@@ -30,15 +30,14 @@ class AESLCK:
 
     def _step(self, block, step, fn):
         logging.debug('STEP #%d' % step)
-        new = block[:]
         for group in self._get_groups(step):
             logging.debug('GROUP: ' + ','.join(map(str, group)))
             indexes = [(g*self._FS, (g+1)*self._FS) for g in group]
             CB = fn(''.join(str(block[idx[0]:idx[1]]) for idx in indexes))
             for i, idx in enumerate(indexes):
                 data = CB[i*self._FS:(i+1)*self._FS]
-                new[idx[0]:idx[1]] = CB[i*self._FS:(i+1)*self._FS]
-        return new
+                block[idx[0]:idx[1]] = CB[i*self._FS:(i+1)*self._FS]
+        return block
 
     def _encryptblock(self, block):
         assert len(block) == self._block_size
