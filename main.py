@@ -2,7 +2,7 @@
 
 from lck import AESLCK
 
-with open('lipsum4096.txt') as f:
+with open('data/lipsum4096.txt') as f:
     data = f.read().strip()
 
 print('PLAINTEXT: %s' % data)
