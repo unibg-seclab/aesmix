@@ -7,73 +7,73 @@ logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.DEBUG)
 from math import log
 
 class AESLCK:
-    _CIPHER_BLOCK = 16
+    _BS = 16
 
-    def __init__(self, key, frag_size=4, frags_per_block=1024):
-        self._FS = frag_size
-        self._FPB = frags_per_block
-        self._FPC = self._CIPHER_BLOCK / self._FS
-        self._block_size = self._FS * self._FPB
-        self._digits = int(log(self._FPB, 2))   # fragment ID digits
-        self._dof = int(log(self._FPC, 2))  # free digits
+    def __init__(self, key, mini_size=4, macro_num=1024):
+        self._MIS = mini_size
+        self._MIxMA = macro_num
+        self._MIxB = self._BS / self._MIS
+        self._MAS = self._MIS * self._MIxMA
+        self._digits = int(log(self._MIxMA, 2))   # miniblock ID digits
+        self._dof = int(log(self._MIxB, 2))  # free digits
         self._aes = AES.new(key, mode=AES.MODE_ECB)
 
     def _get_groups(self, step, start=0):
         #create #dof 1s, shift them to the left of round*dof
         unmask = (2**self._dof - 1) << (step * self._dof)
-        dist = 2**(step * self._dof)  # distance of fragments in same group
+        dist = 2**(step * self._dof)  # distance of miniblock in same group
         groups = []
         while start < 2**self._digits:
             start &= ~unmask  # and with the negation of unmask (the mask)
-            groups.append([start + (dist * i) for i in xrange(self._FPC)])
+            groups.append([start + (dist * i) for i in xrange(self._MIxB)])
             start += unmask + 1  # make the step
         return groups
 
-    def _step(self, block, step, fn):
+    def _step(self, macro, step, fn):
         logging.debug('STEP #%d' % step)
         for group in self._get_groups(step):
             logging.debug('GROUP: ' + ','.join(map(str, group)))
-            indexes = [(g*self._FS, (g+1)*self._FS) for g in group]
-            CB = fn(''.join([str(block[s:t]) for s,t in indexes]))
+            indexes = [(g*self._MIS, (g+1)*self._MIS) for g in group]
+            CB = fn(''.join([str(macro[s:t]) for s,t in indexes]))
             for i, idx in enumerate(indexes):
-                block[idx[0]:idx[1]] = CB[i*self._FS:(i+1)*self._FS]
-        return block
+                macro[idx[0]:idx[1]] = CB[i*self._MIS:(i+1)*self._MIS]
+        return macro
 
-    def _encryptblock(self, block):
-        assert len(block) == self._block_size
+    def _encryptmacroblock(self, macro):
+        assert len(macro) == self._MAS
         for step in xrange(self._digits / self._dof):
-            block = self._step(block, step, self._aes.encrypt)
-        return block
+            macro = self._step(macro, step, self._aes.encrypt)
+        return macro
 
-    def _decryptblock(self, block):
-        assert len(block) == self._block_size
+    def _decryptmacroblock(self, macro):
+        assert len(macro) == self._MAS
         for step in xrange(self._digits / self._dof - 1, -1, -1):
-            block = self._step(block, step, self._aes.decrypt)
-        return block
+            macro = self._step(macro, step, self._aes.decrypt)
+        return macro
 
     def __shuffle(self, data, step):
         size = len(data)
-        for block in xrange(step):
+        for macro in xrange(step):
             yield bytearray(byte
-                    for offset in xrange(block, size / self._FS, step)
-                    for byte in data[offset*self._FS : (offset+1) * self._FS])
+                    for offset in xrange(macro, size / self._MIS, step)
+                    for byte in data[offset*self._MIS : (offset+1) * self._MIS])
 
     def _shuffle(self, data):
-        return self.__shuffle(data, len(data) / self._block_size)
+        return self.__shuffle(data, len(data) / self._MAS)
 
     def _unshuffle(self, data):
-        return self.__shuffle(data, self._FPB)
+        return self.__shuffle(data, self._MIxMA)
 
     def __process(self, data, fn):
-        assert len(data) % self._block_size == 0
+        assert len(data) % self._MAS == 0
         result = bytearray()
-        for i, block in enumerate(self._shuffle(data)):
-            logging.debug('BLOCK #%d: %r' % (i, block))
-            result.extend(fn(block))
+        for i, macro in enumerate(self._shuffle(data)):
+            logging.debug('MACRO #%d: %r' % (i, macro))
+            result.extend(fn(macro))
         return ''.join(map(str, self._unshuffle(result)))
 
     def encrypt(self, data):
-        return self.__process(data, self._encryptblock)
+        return self.__process(data, self._encryptmacroblock)
 
     def decrypt(self, data):
-        return self.__process(data, self._decryptblock)
+        return self.__process(data, self._decryptmacroblock)
