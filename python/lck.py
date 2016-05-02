@@ -12,30 +12,30 @@ class AESLCK:
     def __init__(self, key, frag_size=4, frags_per_block=1024):
         self._FS = frag_size
         self._FPB = frags_per_block
-        self._frags_per_cipher = self._CIPHER_BLOCK / self._FS
+        self._FPC = self._CIPHER_BLOCK / self._FS
         self._block_size = self._FS * self._FPB
         self._digits = int(log(self._FPB, 2))   # fragment ID digits
-        self._dof = int(log(self._frags_per_cipher, 2))  # free digits
+        self._dof = int(log(self._FPC, 2))  # free digits
         self._aes = AES.new(key, mode=AES.MODE_ECB)
 
     def _get_groups(self, step, start=0):
         #create #dof 1s, shift them to the left of round*dof
         unmask = (2**self._dof - 1) << (step * self._dof)
-        dist = 2**(step * self._dof)
+        dist = 2**(step * self._dof)  # distance of fragments in same group
+        groups = []
         while start < 2**self._digits:
-            # and with the negation of unmask (the mask)
-            start &= ~unmask
-            yield [start + (dist * i) for i in xrange(self._frags_per_cipher)]
-            start += unmask + 1
+            start &= ~unmask  # and with the negation of unmask (the mask)
+            groups.append([start + (dist * i) for i in xrange(self._FPC)])
+            start += unmask + 1  # make the step
+        return groups
 
     def _step(self, block, step, fn):
         logging.debug('STEP #%d' % step)
         for group in self._get_groups(step):
             logging.debug('GROUP: ' + ','.join(map(str, group)))
             indexes = [(g*self._FS, (g+1)*self._FS) for g in group]
-            CB = fn(''.join(str(block[idx[0]:idx[1]]) for idx in indexes))
+            CB = fn(''.join([str(block[s:t]) for s,t in indexes]))
             for i, idx in enumerate(indexes):
-                data = CB[i*self._FS:(i+1)*self._FS]
                 block[idx[0]:idx[1]] = CB[i*self._FS:(i+1)*self._FS]
         return block
 
