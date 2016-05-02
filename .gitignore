@@ -1,3 +1,8 @@
+# python
 *.pyc
 *.pyo
 __pycache__
+
+# C
+*.o
+/c/main
