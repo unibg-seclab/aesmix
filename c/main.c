@@ -17,18 +17,17 @@ void print_hex(const unsigned char *s, unsigned int l)
 
 int main()
 {
-
     unsigned char in[MACRO_SIZE], out[MACRO_SIZE], dec[MACRO_SIZE];
     RAND_pseudo_bytes(in, MACRO_SIZE);
 
     printf("PLAINTEXT:  ");
     print_hex(in, MACRO_SIZE);
 
-    encrypt_macroblock(in, out, key, iv);
+    encrypt(in, out, MACRO_SIZE, key, iv);
     printf("CIPHERTEXT: ");
     print_hex(out, MACRO_SIZE);
 
-    decrypt_macroblock(out, dec, key, iv);
+    decrypt(out, dec, MACRO_SIZE, key, iv);
     printf("DECRYPTED:  ");
     print_hex(dec, MACRO_SIZE);
 

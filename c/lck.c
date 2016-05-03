@@ -22,7 +22,7 @@ static inline void do_step(
     dist = 1 << (step * DOF);
     printf("STEP: %d (distance: %d)\n", step, dist);
 
-    for (start = 0; start < (1 << DIGITS); start=((start|mask)+1) & ~mask) {
+    for (start=0; start < (1 << DIGITS); start=((start|mask)+1) & ~mask) {
         printf("GROUP: ");
         for (i=0, off=start; i < MINI_PER_BLOCK; ++i, off+=dist) {
             printf("%d ", off);
@@ -57,7 +57,7 @@ void encrypt_macroblock(
     assert(outlen1 + outlen2 == MACRO_SIZE);
 
     // Step 1-N are always ECB encryptions
-    for (step = 1; step < DIGITS/DOF; ++step) {
+    for (step=1; step < DIGITS/DOF; ++step) {
         do_step(out, step, key);
     }
 }
@@ -83,4 +83,32 @@ void decrypt_macroblock(
     EVP_DecryptUpdate(&ctx, out, &outlen1, out, MACRO_SIZE);
     EVP_DecryptFinal(&ctx, &out[outlen1], &outlen2);
     assert(outlen1 + outlen2 == MACRO_SIZE);
+}
+
+void encrypt(
+    unsigned char* data,
+    unsigned char* out,
+    unsigned int size,
+    unsigned char* key,
+    unsigned char* iv
+){
+    int offset;
+    assert(size % MACRO_SIZE == 0);
+    for (offset=0; offset < size; offset+=MACRO_SIZE) {
+        encrypt_macroblock(&data[offset], &out[offset], key, iv);
+    }
+}
+
+void decrypt(
+    unsigned char* data,
+    unsigned char* out,
+    unsigned int size,
+    unsigned char* key,
+    unsigned char* iv
+){
+    int offset;
+    assert(size % MACRO_SIZE == 0);
+    for (offset=0; offset < size; offset+=MACRO_SIZE) {
+        decrypt_macroblock(&data[offset], &out[offset], key, iv);
+    }
 }
