@@ -92,7 +92,7 @@ void encrypt(
     unsigned char* key,
     unsigned char* iv
 ){
-    size_t offset;
+    unsigned long offset;
     assert(size % MACRO_SIZE == 0);
     for (offset=0; offset < size; offset+=MACRO_SIZE) {
         encrypt_macroblock(&data[offset], &out[offset], key, iv);
