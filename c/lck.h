@@ -6,8 +6,8 @@
 #define DIGITS           ((int) log2(MINI_PER_MACRO))
 #define DOF              ((int) log2(MINI_PER_BLOCK))
 
-void encrypt(unsigned char* data, unsigned char* out, unsigned int size,
+void encrypt(unsigned char* data, unsigned char* out, unsigned long size,
              unsigned char* key, unsigned char* iv);
 
-void decrypt(unsigned char* data, unsigned char* out, unsigned int size,
+void decrypt(unsigned char* data, unsigned char* out, unsigned long size,
              unsigned char* key, unsigned char* iv);

@@ -88,11 +88,11 @@ void decrypt_macroblock(
 void encrypt(
     unsigned char* data,
     unsigned char* out,
-    unsigned int size,
+    unsigned long size,
     unsigned char* key,
     unsigned char* iv
 ){
-    int offset;
+    size_t offset;
     assert(size % MACRO_SIZE == 0);
     for (offset=0; offset < size; offset+=MACRO_SIZE) {
         encrypt_macroblock(&data[offset], &out[offset], key, iv);
@@ -102,11 +102,11 @@ void encrypt(
 void decrypt(
     unsigned char* data,
     unsigned char* out,
-    unsigned int size,
+    unsigned long size,
     unsigned char* key,
     unsigned char* iv
 ){
-    int offset;
+    unsigned long offset;
     assert(size % MACRO_SIZE == 0);
     for (offset=0; offset < size; offset+=MACRO_SIZE) {
         decrypt_macroblock(&data[offset], &out[offset], key, iv);
