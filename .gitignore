@@ -6,3 +6,4 @@ __pycache__
 # C
 *.o
 /c/main
+.ycm_extra_conf.py
