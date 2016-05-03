@@ -5,6 +5,15 @@
 #include <math.h>
 #include "lck.h"
 
+#ifdef DEBUG
+#define DEBUG_TEST 1
+#else
+#define DEBUG_TEST 0
+#endif
+
+#define debug_print(...) \
+    do { if (DEBUG_TEST) fprintf(stderr, __VA_ARGS__); } while (0)
+
 static inline void do_step(
     unsigned char* macro,
     unsigned int step,
@@ -20,12 +29,12 @@ static inline void do_step(
 
     mask = ((1 << DOF) - 1) << (step * DOF);
     dist = 1 << (step * DOF);
-    printf("STEP: %d (distance: %d)\n", step, dist);
+    debug_print("STEP: %d (distance: %d)\n", step, dist);
 
     for (start=0; start < (1 << DIGITS); start=((start|mask)+1) & ~mask) {
-        printf("GROUP: ");
+        debug_print("GROUP: ");
         for (i=0, off=start; i < MINI_PER_BLOCK; ++i, off+=dist) {
-            printf("%d ", off);
+            debug_print("%d ", off);
             memcpy(&temp[i*MINI_SIZE], &macro[off*MINI_SIZE], MINI_SIZE);
         }
 
@@ -36,7 +45,7 @@ static inline void do_step(
             memcpy(&temp[i*MINI_SIZE], &macro[off*MINI_SIZE], MINI_SIZE);
         }
 
-        printf("\n");
+        debug_print("\n");
     }
 }
 
@@ -95,6 +104,7 @@ void encrypt(
     unsigned long offset;
     assert(size % MACRO_SIZE == 0);
     for (offset=0; offset < size; offset+=MACRO_SIZE) {
+        debug_print("ENCRYPT BLOCK with offset: %lu\n", offset);
         encrypt_macroblock(&data[offset], &out[offset], key, iv);
     }
 }
@@ -109,6 +119,7 @@ void decrypt(
     unsigned long offset;
     assert(size % MACRO_SIZE == 0);
     for (offset=0; offset < size; offset+=MACRO_SIZE) {
+        debug_print("DECRYPT BLOCK with offset: %lu\n", offset);
         decrypt_macroblock(&data[offset], &out[offset], key, iv);
     }
 }
