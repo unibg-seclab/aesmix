@@ -1,6 +1,6 @@
 TARGET   = main
 
-SRCS     = lck.c
+SRCS     = lck.c main.c
 OBJS    := $(SRCS:%.c=%.o)
 
 CC       = gcc
