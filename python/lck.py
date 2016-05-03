@@ -51,26 +51,14 @@ class AESLCK:
             macro = self._step(macro, step, self._aes.decrypt)
         return macro
 
-    def __shuffle(self, data, step):
-        size = len(data)
-        for macro in xrange(step):
-            yield bytearray(byte
-                    for offset in xrange(macro, size / self._MIS, step)
-                    for byte in data[offset*self._MIS : (offset+1) * self._MIS])
-
-    def _shuffle(self, data):
-        return self.__shuffle(data, len(data) / self._MAS)
-
-    def _unshuffle(self, data):
-        return self.__shuffle(data, self._MIxMA)
-
     def __process(self, data, fn):
         assert len(data) % self._MAS == 0
-        result = bytearray()
-        for i, macro in enumerate(self._shuffle(data)):
+        data, result = bytearray(data), bytearray()
+        for i in xrange(len(data) / self._MAS):
+            macro = data[i*self._MAS:(i+1)*self._MAS]
             logging.debug('MACRO #%d: %r' % (i, macro))
             result.extend(fn(macro))
-        return ''.join(map(str, self._unshuffle(result)))
+        return result
 
     def encrypt(self, data):
         return self.__process(data, self._encryptmacroblock)
