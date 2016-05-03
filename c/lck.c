@@ -1,25 +1,86 @@
-#include <stdio.h>
 #include <openssl/evp.h>
+#include <assert.h>
+#include <string.h>
+#include <stdio.h>
+#include <math.h>
+#include "lck.h"
 
-int main()
-{
+static inline void do_step(
+    unsigned char* macro,
+    unsigned int step,
+    unsigned char* key
+){
+    unsigned int i, off, mask, start, dist;
+    unsigned char temp[BLOCK_SIZE];
+    int outlen1;
     EVP_CIPHER_CTX ctx;
-    unsigned char key[32];
-    unsigned char iv[16];
-    unsigned char in[] = "0123456789ABCDEF";
-    unsigned char cipher[32]; /* at least one block longer than in[] (PAD) */
-    unsigned char plain[32]; /* at least one block longer than in[] (PAD) */
+
+    EVP_EncryptInit(&ctx, EVP_aes_128_ecb(), key, NULL);
+    EVP_CIPHER_CTX_set_padding(&ctx, 0); // disable padding
+
+    mask = ((1 << DOF) - 1) << (step * DOF);
+    dist = 1 << (step * DOF);
+    printf("STEP: %d (distance: %d)\n", step, dist);
+
+    for (start = 0; start < (1 << DIGITS); start=((start|mask)+1) & ~mask) {
+        printf("GROUP: ");
+        for (i=0, off=start; i < MINI_PER_BLOCK; ++i, off+=dist) {
+            printf("%d ", off);
+            memcpy(&temp[i*MINI_SIZE], &macro[off*MINI_SIZE], MINI_SIZE);
+        }
+
+        EVP_EncryptUpdate(&ctx, temp, &outlen1, temp, BLOCK_SIZE);
+        assert(outlen1 == BLOCK_SIZE);
+
+        for (i=0, off=start; i < MINI_PER_BLOCK; ++i, off+=dist) {
+            memcpy(&temp[i*MINI_SIZE], &macro[off*MINI_SIZE], MINI_SIZE);
+        }
+
+        printf("\n");
+    }
+}
+
+void encrypt_macroblock(
+    unsigned char* macro,
+    unsigned char* out,
+    unsigned char* key,
+    unsigned char* iv
+){
     int outlen1, outlen2;
+    unsigned int step;
+    EVP_CIPHER_CTX ctx;
 
-    EVP_EncryptInit(&ctx, EVP_aes_256_ctr(), key, iv);
-    EVP_EncryptUpdate(&ctx, cipher, &outlen1, in, sizeof(in));
-    EVP_EncryptFinal(&ctx, &cipher[outlen1], &outlen2);
-    printf("ciphertext: %.*s\n", outlen1 + outlen2, cipher);
+    // Step 0 is always a CTR encryption
+    EVP_EncryptInit(&ctx, EVP_aes_128_ctr(), key, iv);
+    EVP_EncryptUpdate(&ctx, out, &outlen1, macro, MACRO_SIZE);
+    EVP_EncryptFinal(&ctx, &out[outlen1], &outlen2);
+    assert(outlen1 + outlen2 == MACRO_SIZE);
 
-    EVP_DecryptInit(&ctx, EVP_aes_256_ctr(), key, iv);
-    EVP_DecryptUpdate(&ctx, plain, &outlen1, cipher, outlen1 + outlen2);
-    EVP_DecryptFinal(&ctx, &plain[outlen1], &outlen2);
-    printf("plaintext:  %.*s\n", outlen1 + outlen2, plain);
+    // Step 1-N are always ECB encryptions
+    for (step = 1; step < DIGITS/DOF; ++step) {
+        do_step(out, step, key);
+    }
+}
 
-    return 0;
+void decrypt_macroblock(
+    unsigned char* macro,
+    unsigned char* out,
+    unsigned char* key,
+    unsigned char* iv
+){
+    int outlen1, outlen2;
+    unsigned int step;
+    EVP_CIPHER_CTX ctx;
+
+    // Step 1-N are always ECB encryptions
+    memcpy(out, macro, MACRO_SIZE);
+    for (step = DIGITS/DOF - 1; step >= 1; --step) {
+        do_step(out, step, key);
+    }
+
+    // Step 0 is always a CTR encryption
+    EVP_DecryptInit(&ctx, EVP_aes_128_ctr(), key, iv);
+    EVP_DecryptUpdate(&ctx, out, &outlen1, out, MACRO_SIZE);
+    EVP_DecryptFinal(&ctx, &out[outlen1], &outlen2);
+    assert(outlen1 + outlen2 == MACRO_SIZE);
 }
