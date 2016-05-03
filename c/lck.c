@@ -5,15 +5,6 @@
 #include <math.h>
 #include "lck.h"
 
-#ifdef DEBUG
-#define DEBUG_TEST 1
-#else
-#define DEBUG_TEST 0
-#endif
-
-#define debug_print(...) \
-    do { if (DEBUG_TEST) fprintf(stderr, __VA_ARGS__); } while (0)
-
 static inline void do_step(
     unsigned char* macro,
     unsigned int step,
