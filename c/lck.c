@@ -5,38 +5,48 @@
 #include <math.h>
 #include "lck.h"
 
+#define do_step_encrypt(...) do_step(1, __VA_ARGS__)
+#define do_step_decrypt(...) do_step(0, __VA_ARGS__)
+
 static inline void do_step(
+    short encrypt,
     unsigned char* macro,
     unsigned int step,
     unsigned char* key
 ){
-    unsigned int i, off, mask, start, dist;
-    unsigned char temp[BLOCK_SIZE];
+    unsigned int i, j, off, mask, start, dist;
+    unsigned char temp[MACRO_SIZE];
     int outlen1;
     EVP_CIPHER_CTX ctx;
 
-    EVP_EncryptInit(&ctx, EVP_aes_128_ecb(), key, NULL);
+    if (encrypt) { EVP_EncryptInit(&ctx, EVP_aes_128_ecb(), key, NULL); }
+    else         { EVP_DecryptInit(&ctx, EVP_aes_128_ecb(), key, NULL); }
     EVP_CIPHER_CTX_set_padding(&ctx, 0); // disable padding
 
     mask = ((1 << DOF) - 1) << (step * DOF);
     dist = 1 << (step * DOF);
     debug_print("STEP: %d (distance: %d)\n", step, dist);
 
-    for (start=0; start < (1 << DIGITS); start=((start|mask)+1) & ~mask) {
-        debug_print("GROUP: ");
-        for (i=0, off=start; i < MINI_PER_BLOCK; ++i, off+=dist) {
-            debug_print("%d ", off);
-            memcpy(&temp[i*MINI_SIZE], &macro[off*MINI_SIZE], MINI_SIZE);
+    debug_print("PACKING GROUP: ");
+    for (i=0, start=0; start < (1<<DIGITS); ++i, start=((start|mask)+1)&~mask) {
+        for (j=0, off=start; j < MINI_PER_BLOCK; ++j, off+=dist) {
+            debug_print("%d->%d\n", off, i*BLOCK_SIZE/MINI_SIZE + j);
+            memcpy(&temp[i*BLOCK_SIZE + j*MINI_SIZE],
+                   &macro[off*MINI_SIZE], MINI_SIZE);
         }
+    }
 
-        EVP_EncryptUpdate(&ctx, temp, &outlen1, temp, BLOCK_SIZE);
-        assert(outlen1 == BLOCK_SIZE);
+    if (encrypt) { EVP_EncryptUpdate(&ctx, temp, &outlen1, temp, MACRO_SIZE); }
+    else         { EVP_DecryptUpdate(&ctx, temp, &outlen1, temp, MACRO_SIZE); }
+    assert(outlen1 == MACRO_SIZE);
 
-        for (i=0, off=start; i < MINI_PER_BLOCK; ++i, off+=dist) {
-            memcpy(&temp[i*MINI_SIZE], &macro[off*MINI_SIZE], MINI_SIZE);
+    debug_print("UNPACKING GROUP: ");
+    for (i=0, start=0; start < (1<<DIGITS); ++i, start=((start|mask)+1)&~mask) {
+        for (j=0, off=start; j < MINI_PER_BLOCK; ++j, off+=dist) {
+            debug_print("%d<-%d\n", off, i*BLOCK_SIZE/MINI_SIZE + j);
+            memcpy(&macro[off*MINI_SIZE],
+                   &temp[i*BLOCK_SIZE + j*MINI_SIZE], MINI_SIZE);
         }
-
-        debug_print("\n");
     }
 }
 
@@ -58,7 +68,7 @@ void encrypt_macroblock(
 
     // Step 1-N are always ECB encryptions
     for (step=1; step < DIGITS/DOF; ++step) {
-        do_step(out, step, key);
+        do_step_encrypt(out, step, key);
     }
 }
 
@@ -75,7 +85,7 @@ void decrypt_macroblock(
     // Step 1-N are always ECB encryptions
     memcpy(out, macro, MACRO_SIZE);
     for (step = DIGITS/DOF - 1; step >= 1; --step) {
-        do_step(out, step, key);
+        do_step_decrypt(out, step, key);
     }
 
     // Step 0 is always a CTR encryption
