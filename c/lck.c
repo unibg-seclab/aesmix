@@ -25,12 +25,12 @@ static inline void do_step(
 
     mask = ((1 << DOF) - 1) << (step * DOF);
     dist = 1 << (step * DOF);
-    debug_print("STEP: %d (distance: %d)\n", step, dist);
+    D fprintf(stderr, "STEP: %d (distance: %d)\n", step, dist);
 
-    debug_print("PACKING GROUP: ");
+    D fprintf(stderr, "PACKING GROUP: ");
     for (i=0, start=0; start < (1<<DIGITS); ++i, start=((start|mask)+1)&~mask) {
         for (j=0, off=start; j < MINI_PER_BLOCK; ++j, off+=dist) {
-            debug_print("%d->%d\n", off, i*BLOCK_SIZE/MINI_SIZE + j);
+            D fprintf(stderr, "%d->%d\n", off, i*BLOCK_SIZE/MINI_SIZE + j);
             memcpy(&temp[i*BLOCK_SIZE + j*MINI_SIZE],
                    &macro[off*MINI_SIZE], MINI_SIZE);
         }
@@ -40,10 +40,10 @@ static inline void do_step(
     else         { EVP_DecryptUpdate(&ctx, temp, &outlen1, temp, MACRO_SIZE); }
     assert(outlen1 == MACRO_SIZE);
 
-    debug_print("UNPACKING GROUP: ");
+    D fprintf(stderr, "UNPACKING GROUP: ");
     for (i=0, start=0; start < (1<<DIGITS); ++i, start=((start|mask)+1)&~mask) {
         for (j=0, off=start; j < MINI_PER_BLOCK; ++j, off+=dist) {
-            debug_print("%d<-%d\n", off, i*BLOCK_SIZE/MINI_SIZE + j);
+            D fprintf(stderr, "%d<-%d\n", off, i*BLOCK_SIZE/MINI_SIZE + j);
             memcpy(&macro[off*MINI_SIZE],
                    &temp[i*BLOCK_SIZE + j*MINI_SIZE], MINI_SIZE);
         }
@@ -105,7 +105,7 @@ void encrypt(
     unsigned long offset;
     assert(size % MACRO_SIZE == 0);
     for (offset=0; offset < size; offset+=MACRO_SIZE) {
-        debug_print("ENCRYPT BLOCK with offset: %lu\n", offset);
+        D fprintf(stderr, "ENCRYPT BLOCK with offset: %lu\n", offset);
         encrypt_macroblock(&data[offset], &out[offset], key, iv);
     }
 }
@@ -120,7 +120,7 @@ void decrypt(
     unsigned long offset;
     assert(size % MACRO_SIZE == 0);
     for (offset=0; offset < size; offset+=MACRO_SIZE) {
-        debug_print("DECRYPT BLOCK with offset: %lu\n", offset);
+        D fprintf(stderr, "DECRYPT BLOCK with offset: %lu\n", offset);
         decrypt_macroblock(&data[offset], &out[offset], key, iv);
     }
 }

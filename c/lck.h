@@ -7,13 +7,10 @@
 #define DOF              ((int) log2(MINI_PER_BLOCK))
 
 #ifdef DEBUG
-#define DEBUG_TEST 1
+#define D
 #else
-#define DEBUG_TEST 0
+#define D if(0)
 #endif
-
-#define debug_print(...) \
-    do { if (DEBUG_TEST) fprintf(stderr, __VA_ARGS__); } while (0)
 
 void encrypt(unsigned char* data, unsigned char* out, unsigned long size,
              unsigned char* key, unsigned char* iv);
