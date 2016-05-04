@@ -12,15 +12,16 @@ static inline void do_step(
     short encrypt,
     unsigned char* macro,
     unsigned int step,
-    unsigned char* key
+    unsigned char* key,
+    unsigned char* iv
 ){
     unsigned int i, j, off, mask, start, dist;
     unsigned char temp[MACRO_SIZE];
     int outlen1;
     EVP_CIPHER_CTX ctx;
 
-    if (encrypt) { EVP_EncryptInit(&ctx, EVP_aes_128_ecb(), key, NULL); }
-    else         { EVP_DecryptInit(&ctx, EVP_aes_128_ecb(), key, NULL); }
+    if (encrypt) { EVP_EncryptInit(&ctx, EVP_aes_128_ctr(), key, iv); }
+    else         { EVP_DecryptInit(&ctx, EVP_aes_128_ctr(), key, iv); }
     EVP_CIPHER_CTX_set_padding(&ctx, 0); // disable padding
 
     mask = ((1 << DOF) - 1) << (step * DOF);
@@ -65,9 +66,8 @@ void encrypt_macroblock(
     EVP_EncryptFinal(&ctx, &out[outlen1], &outlen2);
     D assert(outlen1 + outlen2 == MACRO_SIZE);
 
-    // Step 1-N are always ECB encryptions
     for (step=1; step < DIGITS/DOF; ++step) {
-        do_step_encrypt(out, step, key);
+        do_step_encrypt(out, step, key, iv);
     }
 }
 
@@ -81,10 +81,9 @@ void decrypt_macroblock(
     unsigned int step;
     EVP_CIPHER_CTX ctx;
 
-    // Step 1-N are always ECB encryptions
     memcpy(out, macro, MACRO_SIZE);
     for (step = DIGITS/DOF - 1; step >= 1; --step) {
-        do_step_decrypt(out, step, key);
+        do_step_decrypt(out, step, key, iv);
     }
 
     // Step 0 is always a CTR encryption
