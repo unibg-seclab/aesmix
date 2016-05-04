@@ -11,7 +11,8 @@ LDLIBS  += -lcrypto
 $(TARGET) all: $(OBJS)
 	$(CC) $(LDFLAGS) $^ $(LDLIBS) -o $(TARGET)
 
-debug: CFLAGS += -DDEBUG -g
+debug: CFLAGS += -DDEBUG -g -pg
+debug: LDFLAGS += -pg
 debug: all
 
 %.o: %.c
