@@ -1,3 +1,5 @@
+.PHONY:    clean
+
 TARGET   = main
 
 SRCS     = lck.c main.c
