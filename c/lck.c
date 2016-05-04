@@ -17,11 +17,11 @@ static inline void do_step(
 ){
     unsigned int i, j, off, mask, start, dist;
     unsigned char temp[MACRO_SIZE];
-    int outlen1;
+    int outl1, outl2;
     EVP_CIPHER_CTX ctx;
 
-    if (encrypt) { EVP_EncryptInit(&ctx, EVP_aes_128_ctr(), key, iv); }
-    else         { EVP_DecryptInit(&ctx, EVP_aes_128_ctr(), key, iv); }
+    (encrypt ? EVP_EncryptInit : EVP_DecryptInit)
+        (&ctx, EVP_aes_128_ctr(), key, iv);
     EVP_CIPHER_CTX_set_padding(&ctx, 0); // disable padding
 
     mask = ((1 << DOF) - 1) << (step * DOF);
@@ -36,9 +36,11 @@ static inline void do_step(
         }
     }
 
-    if (encrypt) { EVP_EncryptUpdate(&ctx, temp, &outlen1, temp, MACRO_SIZE); }
-    else         { EVP_DecryptUpdate(&ctx, temp, &outlen1, temp, MACRO_SIZE); }
-    D assert(outlen1 == MACRO_SIZE);
+    (encrypt ? EVP_EncryptUpdate : EVP_DecryptUpdate)
+        (&ctx, temp, &outl1, temp, MACRO_SIZE);
+    (encrypt ? EVP_EncryptFinal : EVP_DecryptFinal)
+        (&ctx, &temp[outl1], &outl2);
+    D assert(outl1 + outl2 == MACRO_SIZE);
 
     D fprintf(stderr, "\n== UNPACKING ==\n");
     for (i=0, start=0; start < (1<<DIGITS); ++i, start=((start|mask)+1)&~mask) {
@@ -56,15 +58,15 @@ void encrypt_macroblock(
     unsigned char* key,
     unsigned char* iv
 ){
-    int outlen1, outlen2;
+    int outl1, outl2;
     unsigned int step;
     EVP_CIPHER_CTX ctx;
 
     // Step 0 is always a CTR encryption
     EVP_EncryptInit(&ctx, EVP_aes_128_ctr(), key, iv);
-    EVP_EncryptUpdate(&ctx, out, &outlen1, macro, MACRO_SIZE);
-    EVP_EncryptFinal(&ctx, &out[outlen1], &outlen2);
-    D assert(outlen1 + outlen2 == MACRO_SIZE);
+    EVP_EncryptUpdate(&ctx, out, &outl1, macro, MACRO_SIZE);
+    EVP_EncryptFinal(&ctx, &out[outl1], &outl2);
+    D assert(outl1 + outl2 == MACRO_SIZE);
 
     for (step=1; step < DIGITS/DOF; ++step) {
         do_step_encrypt(out, step, key, iv);
@@ -77,7 +79,7 @@ void decrypt_macroblock(
     unsigned char* key,
     unsigned char* iv
 ){
-    int outlen1, outlen2;
+    int outl1, outl2;
     unsigned int step;
     EVP_CIPHER_CTX ctx;
 
@@ -88,9 +90,9 @@ void decrypt_macroblock(
 
     // Step 0 is always a CTR encryption
     EVP_DecryptInit(&ctx, EVP_aes_128_ctr(), key, iv);
-    EVP_DecryptUpdate(&ctx, out, &outlen1, out, MACRO_SIZE);
-    EVP_DecryptFinal(&ctx, &out[outlen1], &outlen2);
-    D assert(outlen1 + outlen2 == MACRO_SIZE);
+    EVP_DecryptUpdate(&ctx, out, &outl1, out, MACRO_SIZE);
+    EVP_DecryptFinal(&ctx, &out[outl1], &outl2);
+    D assert(outl1 + outl2 == MACRO_SIZE);
 }
 
 void encrypt(
