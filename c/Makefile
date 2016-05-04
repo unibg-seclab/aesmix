@@ -8,11 +8,11 @@ OBJS    := $(SRCS:%.c=%.o)
 CFLAGS += -O6 -Wall
 LDLIBS  += -lcrypto
 
-debug: CFLAGS += -DDEBUG -g
-debug: all
-
 $(TARGET) all: $(OBJS)
 	$(CC) $(LDFLAGS) $^ $(LDLIBS) -o $(TARGET)
+
+debug: CFLAGS += -DDEBUG -g
+debug: all
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c -o $@ $<
