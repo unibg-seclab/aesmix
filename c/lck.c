@@ -17,7 +17,7 @@ static inline void do_step(
 ){
     unsigned int i, j, off, mask, start, dist;
     unsigned char temp[MACRO_SIZE];
-    int outl1, outl2;
+    int outl1 = 0, outl2 = 0;
     EVP_CIPHER_CTX ctx;
 
     (encrypt ? EVP_EncryptInit : EVP_DecryptInit)
@@ -41,15 +41,6 @@ static inline void do_step(
     (encrypt ? EVP_EncryptFinal : EVP_DecryptFinal)
         (&ctx, &temp[outl1], &outl2);
     D assert(outl1 + outl2 == MACRO_SIZE);
-
-    D fprintf(stderr, "\n== UNPACKING ==\n");
-    for (i=0, start=0; start < (1<<DIGITS); ++i, start=((start|mask)+1)&~mask) {
-        for (j=0, off=start; j < MINI_PER_BLOCK; ++j, off+=dist) {
-            D fprintf(stderr, "%d<-%d\n", off, i*BLOCK_SIZE/MINI_SIZE + j);
-            memcpy(&macro[off*MINI_SIZE],
-                   &temp[i*BLOCK_SIZE + j*MINI_SIZE], MINI_SIZE);
-        }
-    }
 }
 
 void encrypt_macroblock(
