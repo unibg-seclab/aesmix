@@ -1,19 +1,21 @@
-.PHONY:    clean
+.PHONY:    all clean debug
 
 TARGET   = main
 
 SRCS     = lck.c main.c
 OBJS    := $(SRCS:%.c=%.o)
 
-CC       = gcc
-CFLAGS   = -Wall
-LFLAGS   = -lcrypto
+CFLAGS += -O6 -Wall
+LDLIBS  += -lcrypto
+
+debug: CFLAGS += -DDEBUG -g
+debug: all
 
 $(TARGET) all: $(OBJS)
-	$(CC) -o $(TARGET) $(LFLAGS) $(OBJS)
+	$(CC) $(LDFLAGS) $^ $(LDLIBS) -o $(TARGET)
 
 %.o: %.c
-	$(CC) -c -O6 -o $@ $< $(CFLAGS)
+	$(CC) $(CFLAGS) -c -o $@ $<
 
 clean:
 	@rm -f $(OBJS) $(TARGET)
