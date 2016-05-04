@@ -25,9 +25,8 @@ static inline void do_step(
 
     mask = ((1 << DOF) - 1) << (step * DOF);
     dist = 1 << (step * DOF);
-    D fprintf(stderr, "STEP: %d (distance: %d)\n", step, dist);
 
-    D fprintf(stderr, "PACKING GROUP: ");
+    D fprintf(stderr, "\n== STEP %d (dist %d) ==\n== PACKING ==\n", step, dist);
     for (i=0, start=0; start < (1<<DIGITS); ++i, start=((start|mask)+1)&~mask) {
         for (j=0, off=start; j < MINI_PER_BLOCK; ++j, off+=dist) {
             D fprintf(stderr, "%d->%d\n", off, i*BLOCK_SIZE/MINI_SIZE + j);
@@ -40,7 +39,7 @@ static inline void do_step(
     else         { EVP_DecryptUpdate(&ctx, temp, &outlen1, temp, MACRO_SIZE); }
     assert(outlen1 == MACRO_SIZE);
 
-    D fprintf(stderr, "UNPACKING GROUP: ");
+    D fprintf(stderr, "\n== UNPACKING ==\n");
     for (i=0, start=0; start < (1<<DIGITS); ++i, start=((start|mask)+1)&~mask) {
         for (j=0, off=start; j < MINI_PER_BLOCK; ++j, off+=dist) {
             D fprintf(stderr, "%d<-%d\n", off, i*BLOCK_SIZE/MINI_SIZE + j);
@@ -105,7 +104,7 @@ void encrypt(
     unsigned long offset;
     assert(size % MACRO_SIZE == 0);
     for (offset=0; offset < size; offset+=MACRO_SIZE) {
-        D fprintf(stderr, "ENCRYPT BLOCK with offset: %lu\n", offset);
+        D fprintf(stderr, "\n== ENCRYPT BLOCK with offset: %lu ==\n", offset);
         encrypt_macroblock(&data[offset], &out[offset], key, iv);
     }
 }
@@ -120,7 +119,7 @@ void decrypt(
     unsigned long offset;
     assert(size % MACRO_SIZE == 0);
     for (offset=0; offset < size; offset+=MACRO_SIZE) {
-        D fprintf(stderr, "DECRYPT BLOCK with offset: %lu\n", offset);
+        D fprintf(stderr, "\n== DECRYPT BLOCK with offset: %lu ==\n", offset);
         decrypt_macroblock(&data[offset], &out[offset], key, iv);
     }
 }

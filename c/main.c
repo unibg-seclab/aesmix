@@ -4,9 +4,8 @@
 #include <stdio.h>
 #include "lck.h"
 
-#ifndef MACROS
-#define MACROS                       1024
-#endif
+#define printx(str, data, size) \
+    do { printf(str); print_hex(data, size); } while (0);
 
 unsigned char key[] = "SQUEAMISHOSSIFRA";
 
@@ -26,24 +25,21 @@ int main(int argc, char *argv[])
     unsigned char dec[MACRO_SIZE];
     unsigned char  iv[BLOCK_SIZE];
 
-    macros = (argc > 1) ? atoi(argv[1]) : MACROS;
+    macros = (argc > 1) ? atoi(argv[1]) : 1;
 
-    RAND_pseudo_bytes(iv, BLOCK_SIZE);
     RAND_pseudo_bytes(in, MACRO_SIZE);
-    D printf("PLAINTEXT:\n");
-    D print_hex(in, MACRO_SIZE);
+    D printx("PLAINTEXT: ", in, MACRO_SIZE)
 
     printf("AESLCK-ing %d macroblocks ...\n", macros);
     for (i=0; i < macros; ++i) {
         D RAND_pseudo_bytes(iv, BLOCK_SIZE);
+        D printx("IV: ", iv, BLOCK_SIZE);
 
         encrypt(in, out, MACRO_SIZE, key, iv);
-        D printf("CIPHERTEXT:\n");
-        D print_hex(out, MACRO_SIZE);
+        D printx("CIPHERTEXT: ", out, MACRO_SIZE);
 
         decrypt(out, dec, MACRO_SIZE, key, iv);
-        D printf("DECRYPTED:\n");
-        D print_hex(dec, MACRO_SIZE);
+        D printx("DECRYPTED: ", dec, MACRO_SIZE);
 
         assert(0 == strncmp((const char*)in, (const char*)dec, MACRO_SIZE));
     }
