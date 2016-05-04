@@ -5,11 +5,8 @@
 #include <math.h>
 #include "lck.h"
 
-#define do_step_encrypt(...) do_step(1, __VA_ARGS__)
-#define do_step_decrypt(...) do_step(0, __VA_ARGS__)
 
-static inline void do_step(
-    short encrypt,
+static inline void do_step_encrypt(
     unsigned char* macro,
     unsigned int step,
     unsigned char* key,
@@ -19,10 +16,6 @@ static inline void do_step(
     unsigned char temp[MACRO_SIZE];
     int outl1 = 0, outl2 = 0;
     EVP_CIPHER_CTX ctx;
-
-    (encrypt ? EVP_EncryptInit : EVP_DecryptInit)
-        (&ctx, EVP_aes_128_ctr(), key, iv);
-    EVP_CIPHER_CTX_set_padding(&ctx, 0); // disable padding
 
     mask = ((1 << DOF) - 1) << (step * DOF);
     dist = 1 << (step * DOF);
@@ -36,11 +29,42 @@ static inline void do_step(
         }
     }
 
-    (encrypt ? EVP_EncryptUpdate : EVP_DecryptUpdate)
-        (&ctx, temp, &outl1, temp, MACRO_SIZE);
-    (encrypt ? EVP_EncryptFinal : EVP_DecryptFinal)
-        (&ctx, &temp[outl1], &outl2);
+    EVP_EncryptInit(&ctx, EVP_aes_128_ctr(), key, iv);
+    EVP_CIPHER_CTX_set_padding(&ctx, 0); // disable padding
+    EVP_EncryptUpdate(&ctx, temp, &outl1, temp, MACRO_SIZE);
+    EVP_EncryptFinal(&ctx, &temp[outl1], &outl2);
     D assert(outl1 + outl2 == MACRO_SIZE);
+    memcpy(macro, temp, MACRO_SIZE);
+}
+
+static inline void do_step_decrypt(
+    unsigned char* macro,
+    unsigned int step,
+    unsigned char* key,
+    unsigned char* iv
+){
+    unsigned int i, j, off, mask, start, dist;
+    unsigned char temp[MACRO_SIZE];
+    int outl1 = 0, outl2 = 0;
+    EVP_CIPHER_CTX ctx;
+
+    EVP_DecryptInit(&ctx, EVP_aes_128_ctr(), key, iv);
+    EVP_CIPHER_CTX_set_padding(&ctx, 0); // disable padding
+    EVP_DecryptUpdate(&ctx, temp, &outl1, macro, MACRO_SIZE);
+    EVP_DecryptFinal(&ctx, &temp[outl1], &outl2);
+    D assert(outl1 + outl2 == MACRO_SIZE);
+
+    mask = ((1 << DOF) - 1) << (step * DOF);
+    dist = 1 << (step * DOF);
+
+    D fprintf(stderr, "\n== STEP %d (dist %d) ==\n", step, dist);
+    for (i=0, start=0; start < (1<<DIGITS); ++i, start=((start|mask)+1)&~mask) {
+        for (j=0, off=start; j < MINI_PER_BLOCK; ++j, off+=dist) {
+            D fprintf(stderr, "%d->%d\n", off, i*BLOCK_SIZE/MINI_SIZE + j);
+            memcpy(&macro[off*MINI_SIZE],
+                   &temp[i*BLOCK_SIZE + j*MINI_SIZE], MINI_SIZE);
+        }
+    }
 }
 
 void encrypt_macroblock(
