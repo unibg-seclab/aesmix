@@ -37,7 +37,7 @@ static inline void do_step(
 
     if (encrypt) { EVP_EncryptUpdate(&ctx, temp, &outlen1, temp, MACRO_SIZE); }
     else         { EVP_DecryptUpdate(&ctx, temp, &outlen1, temp, MACRO_SIZE); }
-    assert(outlen1 == MACRO_SIZE);
+    D assert(outlen1 == MACRO_SIZE);
 
     D fprintf(stderr, "\n== UNPACKING ==\n");
     for (i=0, start=0; start < (1<<DIGITS); ++i, start=((start|mask)+1)&~mask) {
@@ -63,7 +63,7 @@ void encrypt_macroblock(
     EVP_EncryptInit(&ctx, EVP_aes_128_ctr(), key, iv);
     EVP_EncryptUpdate(&ctx, out, &outlen1, macro, MACRO_SIZE);
     EVP_EncryptFinal(&ctx, &out[outlen1], &outlen2);
-    assert(outlen1 + outlen2 == MACRO_SIZE);
+    D assert(outlen1 + outlen2 == MACRO_SIZE);
 
     // Step 1-N are always ECB encryptions
     for (step=1; step < DIGITS/DOF; ++step) {
@@ -91,7 +91,7 @@ void decrypt_macroblock(
     EVP_DecryptInit(&ctx, EVP_aes_128_ctr(), key, iv);
     EVP_DecryptUpdate(&ctx, out, &outlen1, out, MACRO_SIZE);
     EVP_DecryptFinal(&ctx, &out[outlen1], &outlen2);
-    assert(outlen1 + outlen2 == MACRO_SIZE);
+    D assert(outlen1 + outlen2 == MACRO_SIZE);
 }
 
 void encrypt(
@@ -102,7 +102,7 @@ void encrypt(
     unsigned char* iv
 ){
     unsigned long offset;
-    assert(size % MACRO_SIZE == 0);
+    D assert(size % MACRO_SIZE == 0);
     for (offset=0; offset < size; offset+=MACRO_SIZE) {
         D fprintf(stderr, "\n== ENCRYPT BLOCK with offset: %lu ==\n", offset);
         encrypt_macroblock(&data[offset], &out[offset], key, iv);
@@ -117,7 +117,7 @@ void decrypt(
     unsigned char* iv
 ){
     unsigned long offset;
-    assert(size % MACRO_SIZE == 0);
+    D assert(size % MACRO_SIZE == 0);
     for (offset=0; offset < size; offset+=MACRO_SIZE) {
         D fprintf(stderr, "\n== DECRYPT BLOCK with offset: %lu ==\n", offset);
         decrypt_macroblock(&data[offset], &out[offset], key, iv);

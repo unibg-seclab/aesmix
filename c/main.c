@@ -41,7 +41,7 @@ int main(int argc, char *argv[])
         decrypt(out, dec, MACRO_SIZE, key, iv);
         D printx("DECRYPTED: ", dec, MACRO_SIZE);
 
-        assert(0 == strncmp((const char*)in, (const char*)dec, MACRO_SIZE));
+        D assert(0 == strncmp((const char*)in, (const char*)dec, MACRO_SIZE));
     }
 
     printf("DONE\n");
