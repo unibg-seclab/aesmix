@@ -21,7 +21,7 @@ blackbox: lck.o debug.o blackbox.o
 %.o: $(SRCDIR)/%.c
 	$(CC) $(CFLAGS) $(INC) -c -o $@ $<
 
-test: | clean debug blackbox
+test: | clean debug
 	@ echo -e "\nRUNNING TESTS ..."
 	@ ./main 1 &> /dev/null || ./main 1
 	@ ./blackbox &> /dev/null || ./blackbox

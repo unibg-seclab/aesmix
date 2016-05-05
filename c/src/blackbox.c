@@ -21,18 +21,18 @@ int main(int argc, char *argv[])
     encrypt(in1, out1, MACRO_SIZE, key, iv);
 
     for (i=0; i<MACRO_SIZE; i+=MINI_SIZE) {
-        printf("\n\n%d", i / MINI_SIZE);
+        printf("CHANGING MINIBLOCK %d  =>  ", i / MINI_SIZE);
         memcpy(in2, in1, MACRO_SIZE);
-        do {
-            RAND_pseudo_bytes(&in2[i], MINI_SIZE);
-        } while (0 == memcmp((const char*)in1, (const char*)in2, MACRO_SIZE));
+        do { RAND_pseudo_bytes(&in2[i], MINI_SIZE); }
+        while (0 == memcmp((const char*)in1, (const char*)in2, MACRO_SIZE));
 
         encrypt(in2, out2, MACRO_SIZE, key, iv);
         for (j=0; j<MACRO_SIZE; j+=BLOCK_SIZE) {
-            printx("out1: ", &out1[j], BLOCK_SIZE);
-            printx("out2: ", &out2[j], BLOCK_SIZE);
+            D printx("out1: ", &out1[j], BLOCK_SIZE);
+            D printx("out2: ", &out2[j], BLOCK_SIZE);
             assert(0 != memcmp((const char*)&out1[j], (const char*)&out2[j], BLOCK_SIZE));
         }
+        printf("ALL OUTPUT BLOCKS CHANGED\n");
     }
 
     printf("DONE\n");
