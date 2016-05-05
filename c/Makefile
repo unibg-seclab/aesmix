@@ -2,6 +2,7 @@
 
 TARGETS  = main blackbox
 
+SRCDIR   = src
 CFLAGS  += -O6 -Wall
 INC     += -Iincludes
 LDLIBS  += -lcrypto
@@ -18,7 +19,7 @@ main: lck.o debug.o main.o
 blackbox: lck.o debug.o blackbox.o
 	$(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
-%.o: %.c
+%.o: $(SRCDIR)/%.c
 	$(CC) $(CFLAGS) $(INC) -c -o $@ $<
 
 clean:
