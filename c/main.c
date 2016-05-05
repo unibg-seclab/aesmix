@@ -2,20 +2,10 @@
 #include <assert.h>
 #include <string.h>
 #include <stdio.h>
+#include "debug.h"
 #include "lck.h"
 
-#define printx(str, data, size) \
-    do { printf(str); print_hex(data, size); } while (0);
-
 unsigned char key[] = "SQUEAMISHOSSIFRA";
-
-void print_hex(const unsigned char *s, unsigned int l)
-{
-    int i;
-    for (i = 0; i < l; ++i)
-        printf("%02x", (unsigned int) s[i]);
-    printf("\n");
-}
 
 int main(int argc, char *argv[])
 {
