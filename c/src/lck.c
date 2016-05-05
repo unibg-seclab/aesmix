@@ -14,23 +14,22 @@ static inline void do_step_encrypt(
     unsigned char* key,
     unsigned char* iv
 ){
-    unsigned int i, j, off, mask, start, dist;
-    unsigned char temp[MACRO_SIZE];
-    int outl1;
+    unsigned int j, off, mask, start, dist;
+    unsigned char buffer[MACRO_SIZE];
+    unsigned char *bp = buffer;
+    int outl;
 
     mask = ((1 << DOF) - 1) << (step * DOF);
-    dist = 1 << (step * DOF);
-    D fprintf(stderr, "\n== STEP %d (dist %d) ==\n", step, dist);
-    for (i=0, start=0; start < (1<<DIGITS); ++i, start=((start|mask)+1)&~mask) {
-        for (j=0, off=start; j < MINI_PER_BLOCK; ++j, off+=dist) {
-            D fprintf(stderr, "%d<->%d\n", off, i*BLOCK_SIZE/MINI_SIZE + j);
-            memcpy(&temp[i*BLOCK_SIZE + j*MINI_SIZE],
-                   &macro[off*MINI_SIZE], MINI_SIZE);
+    dist = (1 << (step * DOF)) * MINI_SIZE;
+    for (start=0; start < (1<<DIGITS); start=((start|mask)+1)&~mask) {
+        for (j=0, off=start*MINI_SIZE; j < MINI_PER_BLOCK; ++j, off+=dist) {
+            memcpy(bp, macro + off, MINI_SIZE);
+            bp += MINI_SIZE;
         }
     }
 
-    EVP_EncryptUpdate(ctx, out, &outl1, temp, MACRO_SIZE);
-    D assert(outl1 == MACRO_SIZE);
+    EVP_EncryptUpdate(ctx, out, &outl, buffer, MACRO_SIZE);
+    D assert(outl == MACRO_SIZE);
 }
 
 static inline void do_step_decrypt(
@@ -41,21 +40,20 @@ static inline void do_step_decrypt(
     unsigned char* key,
     unsigned char* iv
 ){
-    unsigned int i, j, off, mask, start, dist;
-    unsigned char temp[MACRO_SIZE];
-    int outl1;
+    unsigned int j, off, mask, start, dist;
+    unsigned char buffer[MACRO_SIZE];
+    unsigned char *bp = buffer;
+    int outl;
 
-    EVP_DecryptUpdate(ctx, temp, &outl1, macro, MACRO_SIZE);
-    D assert(outl1 == MACRO_SIZE);
+    EVP_DecryptUpdate(ctx, buffer, &outl, macro, MACRO_SIZE);
+    D assert(outl == MACRO_SIZE);
 
     mask = ((1 << DOF) - 1) << (step * DOF);
-    dist = 1 << (step * DOF);
-    D fprintf(stderr, "\n== STEP %d (dist %d) ==\n", step, dist);
-    for (i=0, start=0; start < (1<<DIGITS); ++i, start=((start|mask)+1)&~mask) {
-        for (j=0, off=start; j < MINI_PER_BLOCK; ++j, off+=dist) {
-            D fprintf(stderr, "%d<->%d\n", off, i*BLOCK_SIZE/MINI_SIZE + j);
-            memcpy(&out[off*MINI_SIZE],
-                   &temp[i*BLOCK_SIZE + j*MINI_SIZE], MINI_SIZE);
+    dist = (1 << (step * DOF)) * MINI_SIZE;
+    for (start=0; start < (1<<DIGITS); start=((start|mask)+1)&~mask) {
+        for (j=0, off=start*MINI_SIZE; j < MINI_PER_BLOCK; ++j, off+=dist) {
+            memcpy(out + off, bp, MINI_SIZE);
+            bp += MINI_SIZE;
         }
     }
 }
@@ -95,7 +93,7 @@ void encrypt_macroblock(
         do_step_encrypt(&ctx, out, out, step, key, iv);
     }
 
-    EVP_EncryptFinal(&ctx, &out[outl1], &outl1);
+    EVP_EncryptFinal(&ctx, out + outl1, &outl1);
     D assert(0 == outl1);
 }
 
@@ -121,7 +119,7 @@ void decrypt_macroblock(
     EVP_DecryptUpdate(&ctx, out, &outl1, out, MACRO_SIZE);
     memxor(out, iv, BLOCK_SIZE);         // remove IV from output
     D assert(outl1 == MACRO_SIZE);
-    EVP_DecryptFinal(&ctx, &out[outl1], &outl1);
+    EVP_DecryptFinal(&ctx, out + outl1, &outl1);
     D assert(0 == outl1);
 }
 
@@ -132,11 +130,11 @@ void encrypt(
     unsigned char* key,
     unsigned char* iv
 ){
-    unsigned long offset;
+    unsigned char* last = data + size;
     D assert(size % MACRO_SIZE == 0);
-    for (offset=0; offset < size; offset+=MACRO_SIZE) {
+    for (; data < last; data+=MACRO_SIZE, out+=MACRO_SIZE) {
         // TODO mix IV with offset
-        encrypt_macroblock(&data[offset], &out[offset], key, iv);
+        encrypt_macroblock(data, out, key, iv);
     }
 }
 
@@ -147,10 +145,10 @@ void decrypt(
     unsigned char* key,
     unsigned char* iv
 ){
-    unsigned long offset;
+    unsigned char* last = data + size;
     D assert(size % MACRO_SIZE == 0);
-    for (offset=0; offset < size; offset+=MACRO_SIZE) {
+    for (; data < last; data+=MACRO_SIZE, out+=MACRO_SIZE) {
         // TODO mix IV with offset
-        decrypt_macroblock(&data[offset], &out[offset], key, iv);
+        decrypt_macroblock(data, out, key, iv);
     }
 }
