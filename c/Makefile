@@ -1,22 +1,24 @@
 .PHONY:    all clean debug
 
-TARGET   = main
+TARGETS  = main blackbox
 
-SRCS     = lck.c main.c
-OBJS    := $(SRCS:%.c=%.o)
-
-CFLAGS += -O6 -Wall
+CFLAGS  += -O6 -Wall
 LDLIBS  += -lcrypto
 
-$(TARGET) all: $(OBJS)
-	$(CC) $(LDFLAGS) $^ $(LDLIBS) -o $(TARGET)
+all: $(TARGETS)
 
 debug: CFLAGS += -DDEBUG -g -pg
 debug: LDFLAGS += -pg
 debug: all
 
+main: lck.o debug.o main.o
+	$(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@
+
+blackbox: lck.o debug.o blackbox.o
+	$(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@
+
 %.o: %.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 clean:
-	@rm -f $(OBJS) $(TARGET) *.out
+	@rm -f *.o *.out $(TARGETS)
