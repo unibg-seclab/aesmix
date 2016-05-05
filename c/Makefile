@@ -1,4 +1,4 @@
-.PHONY:    all clean debug fresh test
+.PHONY:    all callgrind clean debug fresh test
 
 TARGETS  = main blackbox
 
