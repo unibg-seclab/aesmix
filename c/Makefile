@@ -9,8 +9,7 @@ LDLIBS  += -lcrypto
 
 all: $(TARGETS)
 
-debug: CFLAGS += -DDEBUG -g -pg
-debug: LDFLAGS += -pg
+debug: CFLAGS += -DDEBUG -g
 debug: all
 
 main: lck.o debug.o main.o
