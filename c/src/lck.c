@@ -5,16 +5,6 @@
 #include <math.h>
 #include "lck.h"
 
-#define shuffle(FROM, TO)                                                      \
-    mask = ((1 << DOF) - 1) << (step * DOF);                                   \
-    dist = 1 << (step * DOF);                                                  \
-    D fprintf(stderr, "\n== STEP %d (dist %d) ==\n", step, dist);              \
-    for (i=0, start=0; start<(1<<DIGITS); ++i, start=((start|mask)+1)&~mask) { \
-        for (j=0, off=start; j < MINI_PER_BLOCK; ++j, off+=dist) {             \
-            D fprintf(stderr, "%d<->%d\n", off, i*BLOCK_SIZE/MINI_SIZE + j);   \
-            memcpy(FROM, TO, MINI_SIZE);                                       \
-        }                                                                      \
-    }                                                                          \
 
 static inline void do_step_encrypt(
     unsigned char* macro,
@@ -28,7 +18,16 @@ static inline void do_step_encrypt(
     int outl1 = 0, outl2 = 0;
     EVP_CIPHER_CTX ctx;
 
-    shuffle(&temp[i*BLOCK_SIZE + j*MINI_SIZE], &macro[off*MINI_SIZE]);
+    mask = ((1 << DOF) - 1) << (step * DOF);
+    dist = 1 << (step * DOF);
+    D fprintf(stderr, "\n== STEP %d (dist %d) ==\n", step, dist);
+    for (i=0, start=0; start < (1<<DIGITS); ++i, start=((start|mask)+1)&~mask) {
+        for (j=0, off=start; j < MINI_PER_BLOCK; ++j, off+=dist) {
+            D fprintf(stderr, "%d<->%d\n", off, i*BLOCK_SIZE/MINI_SIZE + j);
+            memcpy(&temp[i*BLOCK_SIZE + j*MINI_SIZE],
+                   &macro[off*MINI_SIZE], MINI_SIZE);
+        }
+    }
 
     EVP_EncryptInit(&ctx, STEPi_CIPHER, key, iv);
     EVP_CIPHER_CTX_set_padding(&ctx, 0); // disable padding
@@ -55,7 +54,16 @@ static inline void do_step_decrypt(
     EVP_DecryptFinal(&ctx, &temp[outl1], &outl2);
     D assert(outl1 + outl2 == MACRO_SIZE);
 
-    shuffle(&out[off*MINI_SIZE], &temp[i*BLOCK_SIZE + j*MINI_SIZE]);
+    mask = ((1 << DOF) - 1) << (step * DOF);
+    dist = 1 << (step * DOF);
+    D fprintf(stderr, "\n== STEP %d (dist %d) ==\n", step, dist);
+    for (i=0, start=0; start < (1<<DIGITS); ++i, start=((start|mask)+1)&~mask) {
+        for (j=0, off=start; j < MINI_PER_BLOCK; ++j, off+=dist) {
+            D fprintf(stderr, "%d<->%d\n", off, i*BLOCK_SIZE/MINI_SIZE + j);
+            memcpy(&out[off*MINI_SIZE],
+                   &temp[i*BLOCK_SIZE + j*MINI_SIZE], MINI_SIZE);
+        }
+    }
 }
 
 static inline void memxor(
