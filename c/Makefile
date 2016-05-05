@@ -1,4 +1,4 @@
-.PHONY:    all clean debug
+.PHONY:    all clean debug fresh test
 
 TARGETS  = main blackbox
 
@@ -8,6 +8,8 @@ INC     += -Iincludes
 LDLIBS  += -lcrypto
 
 all: $(TARGETS)
+
+fresh: | clean all
 
 debug: CFLAGS += -DDEBUG -g
 debug: all
