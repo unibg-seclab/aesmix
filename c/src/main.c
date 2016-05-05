@@ -10,14 +10,16 @@ unsigned char key[] = "SQUEAMISHOSSIFRA";
 int main(int argc, char *argv[])
 {
     int i, macros;
-    unsigned char  in[MACRO_SIZE];
-    unsigned char out[MACRO_SIZE];
-    unsigned char dec[MACRO_SIZE];
-    unsigned char  iv[BLOCK_SIZE];
+    unsigned char   in[MACRO_SIZE];
+    unsigned char orig[MACRO_SIZE];
+    unsigned char  out[MACRO_SIZE];
+    unsigned char  dec[MACRO_SIZE];
+    unsigned char   iv[BLOCK_SIZE];
 
     macros = (argc > 1) ? atoi(argv[1]) : 1;
 
     RAND_pseudo_bytes(in, MACRO_SIZE);
+    memcpy(orig, in, MACRO_SIZE);
     D printx("PLAINTEXT: ", in, MACRO_SIZE)
 
     printf("AESLCK-ing %d macroblocks ...\n", macros);
@@ -28,10 +30,12 @@ int main(int argc, char *argv[])
         encrypt(in, out, MACRO_SIZE, key, iv);
         D printx("CIPHERTEXT: ", out, MACRO_SIZE);
         D assert(0 != memcmp((const char*)in, (const char*)out, MACRO_SIZE));
+        D assert(0 == memcmp((const char*)in, (const char*)orig, MACRO_SIZE));
 
         decrypt(out, dec, MACRO_SIZE, key, iv);
         D printx("DECRYPTED: ", dec, MACRO_SIZE);
         D assert(0 == memcmp((const char*)in, (const char*)dec, MACRO_SIZE));
+        D assert(0 == memcmp((const char*)in, (const char*)orig, MACRO_SIZE));
     }
 
     printf("DONE\n");
