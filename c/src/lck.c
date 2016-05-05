@@ -77,8 +77,9 @@ void encrypt_macroblock(
     unsigned int step;
     EVP_CIPHER_CTX ctx;
 
-    // Step 0 is always a CTR encryption
+    // Step 0
     EVP_EncryptInit(&ctx, STEP0_CIPHER, key, iv);
+    EVP_CIPHER_CTX_set_padding(&ctx, 0); // disable padding
     EVP_EncryptUpdate(&ctx, out, &outl1, macro, MACRO_SIZE);
     EVP_EncryptFinal(&ctx, &out[outl1], &outl2);
     D assert(outl1 + outl2 == MACRO_SIZE);
@@ -103,8 +104,9 @@ void decrypt_macroblock(
         do_step_decrypt(out, step, key, iv);
     }
 
-    // Step 0 is always a CTR encryption
+    // Step 0
     EVP_DecryptInit(&ctx, STEP0_CIPHER, key, iv);
+    EVP_CIPHER_CTX_set_padding(&ctx, 0); // disable padding
     EVP_DecryptUpdate(&ctx, out, &outl1, out, MACRO_SIZE);
     EVP_DecryptFinal(&ctx, &out[outl1], &outl2);
     D assert(outl1 + outl2 == MACRO_SIZE);
