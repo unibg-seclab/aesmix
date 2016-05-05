@@ -14,6 +14,10 @@ fresh: | clean all
 debug: CFLAGS += -DDEBUG -g
 debug: all
 
+callgrind: CFLAGS += -g
+callgrind: | clean main
+	valgrind --tool=callgrind --callgrind-out-file=callgrind.out ./main 1024
+
 main: lck.o debug.o main.o
 	$(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
