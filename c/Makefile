@@ -3,6 +3,7 @@
 TARGETS  = main blackbox
 
 CFLAGS  += -O6 -Wall
+INC     += -Iincludes
 LDLIBS  += -lcrypto
 
 all: $(TARGETS)
@@ -18,7 +19,7 @@ blackbox: lck.o debug.o blackbox.o
 	$(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
 %.o: %.c
-	$(CC) $(CFLAGS) -c -o $@ $<
+	$(CC) $(CFLAGS) $(INC) -c -o $@ $<
 
 clean:
 	@rm -f *.o *.out $(TARGETS)
