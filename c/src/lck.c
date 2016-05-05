@@ -31,10 +31,9 @@ static inline void do_step_encrypt(
 
     EVP_EncryptInit(&ctx, STEPi_CIPHER, key, iv);
     EVP_CIPHER_CTX_set_padding(&ctx, 0); // disable padding
-    EVP_EncryptUpdate(&ctx, temp, &outl1, temp, MACRO_SIZE);
-    EVP_EncryptFinal(&ctx, &temp[outl1], &outl2);
+    EVP_EncryptUpdate(&ctx, macro, &outl1, temp, MACRO_SIZE);
+    EVP_EncryptFinal(&ctx, &macro[outl1], &outl2);
     D assert(outl1 + outl2 == MACRO_SIZE);
-    memcpy(macro, temp, MACRO_SIZE);
 }
 
 static inline void do_step_decrypt(
