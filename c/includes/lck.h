@@ -6,7 +6,7 @@
 #define DIGITS           ((int) log2(MINI_PER_MACRO))
 #define DOF              ((int) log2(MINI_PER_BLOCK))
 
-#define STEP0_CIPHER EVP_aes_128_ctr()
+#define STEP0_CIPHER EVP_aes_128_ecb()
 #define STEPi_CIPHER EVP_aes_128_ecb()
 
 #ifdef DEBUG
