@@ -8,6 +8,7 @@
 
 static inline void do_step_encrypt(
     unsigned char* macro,
+    unsigned char* out,
     unsigned int step,
     unsigned char* key,
     unsigned char* iv
@@ -31,13 +32,14 @@ static inline void do_step_encrypt(
 
     EVP_EncryptInit(&ctx, STEPi_CIPHER, key, iv);
     EVP_CIPHER_CTX_set_padding(&ctx, 0); // disable padding
-    EVP_EncryptUpdate(&ctx, macro, &outl1, temp, MACRO_SIZE);
-    EVP_EncryptFinal(&ctx, &macro[outl1], &outl2);
+    EVP_EncryptUpdate(&ctx, out, &outl1, temp, MACRO_SIZE);
+    EVP_EncryptFinal(&ctx, &out[outl1], &outl2);
     D assert(outl1 + outl2 == MACRO_SIZE);
 }
 
 static inline void do_step_decrypt(
     unsigned char* macro,
+    unsigned char* out,
     unsigned int step,
     unsigned char* key,
     unsigned char* iv
@@ -60,7 +62,7 @@ static inline void do_step_decrypt(
     for (i=0, start=0; start < (1<<DIGITS); ++i, start=((start|mask)+1)&~mask) {
         for (j=0, off=start; j < MINI_PER_BLOCK; ++j, off+=dist) {
             D fprintf(stderr, "%d->%d\n", off, i*BLOCK_SIZE/MINI_SIZE + j);
-            memcpy(&macro[off*MINI_SIZE],
+            memcpy(&out[off*MINI_SIZE],
                    &temp[i*BLOCK_SIZE + j*MINI_SIZE], MINI_SIZE);
         }
     }
@@ -84,7 +86,7 @@ void encrypt_macroblock(
     D assert(outl1 + outl2 == MACRO_SIZE);
 
     for (step=1; step < DIGITS/DOF; ++step) {
-        do_step_encrypt(out, step, key, iv);
+        do_step_encrypt(out, out, step, key, iv);
     }
 }
 
@@ -98,9 +100,9 @@ void decrypt_macroblock(
     unsigned int step;
     EVP_CIPHER_CTX ctx;
 
-    memcpy(out, macro, MACRO_SIZE);
     for (step = DIGITS/DOF - 1; step >= 1; --step) {
-        do_step_decrypt(out, step, key, iv);
+        do_step_decrypt(macro, out, step, key, iv);
+        macro = out;
     }
 
     // Step 0
