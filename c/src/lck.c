@@ -58,6 +58,13 @@ static inline void do_step_decrypt(
     shuffle(&out[off*MINI_SIZE], &temp[i*BLOCK_SIZE + j*MINI_SIZE]);
 }
 
+static inline void memxor(void* dst, const void* src, size_t n){
+    char *d = dst;
+    char const *s = src;
+    for (; n>0; --n)
+        *d++ ^= *s++;
+}
+
 void encrypt_macroblock(
     unsigned char* macro,
     unsigned char* out,
@@ -69,15 +76,16 @@ void encrypt_macroblock(
     EVP_CIPHER_CTX ctx;
 
     // Step 0
+    memxor(macro, iv, BLOCK_SIZE);       // add IV to input
     EVP_EncryptInit(&ctx, STEP0_CIPHER, key, iv);
     EVP_CIPHER_CTX_set_padding(&ctx, 0); // disable padding
     EVP_EncryptUpdate(&ctx, out, &outl1, macro, MACRO_SIZE);
     EVP_EncryptFinal(&ctx, &out[outl1], &outl2);
     D assert(outl1 + outl2 == MACRO_SIZE);
+    memxor(macro, iv, BLOCK_SIZE);       // remove IV from input
 
-    for (step=1; step < DIGITS/DOF; ++step) {
+    for (step=1; step < DIGITS/DOF; ++step)
         do_step_encrypt(out, out, step, key, iv);
-    }
 }
 
 void decrypt_macroblock(
@@ -92,7 +100,7 @@ void decrypt_macroblock(
 
     for (step = DIGITS/DOF - 1; step >= 1; --step) {
         do_step_decrypt(macro, out, step, key, iv);
-        macro = out;
+        macro = out;   // this is needed to avoid a starting memcpy
     }
 
     // Step 0
@@ -101,6 +109,7 @@ void decrypt_macroblock(
     EVP_DecryptUpdate(&ctx, out, &outl1, out, MACRO_SIZE);
     EVP_DecryptFinal(&ctx, &out[outl1], &outl2);
     D assert(outl1 + outl2 == MACRO_SIZE);
+    memxor(out, iv, BLOCK_SIZE);         // remove IV from output
 }
 
 void encrypt(
