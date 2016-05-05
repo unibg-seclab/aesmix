@@ -29,7 +29,7 @@ static inline void do_step_encrypt(
         }
     }
 
-    EVP_EncryptInit(&ctx, EVP_aes_128_ctr(), key, iv);
+    EVP_EncryptInit(&ctx, STEPi_CIPHER, key, iv);
     EVP_CIPHER_CTX_set_padding(&ctx, 0); // disable padding
     EVP_EncryptUpdate(&ctx, temp, &outl1, temp, MACRO_SIZE);
     EVP_EncryptFinal(&ctx, &temp[outl1], &outl2);
@@ -48,7 +48,7 @@ static inline void do_step_decrypt(
     int outl1 = 0, outl2 = 0;
     EVP_CIPHER_CTX ctx;
 
-    EVP_DecryptInit(&ctx, EVP_aes_128_ctr(), key, iv);
+    EVP_DecryptInit(&ctx, STEPi_CIPHER, key, iv);
     EVP_CIPHER_CTX_set_padding(&ctx, 0); // disable padding
     EVP_DecryptUpdate(&ctx, temp, &outl1, macro, MACRO_SIZE);
     EVP_DecryptFinal(&ctx, &temp[outl1], &outl2);
@@ -78,7 +78,7 @@ void encrypt_macroblock(
     EVP_CIPHER_CTX ctx;
 
     // Step 0 is always a CTR encryption
-    EVP_EncryptInit(&ctx, EVP_aes_128_ctr(), key, iv);
+    EVP_EncryptInit(&ctx, STEP0_CIPHER, key, iv);
     EVP_EncryptUpdate(&ctx, out, &outl1, macro, MACRO_SIZE);
     EVP_EncryptFinal(&ctx, &out[outl1], &outl2);
     D assert(outl1 + outl2 == MACRO_SIZE);
@@ -104,7 +104,7 @@ void decrypt_macroblock(
     }
 
     // Step 0 is always a CTR encryption
-    EVP_DecryptInit(&ctx, EVP_aes_128_ctr(), key, iv);
+    EVP_DecryptInit(&ctx, STEP0_CIPHER, key, iv);
     EVP_DecryptUpdate(&ctx, out, &outl1, out, MACRO_SIZE);
     EVP_DecryptFinal(&ctx, &out[outl1], &outl2);
     D assert(outl1 + outl2 == MACRO_SIZE);
