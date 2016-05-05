@@ -8,7 +8,7 @@ __pycache__
 .ycm_extra_conf.py
 
 # profiling tools
-callgrind.out.*
+callgrind.out*
 gmon.out
 
 # binaries
