@@ -58,11 +58,16 @@ static inline void do_step_decrypt(
     shuffle(&out[off*MINI_SIZE], &temp[i*BLOCK_SIZE + j*MINI_SIZE]);
 }
 
-static inline void memxor(void* dst, const void* src, size_t n){
+static inline void memxor(
+    void* dst,
+    const void* src,
+    size_t n
+){
     char *d = dst;
     char const *s = src;
-    for (; n>0; --n)
+    for (; n>0; --n) {
         *d++ ^= *s++;
+    }
 }
 
 void encrypt_macroblock(
@@ -84,8 +89,10 @@ void encrypt_macroblock(
     D assert(outl1 + outl2 == MACRO_SIZE);
     memxor(macro, iv, BLOCK_SIZE);       // remove IV from input
 
-    for (step=1; step < DIGITS/DOF; ++step)
+    // Steps 1 -> N
+    for (step=1; step < DIGITS/DOF; ++step) {
         do_step_encrypt(out, out, step, key, iv);
+    }
 }
 
 void decrypt_macroblock(
@@ -98,6 +105,7 @@ void decrypt_macroblock(
     unsigned int step;
     EVP_CIPHER_CTX ctx;
 
+    // Steps N -> 1
     for (step = DIGITS/DOF - 1; step >= 1; --step) {
         do_step_decrypt(macro, out, step, key, iv);
         macro = out;   // this is needed to avoid a starting memcpy
@@ -122,7 +130,7 @@ void encrypt(
     unsigned long offset;
     D assert(size % MACRO_SIZE == 0);
     for (offset=0; offset < size; offset+=MACRO_SIZE) {
-        D fprintf(stderr, "\n== ENCRYPT BLOCK with offset: %lu ==\n", offset);
+        // TODO mix IV with offset
         encrypt_macroblock(&data[offset], &out[offset], key, iv);
     }
 }
@@ -137,7 +145,7 @@ void decrypt(
     unsigned long offset;
     D assert(size % MACRO_SIZE == 0);
     for (offset=0; offset < size; offset+=MACRO_SIZE) {
-        D fprintf(stderr, "\n== DECRYPT BLOCK with offset: %lu ==\n", offset);
+        // TODO mix IV with offset
         decrypt_macroblock(&data[offset], &out[offset], key, iv);
     }
 }
