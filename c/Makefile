@@ -23,4 +23,4 @@ blackbox: lck.o debug.o blackbox.o
 	$(CC) $(CFLAGS) $(INC) -c -o $@ $<
 
 clean:
-	@rm -f *.o *.out $(TARGETS)
+	@rm -f $(TARGETS) *.o *.out
