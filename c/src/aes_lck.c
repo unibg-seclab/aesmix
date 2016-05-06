@@ -109,21 +109,45 @@ static inline void decrypt_macroblock(unsigned char* macro,
 void encrypt(unsigned char* data, unsigned char* out,
     unsigned long size, unsigned char* key, unsigned char* iv
 ){
-    unsigned char* last = data + size;
+    unsigned char miv[BLOCK_SIZE];
+    unsigned __int128 n;
+    EVP_CIPHER_CTX ctx;
+    int outl;
+
     D assert(size % MACRO_SIZE == 0);
-    for (; data < last; data+=MACRO_SIZE, out+=MACRO_SIZE) {
-        // TODO mix IV with offset
-        encrypt_macroblock(data, out, key, iv);
+    EVP_EncryptInit(&ctx, EVP_aes_128_cbc(), key, iv);
+    EVP_CIPHER_CTX_set_padding(&ctx, 0); // disable padding
+
+    for (n=0; n < size / MACRO_SIZE; ++n) {
+        EVP_EncryptUpdate(&ctx, miv, &outl, (unsigned char*) &n, BLOCK_SIZE);
+        D assert(BLOCK_SIZE == outl);
+        encrypt_macroblock(data + n*MACRO_SIZE, out + n*MACRO_SIZE, key, miv);
     }
+
+    EVP_EncryptFinal(&ctx, miv, &outl);
+    D assert(0 == outl);
+    EVP_CIPHER_CTX_cleanup(&ctx);
 }
 
 void decrypt(unsigned char* data, unsigned char* out,
     unsigned long size, unsigned char* key, unsigned char* iv
 ){
-    unsigned char* last = data + size;
+    unsigned char miv[BLOCK_SIZE];
+    unsigned __int128 n;
+    EVP_CIPHER_CTX ctx;
+    int outl;
+
     D assert(size % MACRO_SIZE == 0);
-    for (; data < last; data+=MACRO_SIZE, out+=MACRO_SIZE) {
-        // TODO mix IV with offset
-        decrypt_macroblock(data, out, key, iv);
+    EVP_EncryptInit(&ctx, EVP_aes_128_cbc(), key, iv);
+    EVP_CIPHER_CTX_set_padding(&ctx, 0); // disable padding
+
+    for (n=0; n < size / MACRO_SIZE; ++n) {
+        EVP_EncryptUpdate(&ctx, miv, &outl, (unsigned char*) &n, BLOCK_SIZE);
+        D assert(BLOCK_SIZE == outl);
+        decrypt_macroblock(data + n*MACRO_SIZE, out + n*MACRO_SIZE, key, miv);
     }
+
+    EVP_EncryptFinal(&ctx, miv, &outl);
+    D assert(0 == outl);
+    EVP_CIPHER_CTX_cleanup(&ctx);
 }
