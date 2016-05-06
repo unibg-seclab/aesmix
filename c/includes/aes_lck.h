@@ -15,10 +15,12 @@
 #define D if(0)
 #endif
 
-void encrypt(unsigned char* data, unsigned char* out, unsigned long size,
-             unsigned char* key, unsigned char* iv);
+void encrypt(const unsigned char* data, unsigned char* out,
+             const unsigned long size, const unsigned char* key,
+             const unsigned char* iv);
 
-void decrypt(unsigned char* data, unsigned char* out, unsigned long size,
-             unsigned char* key, unsigned char* iv);
+void decrypt(const unsigned char* data, unsigned char* out,
+             const unsigned long size, const unsigned char* key,
+             const unsigned char* iv);
 
 #endif // AES_LCK_H

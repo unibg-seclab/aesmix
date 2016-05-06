@@ -17,8 +17,9 @@
         }                                                                     \
     }
 
-static inline void do_step_encrypt(EVP_CIPHER_CTX* ctx, unsigned char* macro,
-    unsigned char* out, unsigned int step, unsigned char* key, unsigned char* iv
+static inline void do_step_encrypt(EVP_CIPHER_CTX* ctx,
+    const unsigned char* macro, unsigned char* out, const unsigned int step,
+    const unsigned char* key, const unsigned char* iv
 ){
     unsigned char buffer[MACRO_SIZE];
     int outl;
@@ -28,8 +29,9 @@ static inline void do_step_encrypt(EVP_CIPHER_CTX* ctx, unsigned char* macro,
     D assert(MACRO_SIZE == outl);
 }
 
-static inline void do_step_decrypt(EVP_CIPHER_CTX* ctx, unsigned char* macro,
-    unsigned char* out, unsigned int step, unsigned char* key, unsigned char* iv
+static inline void do_step_decrypt(EVP_CIPHER_CTX* ctx,
+    const unsigned char* macro, unsigned char* out, const unsigned int step,
+    const unsigned char* key, const unsigned char* iv
 ){
     unsigned char buffer[MACRO_SIZE];
     int outl;
@@ -48,8 +50,8 @@ static inline void* memxor(void* dst, const void* src, size_t n){
     return dst;
 }
 
-static inline void encrypt_macroblock(unsigned char* macro,
-    unsigned char* out, unsigned char* key, unsigned char* iv
+static inline void encrypt_macroblock(const unsigned char* macro,
+    unsigned char* out, const unsigned char* key, const unsigned char* iv
 ){
     int outl;
     unsigned int step;
@@ -58,9 +60,9 @@ static inline void encrypt_macroblock(unsigned char* macro,
     EVP_CIPHER_CTX_set_padding(&ctx, 0); // disable padding
 
     // Step 0
-    memxor(macro, iv, BLOCK_SIZE);       // add IV to input
+    memxor((unsigned char*) macro, iv, BLOCK_SIZE);  // add IV to input
     EVP_EncryptUpdate(&ctx, out, &outl, macro, MACRO_SIZE);
-    memxor(macro, iv, BLOCK_SIZE);       // remove IV from input
+    memxor((unsigned char*) macro, iv, BLOCK_SIZE);  // remove IV from input
     D assert(MACRO_SIZE == outl);
 
     // Steps 1 -> N
@@ -71,8 +73,8 @@ static inline void encrypt_macroblock(unsigned char* macro,
     EVP_CIPHER_CTX_cleanup(&ctx);
 }
 
-static inline void decrypt_macroblock(unsigned char* macro,
-    unsigned char* out, unsigned char* key, unsigned char* iv
+static inline void decrypt_macroblock(const unsigned char* macro,
+    unsigned char* out, const unsigned char* key, const unsigned char* iv
 ){
     int outl;
     unsigned int step;
@@ -94,8 +96,9 @@ static inline void decrypt_macroblock(unsigned char* macro,
     EVP_CIPHER_CTX_cleanup(&ctx);
 }
 
-static inline void process(short enc, unsigned char* data, unsigned char* out,
-    unsigned long size, unsigned char* key, unsigned char* iv
+static inline void process(const short enc, const unsigned char* data,
+    unsigned char* out, const unsigned long size,
+    const unsigned char* key, const unsigned char* iv
 ){
     unsigned char miv[BLOCK_SIZE];
     unsigned __int128 n;
@@ -116,14 +119,14 @@ static inline void process(short enc, unsigned char* data, unsigned char* out,
     EVP_CIPHER_CTX_cleanup(&ctx);
 }
 
-void encrypt(unsigned char* data, unsigned char* out,
-    unsigned long size, unsigned char* key, unsigned char* iv
+void encrypt(const unsigned char* data, unsigned char* out,
+    const unsigned long size, const unsigned char* key, const unsigned char* iv
 ){
     process(1, data, out, size, key, iv);
 }
 
-void decrypt(unsigned char* data, unsigned char* out,
-    unsigned long size, unsigned char* key, unsigned char* iv
+void decrypt(const unsigned char* data, unsigned char* out,
+    const unsigned long size, const unsigned char* key, const unsigned char* iv
 ){
     process(0, data, out, size, key, iv);
 }
