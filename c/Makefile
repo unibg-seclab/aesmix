@@ -33,5 +33,9 @@ test: | clean debug
 	@ ./blackbox &> /dev/null || ./blackbox
 	@ echo -e "\033[0;32mALL OK\033[0m"
 
+time: | clean main
+	@ echo -e "\nEncrypting 1GiB ..."
+	@ time ./main 262144
+
 clean:
 	@ rm -f $(TARGETS) *.o *.out
