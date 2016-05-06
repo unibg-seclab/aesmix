@@ -32,7 +32,7 @@ int main(int argc, char *argv[])
         D assert(0 != memcmp((const char*)in, (const char*)out, MACRO_SIZE));
         D assert(0 == memcmp((const char*)in, (const char*)orig, MACRO_SIZE));
 
-        decrypt(out, dec, MACRO_SIZE, key, iv);
+        D decrypt(out, dec, MACRO_SIZE, key, iv);
         D printx("DECRYPTED: ", dec, MACRO_SIZE);
         D assert(0 == memcmp((const char*)in, (const char*)dec, MACRO_SIZE));
         D assert(0 == memcmp((const char*)in, (const char*)orig, MACRO_SIZE));
