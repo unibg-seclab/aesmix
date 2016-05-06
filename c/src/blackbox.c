@@ -3,7 +3,7 @@
 #include <string.h>
 #include <stdio.h>
 #include "debug.h"
-#include "lck.h"
+#include "aes_lck.h"
 
 unsigned char key[] = "SQUEAMISHOSSIFRA";
 
@@ -32,8 +32,8 @@ int main(int argc, char *argv[])
         encrypt(in2, out2, MACRO_SIZE, key, iv1);
         encrypt(in2, out3, MACRO_SIZE, key, iv2);
         for (j=0; j<MACRO_SIZE; j+=BLOCK_SIZE) {
-            D printx("out1: ", &out1[j], BLOCK_SIZE);
-            D printx("out2: ", &out2[j], BLOCK_SIZE);
+            D printx("out1: ", &out1[j], BLOCK_SIZE, MINI_SIZE);
+            D printx("out2: ", &out2[j], BLOCK_SIZE, MINI_SIZE);
             // test that entropy flows from each block to each other
             assert(0 != memcmp((const char*)&out1[j], (const char*)&out2[j], BLOCK_SIZE));
             // test that IV affects all the blocks

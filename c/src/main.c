@@ -3,7 +3,7 @@
 #include <string.h>
 #include <stdio.h>
 #include "debug.h"
-#include "lck.h"
+#include "aes_lck.h"
 
 unsigned char key[] = "SQUEAMISHOSSIFRA";
 
@@ -20,20 +20,20 @@ int main(int argc, char *argv[])
 
     RAND_pseudo_bytes(in, MACRO_SIZE);
     memcpy(orig, in, MACRO_SIZE);
-    D printx("PLAINTEXT: ", in, MACRO_SIZE)
+    D printx("PLAINTEXT: ", in, MACRO_SIZE, MINI_SIZE)
 
     printf("AESLCK-ing %d macroblocks ...\n", macros);
     for (i=0; i < macros; ++i) {
         D RAND_pseudo_bytes(iv, BLOCK_SIZE);
-        D printx("IV: ", iv, BLOCK_SIZE);
+        D printx("IV: ", iv, BLOCK_SIZE, MINI_SIZE);
 
         encrypt(in, out, MACRO_SIZE, key, iv);
-        D printx("CIPHERTEXT: ", out, MACRO_SIZE);
+        D printx("CIPHERTEXT: ", out, MACRO_SIZE, MINI_SIZE);
         D assert(0 != memcmp((const char*)in, (const char*)out, MACRO_SIZE));
         D assert(0 == memcmp((const char*)in, (const char*)orig, MACRO_SIZE));
 
         D decrypt(out, dec, MACRO_SIZE, key, iv);
-        D printx("DECRYPTED: ", dec, MACRO_SIZE);
+        D printx("DECRYPTED: ", dec, MACRO_SIZE, MINI_SIZE);
         D assert(0 == memcmp((const char*)in, (const char*)dec, MACRO_SIZE));
         D assert(0 == memcmp((const char*)in, (const char*)orig, MACRO_SIZE));
     }

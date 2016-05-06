@@ -3,16 +3,11 @@
 #include <string.h>
 #include <stdio.h>
 #include <math.h>
-#include "lck.h"
+#include "aes_lck.h"
 
 
-static inline void do_step_encrypt(
-    EVP_CIPHER_CTX* ctx,
-    unsigned char* macro,
-    unsigned char* out,
-    unsigned int step,
-    unsigned char* key,
-    unsigned char* iv
+static inline void do_step_encrypt(EVP_CIPHER_CTX* ctx, unsigned char* macro,
+    unsigned char* out, unsigned int step, unsigned char* key, unsigned char* iv
 ){
     unsigned int j, off, mask, start, dist;
     unsigned char buffer[MACRO_SIZE];
@@ -32,13 +27,8 @@ static inline void do_step_encrypt(
     D assert(outl == MACRO_SIZE);
 }
 
-static inline void do_step_decrypt(
-    EVP_CIPHER_CTX* ctx,
-    unsigned char* macro,
-    unsigned char* out,
-    unsigned int step,
-    unsigned char* key,
-    unsigned char* iv
+static inline void do_step_decrypt(EVP_CIPHER_CTX* ctx, unsigned char* macro,
+    unsigned char* out, unsigned int step, unsigned char* key, unsigned char* iv
 ){
     unsigned int j, off, mask, start, dist;
     unsigned char buffer[MACRO_SIZE];
@@ -58,11 +48,7 @@ static inline void do_step_decrypt(
     }
 }
 
-static inline void* memxor(
-    void* dst,
-    const void* src,
-    size_t n
-){
+static inline void* memxor(void* dst, const void* src, size_t n){
     char *d = dst;
     char const *s = src;
     for (; n>0; --n) {
@@ -71,11 +57,8 @@ static inline void* memxor(
     return dst;
 }
 
-static inline void encrypt_macroblock(
-    unsigned char* macro,
-    unsigned char* out,
-    unsigned char* key,
-    unsigned char* iv
+static inline void encrypt_macroblock(unsigned char* macro,
+    unsigned char* out, unsigned char* key, unsigned char* iv
 ){
     int outl;
     unsigned int step;
@@ -99,11 +82,8 @@ static inline void encrypt_macroblock(
     EVP_CIPHER_CTX_cleanup(&ctx);
 }
 
-static inline void decrypt_macroblock(
-    unsigned char* macro,
-    unsigned char* out,
-    unsigned char* key,
-    unsigned char* iv
+static inline void decrypt_macroblock(unsigned char* macro,
+    unsigned char* out, unsigned char* key, unsigned char* iv
 ){
     int outl;
     unsigned int step;
@@ -126,12 +106,8 @@ static inline void decrypt_macroblock(
     EVP_CIPHER_CTX_cleanup(&ctx);
 }
 
-void encrypt(
-    unsigned char* data,
-    unsigned char* out,
-    unsigned long size,
-    unsigned char* key,
-    unsigned char* iv
+void encrypt(unsigned char* data, unsigned char* out,
+    unsigned long size, unsigned char* key, unsigned char* iv
 ){
     unsigned char* last = data + size;
     D assert(size % MACRO_SIZE == 0);
@@ -141,12 +117,8 @@ void encrypt(
     }
 }
 
-void decrypt(
-    unsigned char* data,
-    unsigned char* out,
-    unsigned long size,
-    unsigned char* key,
-    unsigned char* iv
+void decrypt(unsigned char* data, unsigned char* out,
+    unsigned long size, unsigned char* key, unsigned char* iv
 ){
     unsigned char* last = data + size;
     D assert(size % MACRO_SIZE == 0);
