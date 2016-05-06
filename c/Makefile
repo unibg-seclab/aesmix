@@ -1,4 +1,4 @@
-.PHONY:    all callgrind clean debug fresh test
+.PHONY:    all callgrind clean debug fresh test time
 
 TARGETS  = main blackbox
 
@@ -34,7 +34,7 @@ test: | clean debug
 	@ echo -e "\033[0;32mALL OK\033[0m"
 
 time: | clean main
-	@ echo -e "\nEncrypting 1GiB ..."
+	@ echo -e "\nENCRYPTING 1GiB ..."
 	@ time ./main 262144
 
 clean:
