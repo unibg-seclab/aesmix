@@ -5,23 +5,25 @@
 #include <math.h>
 #include "aes_lck.h"
 
+#define SHUFFLE(STEP, OFF, BP, MACRO, BUFFER, FROM, TO)                       \
+    unsigned int j, OFF, mask, start, dist;                                   \
+    unsigned char *bp = buffer;                                               \
+    mask = ((1 << DOF) - 1) << (STEP * DOF);                                  \
+    dist = (1 << (STEP * DOF)) * MINI_SIZE;                                   \
+    for (start=0; start < (1<<DIGITS); start=((start|mask)+1)&~mask) {        \
+        for (j=0, off=start*MINI_SIZE; j < MINI_PER_BLOCK; ++j, off+=dist) {  \
+            memcpy(FROM, TO, MINI_SIZE);                                      \
+            bp += MINI_SIZE;                                                  \
+        }                                                                     \
+    }
+
 static inline void do_step_encrypt(EVP_CIPHER_CTX* ctx, unsigned char* macro,
     unsigned char* out, unsigned int step, unsigned char* key, unsigned char* iv
 ){
-    unsigned int j, off, mask, start, dist;
     unsigned char buffer[MACRO_SIZE];
-    unsigned char *bp = buffer;
     int outl;
 
-    mask = ((1 << DOF) - 1) << (step * DOF);
-    dist = (1 << (step * DOF)) * MINI_SIZE;
-    for (start=0; start < (1<<DIGITS); start=((start|mask)+1)&~mask) {
-        for (j=0, off=start*MINI_SIZE; j < MINI_PER_BLOCK; ++j, off+=dist) {
-            memcpy(bp, macro + off, MINI_SIZE);
-            bp += MINI_SIZE;
-        }
-    }
-
+    SHUFFLE(step, off, bp, macro, buffer, bp, macro + off);
     EVP_EncryptUpdate(ctx, out, &outl, buffer, MACRO_SIZE);
     D assert(outl == MACRO_SIZE);
 }
@@ -29,22 +31,12 @@ static inline void do_step_encrypt(EVP_CIPHER_CTX* ctx, unsigned char* macro,
 static inline void do_step_decrypt(EVP_CIPHER_CTX* ctx, unsigned char* macro,
     unsigned char* out, unsigned int step, unsigned char* key, unsigned char* iv
 ){
-    unsigned int j, off, mask, start, dist;
     unsigned char buffer[MACRO_SIZE];
-    unsigned char *bp = buffer;
     int outl;
 
     EVP_DecryptUpdate(ctx, buffer, &outl, macro, MACRO_SIZE);
     D assert(outl == MACRO_SIZE);
-
-    mask = ((1 << DOF) - 1) << (step * DOF);
-    dist = (1 << (step * DOF)) * MINI_SIZE;
-    for (start=0; start < (1<<DIGITS); start=((start|mask)+1)&~mask) {
-        for (j=0, off=start*MINI_SIZE; j < MINI_PER_BLOCK; ++j, off+=dist) {
-            memcpy(out + off, bp, MINI_SIZE);
-            bp += MINI_SIZE;
-        }
-    }
+    SHUFFLE(step, off, bp, macro, buffer, out + off, bp);
 }
 
 static inline void* memxor(void* dst, const void* src, size_t n){
