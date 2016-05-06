@@ -71,7 +71,7 @@ static inline void* memxor(
     return dst;
 }
 
-void encrypt_macroblock(
+static inline void encrypt_macroblock(
     unsigned char* macro,
     unsigned char* out,
     unsigned char* key,
@@ -98,7 +98,7 @@ void encrypt_macroblock(
     D assert(0 == outl);
 }
 
-void decrypt_macroblock(
+static inline void decrypt_macroblock(
     unsigned char* macro,
     unsigned char* out,
     unsigned char* key,
