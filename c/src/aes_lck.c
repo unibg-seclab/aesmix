@@ -25,7 +25,7 @@ static inline void do_step_encrypt(EVP_CIPHER_CTX* ctx, unsigned char* macro,
 
     SHUFFLE(step, off, bp, macro, buffer, bp, macro + off);
     EVP_EncryptUpdate(ctx, out, &outl, buffer, MACRO_SIZE);
-    D assert(outl == MACRO_SIZE);
+    D assert(MACRO_SIZE == outl);
 }
 
 static inline void do_step_decrypt(EVP_CIPHER_CTX* ctx, unsigned char* macro,
@@ -35,7 +35,7 @@ static inline void do_step_decrypt(EVP_CIPHER_CTX* ctx, unsigned char* macro,
     int outl;
 
     EVP_DecryptUpdate(ctx, buffer, &outl, macro, MACRO_SIZE);
-    D assert(outl == MACRO_SIZE);
+    D assert(MACRO_SIZE == outl);
     SHUFFLE(step, off, bp, macro, buffer, out + off, bp);
 }
 
@@ -61,15 +61,13 @@ static inline void encrypt_macroblock(unsigned char* macro,
     memxor(macro, iv, BLOCK_SIZE);       // add IV to input
     EVP_EncryptUpdate(&ctx, out, &outl, macro, MACRO_SIZE);
     memxor(macro, iv, BLOCK_SIZE);       // remove IV from input
-    D assert(outl == MACRO_SIZE);
+    D assert(MACRO_SIZE == outl);
 
     // Steps 1 -> N
     for (step=1; step < DIGITS/DOF; ++step) {
         do_step_encrypt(&ctx, out, out, step, key, iv);
     }
 
-    EVP_EncryptFinal(&ctx, out + outl, &outl);
-    D assert(0 == outl);
     EVP_CIPHER_CTX_cleanup(&ctx);
 }
 
@@ -79,6 +77,7 @@ static inline void decrypt_macroblock(unsigned char* macro,
     int outl;
     unsigned int step;
     EVP_CIPHER_CTX ctx;
+
     EVP_DecryptInit(&ctx, EVP_aes_128_ecb(), key, iv);
     EVP_CIPHER_CTX_set_padding(&ctx, 0); // disable padding
 
@@ -91,9 +90,7 @@ static inline void decrypt_macroblock(unsigned char* macro,
     // Step 0
     EVP_DecryptUpdate(&ctx, out, &outl, out, MACRO_SIZE);
     memxor(out, iv, BLOCK_SIZE);         // remove IV from output
-    D assert(outl == MACRO_SIZE);
-    EVP_DecryptFinal(&ctx, out + outl, &outl);
-    D assert(0 == outl);
+    D assert(MACRO_SIZE == outl);
     EVP_CIPHER_CTX_cleanup(&ctx);
 }
 
@@ -105,7 +102,7 @@ static inline void process(short enc, unsigned char* data, unsigned char* out,
     EVP_CIPHER_CTX ctx;
     int outl;
 
-    D assert(size % MACRO_SIZE == 0);
+    D assert(0 == size % MACRO_SIZE);
     EVP_EncryptInit(&ctx, EVP_aes_128_cbc(), key, iv);
     EVP_CIPHER_CTX_set_padding(&ctx, 0); // disable padding
 
@@ -116,8 +113,6 @@ static inline void process(short enc, unsigned char* data, unsigned char* out,
             (data + n*MACRO_SIZE, out + n*MACRO_SIZE, key, miv);
     }
 
-    EVP_EncryptFinal(&ctx, miv, &outl);
-    D assert(0 == outl);
     EVP_CIPHER_CTX_cleanup(&ctx);
 }
 
