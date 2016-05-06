@@ -58,7 +58,7 @@ static inline void do_step_decrypt(
     }
 }
 
-static inline void memxor(
+static inline void* memxor(
     void* dst,
     const void* src,
     size_t n
@@ -68,6 +68,7 @@ static inline void memxor(
     for (; n>0; --n) {
         *d++ ^= *s++;
     }
+    return dst;
 }
 
 void encrypt_macroblock(
