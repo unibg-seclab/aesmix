@@ -76,7 +76,7 @@ void encrypt_macroblock(
     unsigned char* key,
     unsigned char* iv
 ){
-    int outl1;
+    int outl;
     unsigned int step;
     EVP_CIPHER_CTX ctx;
     EVP_EncryptInit(&ctx, EVP_aes_128_ecb(), key, iv);
@@ -84,17 +84,17 @@ void encrypt_macroblock(
 
     // Step 0
     memxor(macro, iv, BLOCK_SIZE);       // add IV to input
-    EVP_EncryptUpdate(&ctx, out, &outl1, macro, MACRO_SIZE);
+    EVP_EncryptUpdate(&ctx, out, &outl, macro, MACRO_SIZE);
     memxor(macro, iv, BLOCK_SIZE);       // remove IV from input
-    D assert(outl1 == MACRO_SIZE);
+    D assert(outl == MACRO_SIZE);
 
     // Steps 1 -> N
     for (step=1; step < DIGITS/DOF; ++step) {
         do_step_encrypt(&ctx, out, out, step, key, iv);
     }
 
-    EVP_EncryptFinal(&ctx, out + outl1, &outl1);
-    D assert(0 == outl1);
+    EVP_EncryptFinal(&ctx, out + outl, &outl);
+    D assert(0 == outl);
 }
 
 void decrypt_macroblock(
@@ -103,7 +103,7 @@ void decrypt_macroblock(
     unsigned char* key,
     unsigned char* iv
 ){
-    int outl1;
+    int outl;
     unsigned int step;
     EVP_CIPHER_CTX ctx;
     EVP_DecryptInit(&ctx, EVP_aes_128_ecb(), key, iv);
@@ -116,11 +116,11 @@ void decrypt_macroblock(
     }
 
     // Step 0
-    EVP_DecryptUpdate(&ctx, out, &outl1, out, MACRO_SIZE);
+    EVP_DecryptUpdate(&ctx, out, &outl, out, MACRO_SIZE);
     memxor(out, iv, BLOCK_SIZE);         // remove IV from output
-    D assert(outl1 == MACRO_SIZE);
-    EVP_DecryptFinal(&ctx, out + outl1, &outl1);
-    D assert(0 == outl1);
+    D assert(outl == MACRO_SIZE);
+    EVP_DecryptFinal(&ctx, out + outl, &outl);
+    D assert(0 == outl);
 }
 
 void encrypt(
