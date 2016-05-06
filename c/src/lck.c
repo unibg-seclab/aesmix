@@ -96,6 +96,7 @@ static inline void encrypt_macroblock(
 
     EVP_EncryptFinal(&ctx, out + outl, &outl);
     D assert(0 == outl);
+    EVP_CIPHER_CTX_cleanup(&ctx);
 }
 
 static inline void decrypt_macroblock(
@@ -122,6 +123,7 @@ static inline void decrypt_macroblock(
     D assert(outl == MACRO_SIZE);
     EVP_DecryptFinal(&ctx, out + outl, &outl);
     D assert(0 == outl);
+    EVP_CIPHER_CTX_cleanup(&ctx);
 }
 
 void encrypt(
