@@ -1,3 +1,6 @@
+#ifndef AES_LCK_H
+#define AES_LCK_H
+
 #define BLOCK_SIZE                                 16
 #define MINI_SIZE                                   4
 #define MINI_PER_MACRO                           1024
@@ -17,3 +20,5 @@ void encrypt(unsigned char* data, unsigned char* out, unsigned long size,
 
 void decrypt(unsigned char* data, unsigned char* out, unsigned long size,
              unsigned char* key, unsigned char* iv);
+
+#endif // AES_LCK_H
