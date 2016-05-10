@@ -7,7 +7,7 @@
 
 unsigned char key[] = "SQUEAMISHOSSIFRA";
 
-int main(int argc, char *argv[])
+int main()
 {
     unsigned char  in1[MACRO_SIZE];
     unsigned char  in2[MACRO_SIZE*2];
