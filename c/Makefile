@@ -3,7 +3,7 @@
 TARGETS  = main blackbox
 
 SRCDIR   = src
-CFLAGS  += -O6 -Wall
+CFLAGS  += -O6 -Wall -Wextra
 INC     += -Iincludes
 LDLIBS  += -lcrypto
 
