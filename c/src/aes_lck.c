@@ -18,8 +18,7 @@
     }
 
 static inline void do_step_encrypt(EVP_CIPHER_CTX* ctx,
-    const unsigned char* macro, unsigned char* out, const unsigned int step,
-    const unsigned char* key, const unsigned char* iv
+    const unsigned char* macro, unsigned char* out, const unsigned int step
 ){
     unsigned char buffer[MACRO_SIZE];
     int outl;
@@ -30,8 +29,7 @@ static inline void do_step_encrypt(EVP_CIPHER_CTX* ctx,
 }
 
 static inline void do_step_decrypt(EVP_CIPHER_CTX* ctx,
-    const unsigned char* macro, unsigned char* out, const unsigned int step,
-    const unsigned char* key, const unsigned char* iv
+    const unsigned char* macro, unsigned char* out, const unsigned int step
 ){
     unsigned char buffer[MACRO_SIZE];
     int outl;
@@ -67,7 +65,7 @@ static inline void encrypt_macroblock(const unsigned char* macro,
 
     // Steps 1 -> N
     for (step=1; step < DIGITS/DOF; ++step) {
-        do_step_encrypt(&ctx, out, out, step, key, iv);
+        do_step_encrypt(&ctx, out, out, step);
     }
 
     EVP_CIPHER_CTX_cleanup(&ctx);
@@ -85,7 +83,7 @@ static inline void decrypt_macroblock(const unsigned char* macro,
 
     // Steps N -> 1
     for (step = DIGITS/DOF - 1; step >= 1; --step) {
-        do_step_decrypt(&ctx, macro, out, step, key, iv);
+        do_step_decrypt(&ctx, macro, out, step);
         macro = out;   // this is needed to avoid a starting memcpy
     }
 
