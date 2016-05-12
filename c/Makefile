@@ -3,11 +3,12 @@
 TARGETS  = main blackbox multithread
 
 SRCDIR   = src
+TESTDIR  = test
 CFLAGS  += -O6 -Wall -Wextra
 INC     += -Iincludes
 LDLIBS  += -lcrypto
 
-vpath %.c $(SRCDIR) $(SRCDIR)/test
+vpath %.c $(SRCDIR) $(TESTDIR)
 
 all: $(TARGETS)
 
