@@ -24,7 +24,7 @@ main: aes_lck.o debug.o main.o
 blackbox: aes_lck.o debug.o blackbox.o
 	$(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
-multithread: aes_lck.o multithread.o
+multithread: aes_lck.o aes_lck_multi.o multithread.o
 	$(CC) $(LDFLAGS) $^ $(LDLIBS) -lpthread -o $@
 
 %.o: $(SRCDIR)/%.c
