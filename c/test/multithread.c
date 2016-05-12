@@ -31,7 +31,7 @@ int main(int argc, char *argv[]) {
     for (i=0; i < times; ++i) {
         t_encrypt(threads,  in, out, size, key, iv);
         t_decrypt(threads, out, dec, size, key, iv);
-        D assert(memcmp(in, dec, size));
+        assert(0 == memcmp(in, dec, size));
     }
     printf("DONE\n");
 
