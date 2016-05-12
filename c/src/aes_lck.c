@@ -101,7 +101,7 @@ static inline void process(const short enc, const unsigned char* data,
     const unsigned char* last = data + size;
     unsigned __int128 miv;
 
-    D assert(0 == size % MACRO_SIZE);
+    assert(0 == size % MACRO_SIZE);
     memcpy(&miv, iv, sizeof(miv));
 
     for ( ; data < last; data+=MACRO_SIZE, out+=MACRO_SIZE, miv++) {
