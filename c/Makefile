@@ -7,6 +7,8 @@ CFLAGS  += -O6 -Wall -Wextra
 INC     += -Iincludes
 LDLIBS  += -lcrypto
 
+vpath %.c $(SRCDIR) $(SRCDIR)/test
+
 all: $(TARGETS)
 
 fresh: | clean all
@@ -27,7 +29,7 @@ blackbox: aes_lck.o debug.o blackbox.o
 multithread: aes_lck.o aes_lck_multi.o multithread.o
 	$(CC) $(LDFLAGS) $^ $(LDLIBS) -lpthread -o $@
 
-%.o: $(SRCDIR)/%.c
+%.o: %.c
 	$(CC) $(CFLAGS) $(INC) -c -o $@ $<
 
 test: | clean debug
