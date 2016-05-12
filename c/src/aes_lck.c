@@ -51,8 +51,7 @@ static inline void* memxor(void* dst, const void* src, size_t n){
 static inline void encrypt_macroblock(const unsigned char* macro,
     unsigned char* out, const unsigned char* key, const unsigned char* iv
 ){
-    int outl;
-    unsigned int step;
+    int step, outl;
     EVP_CIPHER_CTX ctx;
     EVP_EncryptInit(&ctx, EVP_aes_128_ecb(), key, iv);
     EVP_CIPHER_CTX_set_padding(&ctx, 0); // disable padding
@@ -74,8 +73,7 @@ static inline void encrypt_macroblock(const unsigned char* macro,
 static inline void decrypt_macroblock(const unsigned char* macro,
     unsigned char* out, const unsigned char* key, const unsigned char* iv
 ){
-    int outl;
-    unsigned int step;
+    int step, outl;
     EVP_CIPHER_CTX ctx;
 
     EVP_DecryptInit(&ctx, EVP_aes_128_ecb(), key, iv);
