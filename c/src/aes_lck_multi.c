@@ -19,7 +19,7 @@ static void *w_encrypt(void *data){
 
 static void *w_decrypt(void *data){
     aeslck_args *args = data;
-    encrypt(args->data, args->out, args->size, args->key, args->iv);
+    decrypt(args->data, args->out, args->size, args->key, args->iv);
     return NULL;  // TODO return something meaningful
 }
 
