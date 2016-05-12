@@ -14,3 +14,4 @@ gmon.out
 # binaries
 /c/main
 /c/blackbox
+/c/multithread

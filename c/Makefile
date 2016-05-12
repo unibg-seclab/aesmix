@@ -1,6 +1,6 @@
 .PHONY:    all callgrind clean debug fresh test time
 
-TARGETS  = main blackbox
+TARGETS  = main blackbox multithread
 
 SRCDIR   = src
 CFLAGS  += -O6 -Wall -Wextra
@@ -23,6 +23,9 @@ main: aes_lck.o debug.o main.o
 
 blackbox: aes_lck.o debug.o blackbox.o
 	$(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@
+
+multithread: aes_lck.o multithread.o
+	$(CC) $(LDFLAGS) $^ $(LDLIBS) -lpthread -o $@
 
 %.o: $(SRCDIR)/%.c
 	$(CC) $(CFLAGS) $(INC) -c -o $@ $<
