@@ -6,7 +6,7 @@ logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.DEBUG)
 
 from math import log
 
-class AESLCK:
+class AESMIX:
     _BS = 16
 
     def __init__(self, key, mini_size=4, macro_num=1024):

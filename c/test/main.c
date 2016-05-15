@@ -3,7 +3,7 @@
 #include <string.h>
 #include <stdio.h>
 #include "debug.h"
-#include "aes_lck.h"
+#include "aes_mix.h"
 
 #ifdef DEBUG
 #define SIZE  (MACRO_SIZE*4)
@@ -28,7 +28,7 @@ int main(int argc, char *argv[])
     memcpy(orig, in, SIZE);
     D printx("PLAINTEXT: ", in, SIZE, MINI_SIZE)
 
-    printf("AESLCK-ing %d * %d macroblocks ...\n", SIZE/MACRO_SIZE, macros);
+    printf("AESMIX-ing %d * %d macroblocks ...\n", SIZE/MACRO_SIZE, macros);
     for (i=0; i < macros; ++i) {
         D RAND_pseudo_bytes(iv, BLOCK_SIZE);
         D printx("IV: ", iv, BLOCK_SIZE, MINI_SIZE);

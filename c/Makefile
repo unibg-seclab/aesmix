@@ -21,10 +21,10 @@ callgrind: CFLAGS += -g
 callgrind: | clean main
 	valgrind --tool=callgrind --callgrind-out-file=callgrind.out ./main 1024
 
-main: aes_lck.o debug.o main.o
+main: aes_mix.o debug.o main.o
 	$(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
-blackbox: aes_lck.o debug.o blackbox.o
+blackbox: aes_mix.o debug.o blackbox.o
 	$(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
 multithread: aes_lck.o aes_lck_multi.o multithread.o

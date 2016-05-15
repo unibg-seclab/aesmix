@@ -1,5 +1,5 @@
-#ifndef AES_LCK_H
-#define AES_LCK_H
+#ifndef AES_MIX_H
+#define AES_MIX_H
 
 #define BLOCK_SIZE                                 16
 #define MINI_SIZE                                   4
@@ -23,4 +23,4 @@ void decrypt(const unsigned char* data, unsigned char* out,
              const unsigned long size, const unsigned char* key,
              const unsigned char* iv);
 
-#endif // AES_LCK_H
+#endif // AES_MIX_H

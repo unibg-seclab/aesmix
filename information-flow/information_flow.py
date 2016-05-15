@@ -6,7 +6,7 @@ from math import log
 
 ## This module uses counter insted of actual data, to check that at the end
 ## of the shuffling part, the entropy of each block has reached all the
-## blocks in the macroblock (the whole meaning of AES LCK).
+## blocks in the macroblock (the whole meaning of AES MIX).
 ## This module is used to test the shuffling part and verify the assertion.
 
 

@@ -1,2 +1,2 @@
-# aeslock
-AES LCK implementation and tests
+# aesmix
+AES MIX implementation and tests

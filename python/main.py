@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from lck import AESLCK
+from mix import AESMIX
 
 with open('data/lipsum4096.txt') as f:
     data = f.read().strip()
@@ -8,10 +8,10 @@ with open('data/lipsum4096.txt') as f:
 print('PLAINTEXT: %s' % data)
 
 key = 'keykeykeykeykeyk'
-lck = AESLCK(key)
+mix = AESMIX(key)
 
-cipher = lck.encrypt(data)
+cipher = mix.encrypt(data)
 print('CIPHERTEXT: %r' % cipher)
 
-plain = lck.decrypt(cipher)
+plain = mix.decrypt(cipher)
 print('DECRYPTED: %s' % plain)

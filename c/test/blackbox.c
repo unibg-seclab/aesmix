@@ -3,7 +3,7 @@
 #include <string.h>
 #include <stdio.h>
 #include "debug.h"
-#include "aes_lck.h"
+#include "aes_mix.h"
 
 unsigned char key[] = "SQUEAMISHOSSIFRA";
 

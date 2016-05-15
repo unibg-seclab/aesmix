@@ -3,7 +3,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <math.h>
-#include "aes_lck.h"
+#include "aes_mix.h"
 
 #define SHUFFLE(STEP, OFF, BP, MACRO, BUFFER, FROM, TO)                       \
     unsigned int j, OFF, mask, start, dist;                                   \
