@@ -27,7 +27,7 @@ main: aes_mix.o debug.o main.o
 blackbox: aes_mix.o debug.o blackbox.o
 	$(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
-multithread: aes_lck.o aes_lck_multi.o multithread.o
+multithread: aes_mix.o aes_mix_multi.o multithread.o
 	$(CC) $(LDFLAGS) $^ $(LDLIBS) -lpthread -o $@
 
 %.o: %.c

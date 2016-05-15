@@ -1,7 +1,7 @@
-#ifndef AES_LCK_MULTI_H
-#define AES_LCK_MULTI_H
+#ifndef AES_MIX_MULTI_H
+#define AES_MIX_MULTI_H
 
-#include <aes_lck.h>
+#include <aes_mix.h>
 
 void t_encrypt(unsigned int thr, const unsigned char* data, unsigned char* out,
     const unsigned long size, const unsigned char* key, const unsigned char* iv);
@@ -9,4 +9,4 @@ void t_encrypt(unsigned int thr, const unsigned char* data, unsigned char* out,
 void t_decrypt(unsigned int thr, const unsigned char* data, unsigned char* out,
     const unsigned long size, const unsigned char* key, const unsigned char* iv);
 
-#endif // AES_LCK_MULTI_H
+#endif // AES_MIX_MULTI_H

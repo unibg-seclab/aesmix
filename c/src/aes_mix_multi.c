@@ -1,24 +1,24 @@
 #include <pthread.h>
 #include <assert.h>
 
-#include "aes_lck_multi.h"
+#include "aes_mix_multi.h"
 
-typedef struct aeslck_args_s {
+typedef struct aesmix_args_s {
     const unsigned char* data;
     unsigned char* out;
     unsigned long size;
     const unsigned char* key;
     const unsigned char* iv;
-} aeslck_args;
+} aesmix_args;
 
 static void *w_encrypt(void *data){
-    aeslck_args *args = data;
+    aesmix_args *args = data;
     encrypt(args->data, args->out, args->size, args->key, args->iv);
     return NULL;  // TODO return something meaningful
 }
 
 static void *w_decrypt(void *data){
-    aeslck_args *args = data;
+    aesmix_args *args = data;
     decrypt(args->data, args->out, args->size, args->key, args->iv);
     return NULL;  // TODO return something meaningful
 }
@@ -28,9 +28,9 @@ static inline void process(const short enc, unsigned int thr,
     const unsigned char* key, const unsigned char* iv
 ){
     pthread_t thread[thr];
-    aeslck_args args[thr];
+    aesmix_args args[thr];
     unsigned long tsize = size / thr;
-    aeslck_args* a;
+    aesmix_args* a;
     unsigned int t;
 
     assert(0 == size % MACRO_SIZE);

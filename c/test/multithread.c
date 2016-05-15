@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "aes_lck_multi.h"
+#include "aes_mix_multi.h"
 
 #define MACROS               4
 #define THREADS              2
