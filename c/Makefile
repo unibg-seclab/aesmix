@@ -1,4 +1,4 @@
-.PHONY:    all callgrind clean cleanall debug fresh multitest test time
+.PHONY:    all callgrind clean cleanall debug fresh multitest noaesni test time
 
 SRCDIR   = src
 CFLAGS  += -O6 -Wall -Wextra
@@ -21,6 +21,8 @@ fresh: | clean all
 
 debug: CFLAGS += -DDEBUG -g
 debug: all
+
+noaesni: export OPENSSL_ia32cap = "~0x200000200000000"
 
 callgrind: CFLAGS += -g
 callgrind: | clean main
@@ -46,16 +48,16 @@ $(DUMMYFILE): $(TESTDIR)/data
 
 test: | clean debug
 	@ echo -e "\nRUNNING TESTS ..."
-	@ ./main 1 &> /dev/null || ./main 1
-	@ ./blackbox &> /dev/null || ./blackbox
+	@ $(ENV) ./main 1 &> /dev/null || ./main 1
+	@ $(ENV) ./blackbox &> /dev/null || ./blackbox
 	@ echo -e "\033[0;32mALL OK\033[0m"
 
 time: | clean main
 	@ echo -e "\nENCRYPTING 1GiB ..."
-	@ time ./main 262144
+	@ $(ENV) time ./main 262144
 
 multitest: multithread $(DUMMYFILE)
-	./multithread $(DUMMYFILE) $(DUMMYFILE).out $(THREADS) $(TIMES)
+	$(ENV) ./multithread $(DUMMYFILE) $(DUMMYFILE).out $(THREADS) $(TIMES)
 
 clean:
 	@ rm -f $(TARGETS) *.o *.out
