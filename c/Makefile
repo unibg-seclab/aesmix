@@ -9,7 +9,7 @@ LDLIBS  += -lcrypto
 TARGETS   = main blackbox multithread
 TESTDIR   = test
 DUMMYFILE = $(TESTDIR)/data/file.dummy
-DUMMYSIZE = $$(( 2 ** 30 ))
+DUMMYSIZE = $$(( 1024 * 1024 * 1024 ))
 THREADS   = 128
 TIMES     = 1
 
