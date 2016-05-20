@@ -1,9 +1,16 @@
 #ifndef AES_MIX_H
 #define AES_MIX_H
 
+#ifndef BLOCK_SIZE
 #define BLOCK_SIZE                                 16
+#endif
+#ifndef MINI_SIZE
 #define MINI_SIZE                                   4
+#endif
+#ifndef MINI_PER_MACRO
 #define MINI_PER_MACRO                           1024
+#endif
+
 #define MINI_PER_BLOCK       (BLOCK_SIZE / MINI_SIZE)
 #define MACRO_SIZE       (MINI_SIZE * MINI_PER_MACRO)
 #define DIGITS           ((int) log2(MINI_PER_MACRO))
