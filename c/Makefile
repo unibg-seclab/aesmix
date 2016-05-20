@@ -1,12 +1,17 @@
-.PHONY:    all callgrind clean debug fresh test time
-
-TARGETS  = main blackbox multithread
+.PHONY:    all callgrind clean cleanall debug fresh multitest test time
 
 SRCDIR   = src
-TESTDIR  = test
 CFLAGS  += -O6 -Wall -Wextra
 INC     += -Iincludes
 LDLIBS  += -lcrypto
+
+# TEST
+TARGETS   = main blackbox multithread
+TESTDIR   = test
+DUMMYFILE = $(TESTDIR)/data/file.dummy
+DUMMYSIZE = $$(( 2 ** 30 ))
+THREADS   = 128
+TIMES     = 1
 
 vpath %.c $(SRCDIR) $(TESTDIR)
 
@@ -33,6 +38,12 @@ multithread: aes_mix.o aes_mix_multi.o multithread.o
 %.o: %.c
 	$(CC) $(CFLAGS) $(INC) -c -o $@ $<
 
+$(TESTDIR)/data:
+	mkdir -p $@
+
+$(DUMMYFILE): $(TESTDIR)/data
+	openssl rand -out $@ $(DUMMYSIZE)
+
 test: | clean debug
 	@ echo -e "\nRUNNING TESTS ..."
 	@ ./main 1 &> /dev/null || ./main 1
@@ -43,5 +54,11 @@ time: | clean main
 	@ echo -e "\nENCRYPTING 1GiB ..."
 	@ time ./main 262144
 
+multitest: multithread $(DUMMYFILE)
+	./multithread $(DUMMYFILE) $(DUMMYFILE).out $(THREADS) $(TIMES)
+
 clean:
 	@ rm -f $(TARGETS) *.o *.out
+
+cleanall: clean
+	@ rm -f $(DUMMYFILE) $(DUMMYFILE).out
