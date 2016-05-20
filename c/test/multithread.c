@@ -22,6 +22,7 @@ double test(
     unsigned char *in;
     unsigned char *dec;
     unsigned char *out;
+    unsigned long bytes;
     unsigned int i;
     struct timespec start, finish;
     double elapsed = 0;
@@ -32,8 +33,13 @@ double test(
     out = malloc(size);
 
     fp = fopen(filename, "rb");
-    fread(in, 1, size, fp);
+    bytes = fread(in, 1, size, fp);
     fclose(fp);
+
+    if (bytes != size) {
+        printf("Can read only %lu Bytes from file\n", bytes);
+        return EXIT_FAILURE;
+    }
 
     RAND_pseudo_bytes(key, BLOCK_SIZE);
     RAND_pseudo_bytes(iv, BLOCK_SIZE);
@@ -53,8 +59,13 @@ double test(
     }
 
     fp = fopen(output, "wb");
-    fwrite(dec, 1, size, fp);
+    bytes = fwrite(dec, 1, size, fp);
     fclose(fp);
+
+    if (bytes != size) {
+        printf("Can write only %lu Bytes from file\n", bytes);
+        return EXIT_FAILURE;
+    }
 
     free(in);
     free(out);
@@ -90,4 +101,6 @@ int main(int argc, char *argv[]) {
         elapsed = test(filename, output, size, t, times);
         printf("DONE in %f seconds.\n", elapsed);
     }
+
+    return EXIT_SUCCESS;
 }
