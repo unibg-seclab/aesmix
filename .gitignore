@@ -19,3 +19,7 @@ gmon.out
 # temporary files
 *.dec
 *.out
+
+# dummy files
+*.dummy
+*.dummy.out
