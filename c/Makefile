@@ -65,13 +65,13 @@ printvars:
 
 test: | clean debug printvars
 	@ echo -e "\nRUNNING TESTS ..."
-	@ $(ENV) ./main 1 &> /dev/null || ./main 1
-	@ $(ENV) ./blackbox &> /dev/null || ./blackbox
+	@ ./main 1 &> /dev/null || ./main 1
+	@ ./blackbox &> /dev/null || ./blackbox
 	@ echo -e "\033[0;32mALL OK\033[0m"
 
 time: | clean main printvars
 	@ echo -e "\nENCRYPTING 1GiB ..."
-	@ $(ENV) time ./main $$((1024*1024*1024 / ($(MINI_SIZE)*$(MINI_PER_MACRO))))
+	@ time ./main $$((1024*1024*1024 / ($(MINI_SIZE)*$(MINI_PER_MACRO))))
 
 supertest: clean
 	@ for aesni in 1 0; do \
@@ -86,7 +86,7 @@ supertest: clean
 	done
 
 multitest: | clean multithread $(DUMMYFILE) printvars
-	$(ENV) ./multithread $(DUMMYFILE) $(DUMMYFILE).out $(THREADS) $(TIMES)
+	./multithread $(DUMMYFILE) $(DUMMYFILE).out $(THREADS) $(TIMES)
 
 clean:
 	@ rm -f $(TARGETS) *.o *.out
