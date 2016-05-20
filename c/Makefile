@@ -1,4 +1,5 @@
-.PHONY:    all callgrind clean cleanall debug fresh multitest test time
+.PHONY:	all callgrind clean cleanall debug fresh multitest printvars \
+		supertest test time
 
 # DEFINES
 MINI_SIZE      =    4
@@ -58,17 +59,33 @@ $(TESTDIR)/data:
 $(DUMMYFILE): $(TESTDIR)/data
 	openssl rand -out $@ $(DUMMYSIZE)
 
-test: | clean debug
+printvars:
+	@ printf "\nAESNI=%d MINI=%d MPM=%d\n" \
+		$(AESNI) $(MINI_SIZE) $(MINI_PER_MACRO)
+
+test: | clean debug printvars
 	@ echo -e "\nRUNNING TESTS ..."
 	@ $(ENV) ./main 1 &> /dev/null || ./main 1
 	@ $(ENV) ./blackbox &> /dev/null || ./blackbox
 	@ echo -e "\033[0;32mALL OK\033[0m"
 
-time: | clean main
+time: | clean main printvars
 	@ echo -e "\nENCRYPTING 1GiB ..."
 	@ $(ENV) time ./main $$((1024*1024*1024 / ($(MINI_SIZE)*$(MINI_PER_MACRO))))
 
-multitest: multithread $(DUMMYFILE)
+supertest: clean
+	@ for aesni in 1 0; do \
+		for mini in 2 4 8; do \
+			for mpm in 16 64 256 1024 4096; do \
+				$(MAKE) -s multitest \
+					AESNI=$$aesni \
+					MINI_SIZE=$$mini \
+					MINI_PER_MACRO=$$mpm; \
+			done \
+		done \
+	done
+
+multitest: | clean multithread $(DUMMYFILE) printvars
 	$(ENV) ./multithread $(DUMMYFILE) $(DUMMYFILE).out $(THREADS) $(TIMES)
 
 clean:
