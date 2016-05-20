@@ -1,17 +1,26 @@
 .PHONY:    all callgrind clean cleanall debug fresh multitest test time
 
-SRCDIR   = src
-CFLAGS  += -O6 -Wall -Wextra
-INC     += -Iincludes
-LDLIBS  += -lcrypto
+# DEFINES
+MINI_SIZE      =    4
+BLOCK_SIZE     =   16
+MINI_PER_MACRO = 1024
 
 # TEST
-TARGETS   = main blackbox multithread
 TESTDIR   = test
 DUMMYFILE = $(TESTDIR)/data/file.dummy
 DUMMYSIZE = $$(( 1024 * 1024 * 1024 ))
 THREADS   = 128
 TIMES     = 1
+
+# DO NOT TOUCH
+TARGETS   = main blackbox multithread
+SRCDIR    = src
+CFLAGS   += -O6 -Wall -Wextra
+CFLAGS   += -DMINI_SIZE=$(MINI_SIZE)
+CFLAGS   += -DBLOCK_SIZE=$(BLOCK_SIZE)
+CFLAGS   += -DMINI_PER_MACRO=$(MINI_PER_MACRO)
+INC      += -Iincludes
+LDLIBS   += -lcrypto
 AESNI     = 1
 
 ifneq ($(AESNI),1)
@@ -57,7 +66,7 @@ test: | clean debug
 
 time: | clean main
 	@ echo -e "\nENCRYPTING 1GiB ..."
-	@ $(ENV) time ./main 262144
+	@ $(ENV) time ./main $$((1024*1024*1024 / ($(MINI_SIZE)*$(MINI_PER_MACRO))))
 
 multitest: multithread $(DUMMYFILE)
 	$(ENV) ./multithread $(DUMMYFILE) $(DUMMYFILE).out $(THREADS) $(TIMES)
