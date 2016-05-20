@@ -1,39 +1,39 @@
 #include <openssl/rand.h>
+#include <sys/stat.h>
 #include <assert.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
-
 #include "aes_mix_multi.h"
 
-#define MACROS               4
-#define THREADS              2
+#define THREADS              4
 #define TIMES             1024
 
-int main(int argc, char *argv[]) {
-    unsigned long i, threads, size, times;
+double test(
+    char *filename,
+    char *output,
+    unsigned long size,
+    unsigned int threads,
+    unsigned int times
+) {
     unsigned char key[BLOCK_SIZE];
     unsigned char  iv[BLOCK_SIZE];
     unsigned char *in;
     unsigned char *dec;
     unsigned char *out;
+    unsigned int i;
     struct timespec start, finish;
     double elapsed = 0;
-    //FILE *fp;
-
-    threads = argc > 1 ? atoi(argv[1]) : THREADS;
-    size = MACRO_SIZE * (argc > 2 ? atoi(argv[2]) : MACROS);
-    times = argc > 3 ? atoi(argv[3]) : TIMES;
+    FILE *fp;
 
     in = malloc(size);
     dec = malloc(size);
     out = malloc(size);
 
-    //fp = fopen("test/data/video_10mb.mp4", "rb");
-    //fread(in, 1, size, fp);
-    //fclose(fp);
-    RAND_pseudo_bytes(in, size);
+    fp = fopen(filename, "rb");
+    fread(in, 1, size, fp);
+    fclose(fp);
 
     RAND_pseudo_bytes(key, BLOCK_SIZE);
     RAND_pseudo_bytes(iv, BLOCK_SIZE);
@@ -44,21 +44,50 @@ int main(int argc, char *argv[]) {
         t_encrypt(threads, in, out, size, key, iv);
 
         D printf("DECRYPTION (size %lu)\n", size);
-        t_decrypt(threads, out, dec, size, key, iv);
+        D t_decrypt(threads, out, dec, size, key, iv);
         clock_gettime(CLOCK_MONOTONIC, &finish);
         elapsed += (finish.tv_sec - start.tv_sec);
         elapsed += (finish.tv_nsec - start.tv_nsec) / 1000000000.0;
 
-        assert(0 == memcmp(in, dec, size));
+        D assert(0 == memcmp(in, dec, size));
     }
 
-    //fp = fopen("test/data/video_10mb.mp4.out", "wb");
-    //fwrite(dec, 1, size, fp);
-    //fclose(fp);
+    fp = fopen(output, "wb");
+    fwrite(dec, 1, size, fp);
+    fclose(fp);
 
     free(in);
     free(out);
     free(dec);
 
-    printf("DONE in %f seconds.\n", elapsed);
+    return elapsed;
+}
+
+int main(int argc, char *argv[]) {
+    unsigned int t, threads, times;
+    unsigned long size;
+    char *filename, *output;
+    double elapsed;
+    struct stat st;
+
+    if (argc < 3) {
+        printf("Usage: ./%s FILE OUTPUT THREADS TIMES\n", argv[0]);
+        return EXIT_FAILURE;
+    }
+
+    filename = argv[1];
+    stat(filename, &st);
+    size = st.st_size;
+
+    output = argv[2];
+    threads = argc > 3 ? atoi(argv[3]) : THREADS;
+    times = argc > 4 ? atoi(argv[4]) : TIMES;
+    printf("%i %i\n", threads, times);
+
+    for (t=1; t<=threads; t*=2) {
+        printf("AESMIX-ing %s (%luB) with %d threads %d times\n",
+               filename, size, t, times);
+        elapsed = test(filename, output, size, t, times);
+        printf("DONE in %f seconds.\n", elapsed);
+    }
 }
