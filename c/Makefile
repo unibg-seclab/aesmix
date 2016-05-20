@@ -1,4 +1,4 @@
-.PHONY:    all callgrind clean cleanall debug fresh multitest noaesni test time
+.PHONY:    all callgrind clean cleanall debug fresh multitest test time
 
 SRCDIR   = src
 CFLAGS  += -O6 -Wall -Wextra
@@ -12,6 +12,11 @@ DUMMYFILE = $(TESTDIR)/data/file.dummy
 DUMMYSIZE = $$(( 1024 * 1024 * 1024 ))
 THREADS   = 128
 TIMES     = 1
+AESNI     = 1
+
+ifneq ($(AESNI),1)
+export OPENSSL_ia32cap = "~0x200000200000000"
+endif
 
 vpath %.c $(SRCDIR) $(TESTDIR)
 
@@ -21,8 +26,6 @@ fresh: | clean all
 
 debug: CFLAGS += -DDEBUG -g
 debug: all
-
-noaesni: export OPENSSL_ia32cap = "~0x200000200000000"
 
 callgrind: CFLAGS += -g
 callgrind: | clean main
