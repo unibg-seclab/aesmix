@@ -15,3 +15,7 @@ gmon.out
 /c/main
 /c/blackbox
 /c/multithread
+
+# temporary files
+*.dec
+*.out
