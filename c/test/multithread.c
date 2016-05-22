@@ -93,7 +93,6 @@ int main(int argc, char *argv[]) {
     output = argv[2];
     threads = argc > 3 ? atoi(argv[3]) : THREADS;
     times = argc > 4 ? atoi(argv[4]) : TIMES;
-    printf("%i %i\n", threads, times);
 
     for (t=1; t<=threads; t*=2) {
         printf("AESMIX-ing %s (%luB) with %d threads %d times\n",
