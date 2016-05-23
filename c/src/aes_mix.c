@@ -17,23 +17,19 @@
         }                                                                     \
     }
 
-static inline void do_step_encrypt(EVP_CIPHER_CTX* ctx,
+static inline void do_step_encrypt(EVP_CIPHER_CTX* ctx, unsigned char* buffer,
     const unsigned char* macro, unsigned char* out, const unsigned int step
 ){
-    unsigned char buffer[MACRO_SIZE];
     int outl;
-
     SHUFFLE(step, off, bp, macro, buffer, bp, macro + off);
     EVP_EncryptUpdate(ctx, out, &outl, buffer, MACRO_SIZE);
     D assert(MACRO_SIZE == outl);
 }
 
-static inline void do_step_decrypt(EVP_CIPHER_CTX* ctx,
+static inline void do_step_decrypt(EVP_CIPHER_CTX* ctx, unsigned char* buffer,
     const unsigned char* macro, unsigned char* out, const unsigned int step
 ){
-    unsigned char buffer[MACRO_SIZE];
     int outl;
-
     EVP_DecryptUpdate(ctx, buffer, &outl, macro, MACRO_SIZE);
     D assert(MACRO_SIZE == outl);
     SHUFFLE(step, off, bp, macro, buffer, out + off, bp);
@@ -49,7 +45,8 @@ static inline void* memxor(void* dst, const void* src, size_t n){
 }
 
 static inline void encrypt_macroblock(const unsigned char* macro,
-    unsigned char* out, const unsigned char* key, const unsigned char* iv
+    unsigned char* out, unsigned char* buffer,
+    const unsigned char* key, const unsigned char* iv
 ){
     int step, outl;
     EVP_CIPHER_CTX ctx;
@@ -64,14 +61,15 @@ static inline void encrypt_macroblock(const unsigned char* macro,
 
     // Steps 1 -> N
     for (step=1; step < DIGITS/DOF; ++step) {
-        do_step_encrypt(&ctx, out, out, step);
+        do_step_encrypt(&ctx, buffer, out, out, step);
     }
 
     EVP_CIPHER_CTX_cleanup(&ctx);
 }
 
 static inline void decrypt_macroblock(const unsigned char* macro,
-    unsigned char* out, const unsigned char* key, const unsigned char* iv
+    unsigned char* out, unsigned char* buffer,
+    const unsigned char* key, const unsigned char* iv
 ){
     int step, outl;
     EVP_CIPHER_CTX ctx;
@@ -81,7 +79,7 @@ static inline void decrypt_macroblock(const unsigned char* macro,
 
     // Steps N -> 1
     for (step = DIGITS/DOF - 1; step >= 1; --step) {
-        do_step_decrypt(&ctx, macro, out, step);
+        do_step_decrypt(&ctx, buffer, macro, out, step);
         macro = out;   // this is needed to avoid a starting memcpy
     }
 
@@ -98,14 +96,22 @@ static inline void process(const short enc, const unsigned char* data,
 ){
     const unsigned char* last = data + size;
     unsigned __int128 miv;
+    unsigned char* buffer = malloc(MACRO_SIZE);
+
+    if ( NULL == buffer ) {
+        printf("Cannot allocate needed memory\n");
+        exit(EXIT_FAILURE);
+    }
 
     assert(0 == size % MACRO_SIZE);
     memcpy(&miv, iv, sizeof(miv));
 
     for ( ; data < last; data+=MACRO_SIZE, out+=MACRO_SIZE, miv++) {
         (enc ? encrypt_macroblock : decrypt_macroblock)
-            (data, out, key, (unsigned char*) &miv);
+            (data, out, buffer, key, (unsigned char*) &miv);
     }
+
+    free(buffer);
 }
 
 void encrypt(const unsigned char* data, unsigned char* out,
