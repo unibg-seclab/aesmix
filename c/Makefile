@@ -28,6 +28,11 @@ ifneq ($(AESNI),1)
 export OPENSSL_ia32cap = "~0x200000200000000"
 endif
 
+ifeq ($(shell uname), Darwin)  # OSX
+    LDFLAGS  += -L/usr/local/opt/openssl/lib
+    CFLAGS   += -I/usr/local/opt/openssl/include
+endif
+
 vpath %.c $(SRCDIR) $(TESTDIR)
 
 all: $(TARGETS)
