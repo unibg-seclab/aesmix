@@ -12,9 +12,9 @@ callgrind.out*
 gmon.out
 
 # binaries
-/c/main
-/c/blackbox
-/c/multithread
+main
+blackbox
+multithread
 
 # temporary files
 *.dec
