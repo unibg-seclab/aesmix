@@ -16,16 +16,16 @@ those from whom access is revoked.
 The approach identifies the following basic concepts:
 
  * **Block**: a sequence of bits input to a block cipher (it corresponds to the
-   classical block concept)
+   classical block concept).
 
  * **Mini-block**: a sequence of bits, of a specified length, contained in a block.
    It represents our atomic unit of protection (i.e., when removing bits, we will
-   operate at the level of mini-block removing all its bits)
+   operate at the level of mini-block removing all its bits).
 
  * **Macro-block**: a sequence of blocks. It allows extend- ing the application of
    block cipher on sequences of bits larger than individual blocks. In particular,
    our ap- proach operates mixing bits at the macro-block level, extending
-   protection to work against attacks beyond the individual block
+   protection to work against attacks beyond the individual block.
 
 
 ## implementation
@@ -40,9 +40,9 @@ hardware-accelerated AES-NI primitives when available.
 
 The files `includes/aes_mix.h` contains the following three definitions:
 
- * `BLOCK_SIZE`: number of bytes in a cipher block (16 bytes for AES)
- * `MINI_SIZE`: number of bytes in a miniblock
- * `MINI_PER_MACRO`: number of mini-blocks in a macro-block
+ * `BLOCK_SIZE`: number of bytes in a cipher block (16 bytes for AES).
+ * `MINI_SIZE`: number of bytes in a miniblock.
+ * `MINI_PER_MACRO`: number of mini-blocks in a macro-block.
 
 *These entities can be modified at compile time to try with different sizes*
 
@@ -93,13 +93,13 @@ See the file `test/multithread.c` for an example of use of Mix&Slice.
 There are three test suites:
 
  * *main*: is the main test suite that verifies that Mix&Slice principles
-   are enforced
+   are enforced.
 
  * *blackbox*: test suite that verifies that the Mix&Slice principles in
-   an *abstract* sense (without knowledge about the code)
+   an *abstract* sense (without knowledge about the code).
 
  * *multithread*: test suite that verifies that the Mix&Slice principles
-   are enforced in the multi-threaded implementation
+   are enforced in the multi-threaded implementation.
 
 
 ## compile
