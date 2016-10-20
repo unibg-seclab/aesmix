@@ -1,8 +1,13 @@
 # aesmix
 
-Open source implementation of the _Mix&Slice_ encryption mode described in the paper:
+Open source base implementation of the _Mix&Slice_ encryption mode described in the paper:
 [Mix&Slice: Efficient Access Revocation in the Cloud](http://spdp.di.unimi.it/papers/bdfprs-ccs2016.pdf)
 presented at the 23rd ACM Conference on Computer and Communication Security (CCS 2016).
+
+<p align="center">
+  <img src="https://cdn.rawgit.com/unibg-seclab/aesmix/master/doc/fragments.svg"
+       alt="Mix&Slice" width="80%" />
+</p>
 
 
 ## idea
@@ -27,6 +32,10 @@ The approach identifies the following basic concepts:
    our approach operates mixing bits at the macro-block level, extending
    protection to work against attacks beyond the individual block.
 
+<p align="center">
+  <img src="https://cdn.rawgit.com/unibg-seclab/aesmix/master/doc/mixing.svg"
+       alt="Mix&Slice blocks" width="60%" />
+</p>
 
 ## implementation
 
@@ -95,8 +104,8 @@ There are three test suites:
  * *main*: is the main test suite that verifies that Mix&Slice principles
    are enforced.
 
- * *blackbox*: test suite that verifies that the Mix&Slice principles in
-   an *abstract* sense (without knowledge about the code).
+ * *blackbox*: test suite that verifies the Mix&Slice principles in an
+   *abstract* sense (without knowledge about the code).
 
  * *multithread*: test suite that verifies that the Mix&Slice principles
    are enforced in the multi-threaded implementation.
