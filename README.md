@@ -13,19 +13,19 @@ it is then sufficient to update a small portion of it, with the guarantee that
 the resource as a whole (and any portion of it) will become unintelligible to
 those from whom access is revoked.
 
-our approach identifies the following basic concepts:
+The approach identifies the following basic concepts:
 
  * **Block**: a sequence of bits input to a block cipher (it corresponds to the
    classical block concept)
-   
+
  * **Mini-block**: a sequence of bits, of a specified length, contained in a block.
    It represents our atomic unit of protection (i.e., when removing bits, we will
    operate at the level of mini-block removing all its bits)
-   
+
  * **Macro-block**: a sequence of blocks. It allows extend- ing the application of
    block cipher on sequences of bits larger than individual blocks. In particular,
    our ap- proach operates mixing bits at the macro-block level, extending
-   protection to work against attacks beyond the individual block.
+   protection to work against attacks beyond the individual block
 
 
 ## implementation
@@ -44,7 +44,7 @@ The files `includes/aes_mix.h` contains the following three definitions:
  * `MINI_SIZE`: number of bytes in a miniblock
  * `MINI_PER_MACRO`: number of mini-blocks in a macro-block
 
-*These entities can be modified at compile time to try with different sizes.*
+*These entities can be modified at compile time to try with different sizes*
 
 
 ### single-thread APIs
@@ -59,16 +59,16 @@ methods that are necessary to use Mix&Slice:
     void decrypt(const unsigned char* data, unsigned char* out,
                  const unsigned long size, const unsigned char* key,
                  const unsigned char* iv);
-                 
+
 The parameters are as follows.
 
  * `data`: pointer to the source buffer (plaintext in case of
    `encrypt` and ciphertext in case of `decrypt`)
  * `out`: pointer to the destination) buffer
  * `size`: number of bytes in source (and destination) buffers
- * `key`: symmetric key (string) used for the AES functions 
+ * `key`: symmetric key (string) used for the AES functions
  * `iv`: initialization vector for the AES functions
- 
+
 See the file `test/main.c` for an example of use of Mix&Slice.
 
 
@@ -94,14 +94,14 @@ There are three test suites:
 
  * *main*: is the main test suite that verifies that Mix&Slice principles
    are enforced
-   
+
  * *blackbox*: test suite that verifies that the Mix&Slice principles in
    an *abstract* sense (without knowledge about the code)
-   
+
  * *multithread*: test suite that verifies that the Mix&Slice principles
    are enforced in the multi-threaded implementation
-   
-   
+
+
 ## compile
 
 *Make* is used for compilation and testing purposes. A basic
