@@ -22,9 +22,9 @@ The approach identifies the following basic concepts:
    It represents our atomic unit of protection (i.e., when removing bits, we will
    operate at the level of mini-block removing all its bits).
 
- * **Macro-block**: a sequence of blocks. It allows extend- ing the application of
+ * **Macro-block**: a sequence of blocks. It allows extending the application of
    block cipher on sequences of bits larger than individual blocks. In particular,
-   our ap- proach operates mixing bits at the macro-block level, extending
+   our approach operates mixing bits at the macro-block level, extending
    protection to work against attacks beyond the individual block.
 
 
