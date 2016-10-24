@@ -47,7 +47,7 @@ hardware-accelerated AES-NI primitives when available.
 
 ## usage
 
-The files `includes/aes_mix.h` contains the following three definitions:
+The file `includes/aes_mix.h` contains the following three definitions:
 
  * `BLOCK_SIZE`: number of bytes in a cipher block (16 bytes for AES).
  * `MINI_SIZE`: number of bytes in a miniblock.
@@ -73,7 +73,7 @@ The parameters are as follows.
 
  * `data`: pointer to the source buffer (plaintext in case of
    `encrypt` and ciphertext in case of `decrypt`)
- * `out`: pointer to the destination) buffer
+ * `out`: pointer to the destination buffer
  * `size`: number of bytes in source (and destination) buffers
  * `key`: symmetric key (string) used for the AES functions
  * `iv`: initialization vector for the AES functions
@@ -81,7 +81,7 @@ The parameters are as follows.
 See the file `test/main.c` for an example of use of Mix&Slice.
 
 
-### multi-thread APIs
+### multi-threaded APIs
 
 The file `includes/aes_mix_multi.h` contains the prototype of the only two
 methods that are necessary to use Mix&Slice in multi-threaded mode:
@@ -101,7 +101,7 @@ See the file `test/multithread.c` for an example of use of Mix&Slice.
 
 There are three test suites:
 
- * *main*: is the main test suite that verifies that Mix&Slice principles
+ * *main*: main test suite that verifies that Mix&Slice principles
    are enforced.
 
  * *blackbox*: test suite that verifies the Mix&Slice principles in an
