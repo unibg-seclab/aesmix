@@ -81,7 +81,7 @@ The parameters are as follows.
 See the file `test/main.c` for an example of use of Mix&Slice.
 
 
-### multi-threaded APIs
+### multi-thread APIs
 
 The file `includes/aes_mix_multi.h` contains the prototype of the only two
 methods that are necessary to use Mix&Slice in multi-threaded mode:
