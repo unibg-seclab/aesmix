@@ -49,22 +49,29 @@ static inline void encrypt_macroblock(const unsigned char* macro,
     const unsigned char* key, const unsigned char* iv
 ){
     int step, outl;
-    EVP_CIPHER_CTX ctx;
-    EVP_EncryptInit(&ctx, EVP_aes_128_ecb(), key, iv);
-    EVP_CIPHER_CTX_set_padding(&ctx, 0); // disable padding
+    EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
+
+    if ( NULL == ctx ) {
+        printf("Cannot allocate needed memory\n");
+        exit(EXIT_FAILURE);
+    }
+
+    EVP_EncryptInit(ctx, EVP_aes_128_ecb(), key, iv);
+    EVP_CIPHER_CTX_set_padding(ctx, 0); // disable padding
 
     // Step 0
     memxor((unsigned char*) macro, iv, BLOCK_SIZE);  // add IV to input
-    EVP_EncryptUpdate(&ctx, out, &outl, macro, MACRO_SIZE);
+    EVP_EncryptUpdate(ctx, out, &outl, macro, MACRO_SIZE);
     memxor((unsigned char*) macro, iv, BLOCK_SIZE);  // remove IV from input
     D assert(MACRO_SIZE == outl);
 
     // Steps 1 -> N
     for (step=1; step < DIGITS/DOF; ++step) {
-        do_step_encrypt(&ctx, buffer, out, out, step);
+        do_step_encrypt(ctx, buffer, out, out, step);
     }
 
-    EVP_CIPHER_CTX_cleanup(&ctx);
+    EVP_CIPHER_CTX_cleanup(ctx);
+    EVP_CIPHER_CTX_free(ctx);
 }
 
 static inline void decrypt_macroblock(const unsigned char* macro,
@@ -72,22 +79,29 @@ static inline void decrypt_macroblock(const unsigned char* macro,
     const unsigned char* key, const unsigned char* iv
 ){
     int step, outl;
-    EVP_CIPHER_CTX ctx;
+    EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
 
-    EVP_DecryptInit(&ctx, EVP_aes_128_ecb(), key, iv);
-    EVP_CIPHER_CTX_set_padding(&ctx, 0); // disable padding
+    if ( NULL == ctx ) {
+        printf("Cannot allocate needed memory\n");
+        exit(EXIT_FAILURE);
+    }
+
+    EVP_DecryptInit(ctx, EVP_aes_128_ecb(), key, iv);
+    EVP_CIPHER_CTX_set_padding(ctx, 0); // disable padding
 
     // Steps N -> 1
     for (step = DIGITS/DOF - 1; step >= 1; --step) {
-        do_step_decrypt(&ctx, buffer, macro, out, step);
+        do_step_decrypt(ctx, buffer, macro, out, step);
         macro = out;   // this is needed to avoid a starting memcpy
     }
 
     // Step 0
-    EVP_DecryptUpdate(&ctx, out, &outl, out, MACRO_SIZE);
+    EVP_DecryptUpdate(ctx, out, &outl, out, MACRO_SIZE);
     memxor(out, iv, BLOCK_SIZE);         // remove IV from output
     D assert(MACRO_SIZE == outl);
-    EVP_CIPHER_CTX_cleanup(&ctx);
+
+    EVP_CIPHER_CTX_cleanup(ctx);
+    EVP_CIPHER_CTX_free(ctx);
 }
 
 static inline void process(const short enc, const unsigned char* data,
