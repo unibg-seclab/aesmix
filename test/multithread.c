@@ -41,8 +41,8 @@ double test(
         return EXIT_FAILURE;
     }
 
-    RAND_pseudo_bytes(key, BLOCK_SIZE);
-    RAND_pseudo_bytes(iv, BLOCK_SIZE);
+    RAND_bytes(key, BLOCK_SIZE);
+    RAND_bytes(iv, BLOCK_SIZE);
 
     for (i=0; i < times; ++i) {
         clock_gettime(CLOCK_MONOTONIC, &start);

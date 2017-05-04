@@ -29,12 +29,12 @@ int main(int argc, char *argv[])
 
     macros = (argc > 1) ? atoi(argv[1]) : 1;
 
-    //RAND_pseudo_bytes(in, SIZE);
+    //RAND_bytes(in, SIZE);
     memcpy(orig, in, SIZE);
 
     printf("AESMIX-ing %d * %d macroblocks ...\n", SIZE/MACRO_SIZE, macros);
     for (i=0; i < macros; ++i) {
-        D RAND_pseudo_bytes(iv, BLOCK_SIZE);
+        D RAND_bytes(iv, BLOCK_SIZE);
         D printx("IV: ", iv, BLOCK_SIZE, MINI_SIZE);
 
         encrypt(in, out, SIZE, key, iv);
