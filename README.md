@@ -61,18 +61,18 @@ The file `includes/aes_mix.h` contains the following three definitions:
 The file `includes/aes_mix.h` contains the prototype of the only two
 methods that are necessary to use Mix&Slice:
 
-    void encrypt(const unsigned char* data, unsigned char* out,
-                 const unsigned long size, const unsigned char* key,
-                 const unsigned char* iv);
+    void mixencrypt(const unsigned char* data, unsigned char* out,
+                    const unsigned long size, const unsigned char* key,
+                    const unsigned char* iv);
 
-    void decrypt(const unsigned char* data, unsigned char* out,
-                 const unsigned long size, const unsigned char* key,
-                 const unsigned char* iv);
+    void mixdecrypt(const unsigned char* data, unsigned char* out,
+                    const unsigned long size, const unsigned char* key,
+                    const unsigned char* iv);
 
 The parameters are as follows.
 
  * `data`: pointer to the source buffer (plaintext in case of
-   `encrypt` and ciphertext in case of `decrypt`)
+   `mixencrypt` and ciphertext in case of `mixdecrypt`)
  * `out`: pointer to the destination buffer
  * `size`: number of bytes in source (and destination) buffers
  * `key`: symmetric key (string) used for the AES functions
@@ -86,10 +86,10 @@ See the file `test/main.c` for an example of use of Mix&Slice.
 The file `includes/aes_mix_multi.h` contains the prototype of the only two
 methods that are necessary to use Mix&Slice in multi-threaded mode:
 
-    void t_encrypt(unsigned int thr, const unsigned char* data, unsigned char* out,
+    void t_mixencrypt(unsigned int thr, const unsigned char* data, unsigned char* out,
         const unsigned long size, const unsigned char* key, const unsigned char* iv);
 
-    void t_decrypt(unsigned int thr, const unsigned char* data, unsigned char* out,
+    void t_mixdecrypt(unsigned int thr, const unsigned char* data, unsigned char* out,
         const unsigned long size, const unsigned char* key, const unsigned char* iv);
 
 The only additional parameter is `thr`, the number of threads to use.

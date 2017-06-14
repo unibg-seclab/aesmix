@@ -22,12 +22,12 @@
 #define D if(0)
 #endif
 
-void encrypt(const unsigned char* data, unsigned char* out,
-             const unsigned long size, const unsigned char* key,
-             const unsigned char* iv);
+void mixencrypt(const unsigned char* data, unsigned char* out,
+                const unsigned long size, const unsigned char* key,
+                const unsigned char* iv);
 
-void decrypt(const unsigned char* data, unsigned char* out,
-             const unsigned long size, const unsigned char* key,
-             const unsigned char* iv);
+void mixdecrypt(const unsigned char* data, unsigned char* out,
+                const unsigned long size, const unsigned char* key,
+                const unsigned char* iv);
 
 #endif // AES_MIX_H

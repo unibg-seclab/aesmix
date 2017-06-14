@@ -44,7 +44,7 @@ static inline void* memxor(void* dst, const void* src, size_t n){
     return dst;
 }
 
-static inline void encrypt_macroblock(const unsigned char* macro,
+static inline void mixencrypt_macroblock(const unsigned char* macro,
     unsigned char* out, unsigned char* buffer,
     const unsigned char* key, const unsigned char* iv
 ){
@@ -74,7 +74,7 @@ static inline void encrypt_macroblock(const unsigned char* macro,
     EVP_CIPHER_CTX_free(ctx);
 }
 
-static inline void decrypt_macroblock(const unsigned char* macro,
+static inline void mixdecrypt_macroblock(const unsigned char* macro,
     unsigned char* out, unsigned char* buffer,
     const unsigned char* key, const unsigned char* iv
 ){
@@ -121,20 +121,20 @@ static inline void process(const short enc, const unsigned char* data,
     memcpy(&miv, iv, sizeof(miv));
 
     for ( ; data < last; data+=MACRO_SIZE, out+=MACRO_SIZE, miv++) {
-        (enc ? encrypt_macroblock : decrypt_macroblock)
+        (enc ? mixencrypt_macroblock : mixdecrypt_macroblock)
             (data, out, buffer, key, (unsigned char*) &miv);
     }
 
     free(buffer);
 }
 
-void encrypt(const unsigned char* data, unsigned char* out,
+void mixencrypt(const unsigned char* data, unsigned char* out,
     const unsigned long size, const unsigned char* key, const unsigned char* iv
 ){
     process(1, data, out, size, key, iv);
 }
 
-void decrypt(const unsigned char* data, unsigned char* out,
+void mixdecrypt(const unsigned char* data, unsigned char* out,
     const unsigned long size, const unsigned char* key, const unsigned char* iv
 ){
     process(0, data, out, size, key, iv);

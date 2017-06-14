@@ -37,11 +37,11 @@ int main(int argc, char *argv[])
         D RAND_bytes(iv, BLOCK_SIZE);
         D printx("IV: ", iv, BLOCK_SIZE, MINI_SIZE);
 
-        encrypt(in, out, SIZE, key, iv);
+        mixencrypt(in, out, SIZE, key, iv);
         D assert(0 != memcmp(in, out, SIZE));
         D assert(0 == memcmp(in, orig, SIZE));
 
-        D decrypt(out, dec, SIZE, key, iv);
+        D mixdecrypt(out, dec, SIZE, key, iv);
         D assert(0 == memcmp(in, dec, SIZE));
         D assert(0 == memcmp(in, orig, SIZE));
     }

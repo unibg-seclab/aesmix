@@ -34,25 +34,25 @@ def shuffle(macro, mask, dist):
         i, start = i + 1, ((start|mask)+1) & ~mask
     return shuffled
 
-def encrypt(macro):
+def mixencrypt(macro):
     """mix the entropy in BLOCK_SIZE // MINI_SIZE consecutive miniblocks"""
     return [reduce(add, macro[off:off+MINI_PER_BLOCK])
             for off in xrange(0, MINI_PER_MACRO, MINI_PER_BLOCK)
             for _ in xrange(MINI_PER_BLOCK)]
 
-def encrypt_macroblock(macro):
+def mixencrypt_macroblock(macro):
     """encrypt the whole macroblock"""
     for step in xrange(0, DIGITS // DOF):
         mask = ((1 << DOF) - 1) << (step * DOF);
         dist = 1 << (step * DOF);
         print(step, bin(mask)[2:].zfill(DIGITS), dist)
-        macro = encrypt(shuffle(macro, mask, dist))
+        macro = mixencrypt(shuffle(macro, mask, dist))
         print(macro[0])
     return macro
 
 if __name__ == "__main__":
     macro = [Counter([i]) for i in xrange(MINI_PER_MACRO)]
-    encrypted = encrypt_macroblock(macro)
+    encrypted = mixencrypt_macroblock(macro)
 
     for mini in encrypted:
         assert(mini == encrypted[0])

@@ -11,15 +11,15 @@ typedef struct aesmix_args_s {
     const unsigned char* iv;
 } aesmix_args;
 
-static void *w_encrypt(void *data){
+static void *w_mixencrypt(void *data){
     aesmix_args *args = data;
-    encrypt(args->data, args->out, args->size, args->key, args->iv);
+    mixencrypt(args->data, args->out, args->size, args->key, args->iv);
     return NULL;  // TODO return something meaningful
 }
 
-static void *w_decrypt(void *data){
+static void *w_mixdecrypt(void *data){
     aesmix_args *args = data;
-    decrypt(args->data, args->out, args->size, args->key, args->iv);
+    mixdecrypt(args->data, args->out, args->size, args->key, args->iv);
     return NULL;  // TODO return something meaningful
 }
 
@@ -38,7 +38,7 @@ static inline void process(const short enc, unsigned int thr,
     for (t=0; t < thr; ++t) {
         a = &args[t];
         a->data = data; a->out = out; a->size = tsize; a->key = key; a->iv = iv;
-        pthread_create(&thread[t], NULL, enc ? w_encrypt : w_decrypt, a);
+        pthread_create(&thread[t], NULL, enc ? w_mixencrypt : w_mixdecrypt, a);
         data += tsize; out += tsize;
     }
 
@@ -47,14 +47,14 @@ static inline void process(const short enc, unsigned int thr,
     }
 }
 
-void t_encrypt(unsigned int thr, const unsigned char* data, unsigned char* out,
+void t_mixencrypt(unsigned int thr, const unsigned char* data, unsigned char* out,
     const unsigned long size, const unsigned char* key, const unsigned char* iv
 ){
     process(1, thr, data, out, size, key, iv);
 }
 
 
-void t_decrypt(unsigned int thr, const unsigned char* data, unsigned char* out,
+void t_mixdecrypt(unsigned int thr, const unsigned char* data, unsigned char* out,
     const unsigned long size, const unsigned char* key, const unsigned char* iv
 ){
     process(0, thr, data, out, size, key, iv);

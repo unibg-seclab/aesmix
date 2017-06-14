@@ -47,10 +47,10 @@ double test(
     for (i=0; i < times; ++i) {
         clock_gettime(CLOCK_MONOTONIC, &start);
         D printf("ENCRYPTION (size %lu)\n", size);
-        t_encrypt(threads, in, out, size, key, iv);
+        t_mixencrypt(threads, in, out, size, key, iv);
 
         D printf("DECRYPTION (size %lu)\n", size);
-        D t_decrypt(threads, out, dec, size, key, iv);
+        D t_mixdecrypt(threads, out, dec, size, key, iv);
         clock_gettime(CLOCK_MONOTONIC, &finish);
         elapsed += (finish.tv_sec - start.tv_sec);
         elapsed += (finish.tv_nsec - start.tv_nsec) / 1000000000.0;
