@@ -22,12 +22,27 @@
 #define D if(0)
 #endif
 
-void mixencrypt(const unsigned char* data, unsigned char* out,
-                const unsigned long size, const unsigned char* key,
-                const unsigned char* iv);
+void mixencrypt (
+    const unsigned char* data, unsigned char* out, const unsigned long size,
+    const unsigned char* key, const unsigned char* iv
+);
 
-void mixdecrypt(const unsigned char* data, unsigned char* out,
-                const unsigned long size, const unsigned char* key,
-                const unsigned char* iv);
+void mixdecrypt (
+    const unsigned char* data, unsigned char* out, const unsigned long size,
+    const unsigned char* key, const unsigned char* iv
+);
+
+/* mixfn and process definitions are used to extend Mix&Slice to other types
+ * of mixes, shuffles and encryption methods */
+
+typedef void (*mixfn) (
+    const unsigned char* macro, unsigned char* out, unsigned char* buffer,
+    const unsigned char* key, const unsigned char* iv
+);
+
+void mixprocess (
+    mixfn fn, const unsigned char* data, unsigned char* out,
+    const unsigned long size, const unsigned char* key, const unsigned char* iv
+);
 
 #endif // AES_MIX_H

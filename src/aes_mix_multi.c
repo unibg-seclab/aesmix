@@ -23,7 +23,7 @@ static void *w_mixdecrypt(void *data){
     return NULL;  // TODO return something meaningful
 }
 
-static inline void process(const short enc, unsigned int thr,
+static inline void t_mixprocess(const short enc, unsigned int thr,
     const unsigned char* data, unsigned char* out, const unsigned long size,
     const unsigned char* key, const unsigned char* iv
 ){
@@ -50,12 +50,12 @@ static inline void process(const short enc, unsigned int thr,
 void t_mixencrypt(unsigned int thr, const unsigned char* data, unsigned char* out,
     const unsigned long size, const unsigned char* key, const unsigned char* iv
 ){
-    process(1, thr, data, out, size, key, iv);
+    t_mixprocess(1, thr, data, out, size, key, iv);
 }
 
 
 void t_mixdecrypt(unsigned int thr, const unsigned char* data, unsigned char* out,
     const unsigned long size, const unsigned char* key, const unsigned char* iv
 ){
-    process(0, thr, data, out, size, key, iv);
+    t_mixprocess(0, thr, data, out, size, key, iv);
 }
