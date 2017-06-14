@@ -7,7 +7,7 @@
 
 #define SHUFFLE(STEP, OFF, BP, MACRO, BUFFER, FROM, TO)                       \
     unsigned int j, OFF, mask, start, dist;                                   \
-    unsigned char *bp = buffer;                                               \
+    unsigned char *BP = buffer;                                               \
     mask = ((1 << DOF) - 1) << (STEP * DOF);                                  \
     dist = (1 << (STEP * DOF)) * MINI_SIZE;                                   \
     for (start=0; start < (1<<DIGITS); start=((start|mask)+1)&~mask) {        \
