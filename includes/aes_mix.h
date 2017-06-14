@@ -1,6 +1,9 @@
 #ifndef AES_MIX_H
 #define AES_MIX_H
 
+#include <stdio.h>
+
+
 #ifndef BLOCK_SIZE
 #define BLOCK_SIZE                                 16
 #endif
@@ -43,6 +46,12 @@ typedef void (*mixfn) (
 void mixprocess (
     mixfn fn, const unsigned char* data, unsigned char* out,
     const unsigned long size, const unsigned char* key, const unsigned char* iv
+);
+
+/* utility functions */
+
+void* memxor (
+    void* dst, const void* src, size_t n
 );
 
 #endif // AES_MIX_H

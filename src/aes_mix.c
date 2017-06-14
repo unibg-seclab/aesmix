@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <math.h>
+
 #include "aes_mix.h"
 
 #define SHUFFLE(STEP, OFF, BP, MACRO, BUFFER, FROM, TO)                       \
@@ -35,7 +36,7 @@ static inline void do_step_decrypt(EVP_CIPHER_CTX* ctx, unsigned char* buffer,
     SHUFFLE(step, off, bp, macro, buffer, out + off, bp);
 }
 
-static inline void* memxor(void* dst, const void* src, size_t n){
+inline void* memxor(void* dst, const void* src, size_t n){
     char *d = dst;
     char const *s = src;
     for (; n>0; --n) {
