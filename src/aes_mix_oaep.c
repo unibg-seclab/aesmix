@@ -23,7 +23,12 @@ static void do_step_encrypt_oaep(
         memxor(right, buffer, partsize);
 
     } else if (partsize > BLOCK_SIZE) {
-        // TODO recursive part
+        do_step_encrypt_oaep(ctx, buffer + partsize, left, buffer, partsize);
+        memxor(right, buffer, partsize);
+        do_step_encrypt_oaep(ctx, buffer + partsize, right, buffer, partsize);
+        memxor(left, buffer, partsize);
+        do_step_encrypt_oaep(ctx, buffer + partsize, left, buffer, partsize);
+        memxor(right, buffer, partsize);
 
     } else {  // partsize < BLOCK_SIZE
         printf("plaintext length must be 2*n*16 Bytes (n>0, int)");
@@ -51,7 +56,12 @@ static void do_step_decrypt_oaep(
         memxor(right, buffer, partsize);
 
     } else if (partsize > BLOCK_SIZE) {
-        // TODO recursive part
+        do_step_encrypt_oaep(ctx, buffer + partsize, left, buffer, partsize);
+        memxor(right, buffer, partsize);
+        do_step_encrypt_oaep(ctx, buffer + partsize, right, buffer, partsize);
+        memxor(left, buffer, partsize);
+        do_step_encrypt_oaep(ctx, buffer + partsize, left, buffer, partsize);
+        memxor(right, buffer, partsize);
 
     } else {  // partsize < BLOCK_SIZE
         printf("plaintext length must be 2*n*16 Bytes (n>0, int)");
