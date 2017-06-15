@@ -81,18 +81,17 @@ static inline void mixencrypt_oaep_macroblock (
         exit(EXIT_FAILURE);
     }
 
-    EVP_EncryptInit(ctx, EVP_aes_128_ecb(), key, iv);
-    EVP_CIPHER_CTX_set_padding(ctx, 0); // disable padding
+    EVP_EncryptInit(ctx, EVP_aes_128_ecb(), key, iv); // init encryption context
+    EVP_CIPHER_CTX_set_padding(ctx, 0);                       // disable padding
 
-    // Step 0
-    memxor((unsigned char*) macro, iv, BLOCK_SIZE);  // add IV to input
-    EVP_EncryptUpdate(ctx, out, &outl, macro, MACRO_SIZE);  // TODO needed?
-    memxor((unsigned char*) macro, iv, BLOCK_SIZE);  // remove IV from input
+    memxor((unsigned char*) macro, iv, BLOCK_SIZE);           // add IV to input
+    do_step_encrypt_oaep(ctx, buffer, macro, out, MACRO_SIZE);   // oaep shuffle
+    memxor((unsigned char*) macro, iv, BLOCK_SIZE);      // remove IV from input
+
+    EVP_EncryptUpdate(ctx, out, &outl, out, MACRO_SIZE); // post-shuffle encrypt
     D assert(MACRO_SIZE == outl);
 
-    do_step_encrypt_oaep(ctx, buffer, out, out, MACRO_SIZE);
-
-    EVP_CIPHER_CTX_cleanup(ctx);
+    EVP_CIPHER_CTX_cleanup(ctx);                              // cleanup context
     EVP_CIPHER_CTX_free(ctx);
 }
 
@@ -108,17 +107,16 @@ static inline void mixdecrypt_oaep_macroblock(
         exit(EXIT_FAILURE);
     }
 
-    EVP_DecryptInit(ctx, EVP_aes_128_ecb(), key, iv);
-    EVP_CIPHER_CTX_set_padding(ctx, 0); // disable padding
+    EVP_DecryptInit(ctx, EVP_aes_128_ecb(), key, iv); // init decryption context
+    EVP_CIPHER_CTX_set_padding(ctx, 0);                       // disable padding
 
-    do_step_decrypt_oaep(ctx, buffer, macro, out, MACRO_SIZE);
-
-    // Step 0
-    EVP_DecryptUpdate(ctx, out, &outl, out, MACRO_SIZE);    // TODO needed?
-    memxor(out, iv, BLOCK_SIZE);        // remove IV from output
+    EVP_DecryptUpdate(ctx, out, &outl, macro, MACRO_SIZE); // preshuffle decrypt
     D assert(MACRO_SIZE == outl);
 
-    EVP_CIPHER_CTX_cleanup(ctx);
+    do_step_decrypt_oaep(ctx, buffer, macro, out, MACRO_SIZE); // oaep unshuffle
+    memxor(out, iv, BLOCK_SIZE);                        // remove IV from output
+
+    EVP_CIPHER_CTX_cleanup(ctx);                              // cleanup context
     EVP_CIPHER_CTX_free(ctx);
 }
 
