@@ -1,26 +1,62 @@
 #include <openssl/evp.h>
+#include <string.h>
 #include <assert.h>
 
 #include "aes_mix_oaep.h"
 
-static inline void do_step_encrypt_oaep(
+static void do_step_encrypt_oaep(
     EVP_CIPHER_CTX* ctx, unsigned char* buffer, const unsigned char* macro,
     unsigned char* out, const unsigned long size
 ){
-    // TODO
-    // int outl;
-    // EVP_EncryptUpdate(ctx, out, &outl, buffer, MACRO_SIZE);
-    // D assert(MACRO_SIZE == outl);
+    int outl;
+    unsigned long partsize = size / 2;
+    unsigned char *left = out;
+    unsigned char *right = out + partsize;
+    memcpy(out, macro, size);
+
+    if (partsize == BLOCK_SIZE) {
+        EVP_EncryptUpdate(ctx, buffer, &outl, left, partsize);
+        memxor(right, buffer, partsize);
+        EVP_EncryptUpdate(ctx, buffer, &outl, right, partsize);
+        memxor(left, buffer, partsize);
+        EVP_EncryptUpdate(ctx, buffer, &outl, left, partsize);
+        memxor(right, buffer, partsize);
+
+    } else if (partsize > BLOCK_SIZE) {
+        // TODO recursive part
+
+    } else {  // partsize < BLOCK_SIZE
+        printf("plaintext length must be 2*n*16 Bytes (n>0, int)");
+        exit(EXIT_FAILURE);
+    }
+
 }
 
-static inline void do_step_decrypt_oaep(
+static void do_step_decrypt_oaep(
     EVP_CIPHER_CTX* ctx, unsigned char* buffer, const unsigned char* macro,
     unsigned char* out, const unsigned long size
 ){
-    // TODO
-    // int outl;
-    // EVP_DecryptUpdate(ctx, buffer, &outl, macro, MACRO_SIZE);
-    // D assert(MACRO_SIZE == outl);
+    int outl;
+    unsigned long partsize = size / 2;
+    unsigned char *left = out;
+    unsigned char *right = out + partsize;
+    memcpy(out, macro, size);
+
+    if (partsize == BLOCK_SIZE) {
+        EVP_DecryptUpdate(ctx, buffer, &outl, left, partsize);
+        memxor(right, buffer, partsize);
+        EVP_DecryptUpdate(ctx, buffer, &outl, right, partsize);
+        memxor(left, buffer, partsize);
+        EVP_DecryptUpdate(ctx, buffer, &outl, left, partsize);
+        memxor(right, buffer, partsize);
+
+    } else if (partsize > BLOCK_SIZE) {
+        // TODO recursive part
+
+    } else {  // partsize < BLOCK_SIZE
+        printf("plaintext length must be 2*n*16 Bytes (n>0, int)");
+        exit(EXIT_FAILURE);
+    }
 }
 
 static inline void mixencrypt_oaep_macroblock (
