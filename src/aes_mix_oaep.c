@@ -2,6 +2,8 @@
 #include <string.h>
 #include <assert.h>
 
+#include "debug.h"
+
 #include "aes_mix_oaep.h"
 
 static void do_step_encrypt_oaep(
@@ -14,26 +16,47 @@ static void do_step_encrypt_oaep(
     unsigned char *right = out + partsize;
     memcpy(out, macro, size);
 
+    D printx("macro:  ", macro, size, BLOCK_SIZE);
+
     if (partsize == BLOCK_SIZE) {
         EVP_EncryptUpdate(ctx, buffer, &outl, left, partsize);
+        D printx("buffer: ", buffer, partsize, partsize);
         memxor(right, buffer, partsize);
+        D printx("out:    ", out, size, BLOCK_SIZE);
+
         EVP_EncryptUpdate(ctx, buffer, &outl, right, partsize);
+        D printx("buffer: ", buffer, partsize, partsize);
         memxor(left, buffer, partsize);
+        D printx("out:    ", out, size, BLOCK_SIZE);
+
         EVP_EncryptUpdate(ctx, buffer, &outl, left, partsize);
+        D printx("buffer: ", buffer, partsize, partsize);
         memxor(right, buffer, partsize);
+        D printx("out:    ", out, size, BLOCK_SIZE);
 
     } else if (partsize > BLOCK_SIZE) {
         do_step_encrypt_oaep(ctx, buffer + partsize, left, buffer, partsize);
+        D printx("buffer: ", buffer, partsize, partsize);
         memxor(right, buffer, partsize);
+        D printx("out:    ", out, size, BLOCK_SIZE);
+
         do_step_encrypt_oaep(ctx, buffer + partsize, right, buffer, partsize);
+        D printx("buffer: ", buffer, partsize, partsize);
         memxor(left, buffer, partsize);
+        D printx("out:    ", out, size, BLOCK_SIZE);
+
         do_step_encrypt_oaep(ctx, buffer + partsize, left, buffer, partsize);
+        D printx("buffer: ", buffer, partsize, partsize);
         memxor(right, buffer, partsize);
+        D printx("out:    ", out, size, BLOCK_SIZE);
 
     } else {  // partsize < BLOCK_SIZE
         printf("plaintext length must be 2*n*16 Bytes (n>0, int)");
         exit(EXIT_FAILURE);
     }
+
+    D printf("partsize: %lu\n", partsize);
+    D printx("out:    ", out, size, BLOCK_SIZE);
 
 }
 
@@ -47,26 +70,47 @@ static void do_step_decrypt_oaep(
     unsigned char *right = out + partsize;
     memcpy(out, macro, size);
 
+    D printx("macro:  ", macro, size, BLOCK_SIZE);
+
     if (partsize == BLOCK_SIZE) {
-        EVP_DecryptUpdate(ctx, buffer, &outl, left, partsize);
+        EVP_EncryptUpdate(ctx, buffer, &outl, left, partsize);
+        D printx("buffer: ", buffer, partsize, MINI_SIZE);
         memxor(right, buffer, partsize);
-        EVP_DecryptUpdate(ctx, buffer, &outl, right, partsize);
+        D printx("out:    ", out, size, MINI_SIZE);
+
+        EVP_EncryptUpdate(ctx, buffer, &outl, right, partsize);
+        D printx("buffer: ", buffer, partsize, MINI_SIZE);
         memxor(left, buffer, partsize);
-        EVP_DecryptUpdate(ctx, buffer, &outl, left, partsize);
+        D printx("out:    ", out, size, MINI_SIZE);
+
+        EVP_EncryptUpdate(ctx, buffer, &outl, left, partsize);
+        D printx("buffer: ", buffer, partsize, MINI_SIZE);
         memxor(right, buffer, partsize);
+        D printx("out:    ", out, size, MINI_SIZE);
 
     } else if (partsize > BLOCK_SIZE) {
-        do_step_encrypt_oaep(ctx, buffer + partsize, left, buffer, partsize);
+        do_step_decrypt_oaep(ctx, buffer + partsize, left, buffer, partsize);
+        D printx("buffer: ", buffer, partsize, MINI_SIZE);
         memxor(right, buffer, partsize);
-        do_step_encrypt_oaep(ctx, buffer + partsize, right, buffer, partsize);
+        D printx("out:    ", out, size, MINI_SIZE);
+
+        do_step_decrypt_oaep(ctx, buffer + partsize, right, buffer, partsize);
+        D printx("buffer: ", buffer, partsize, MINI_SIZE);
         memxor(left, buffer, partsize);
-        do_step_encrypt_oaep(ctx, buffer + partsize, left, buffer, partsize);
+        D printx("out:    ", out, size, MINI_SIZE);
+
+        do_step_decrypt_oaep(ctx, buffer + partsize, left, buffer, partsize);
+        D printx("buffer: ", buffer, partsize, MINI_SIZE);
         memxor(right, buffer, partsize);
+        D printx("out:    ", out, size, MINI_SIZE);
 
     } else {  // partsize < BLOCK_SIZE
         printf("plaintext length must be 2*n*16 Bytes (n>0, int)");
         exit(EXIT_FAILURE);
     }
+
+    D printf("partsize: %lu\n", partsize);
+    D printx("out:    ", out, size, BLOCK_SIZE);
 }
 
 static inline void mixencrypt_oaep_macroblock (
@@ -84,12 +128,12 @@ static inline void mixencrypt_oaep_macroblock (
     EVP_EncryptInit(ctx, EVP_aes_128_ecb(), key, iv); // init encryption context
     EVP_CIPHER_CTX_set_padding(ctx, 0);                       // disable padding
 
-    memxor((unsigned char*) macro, iv, BLOCK_SIZE);           // add IV to input
+//    memxor((unsigned char*) macro, iv, BLOCK_SIZE);           // add IV to input
     do_step_encrypt_oaep(ctx, buffer, macro, out, MACRO_SIZE);   // oaep shuffle
-    memxor((unsigned char*) macro, iv, BLOCK_SIZE);      // remove IV from input
+//    memxor((unsigned char*) macro, iv, BLOCK_SIZE);      // remove IV from input
 
-    EVP_EncryptUpdate(ctx, out, &outl, out, MACRO_SIZE); // post-shuffle encrypt
-    D assert(MACRO_SIZE == outl);
+//    EVP_EncryptUpdate(ctx, out, &outl, out, MACRO_SIZE); // post-shuffle encrypt
+//    D assert(MACRO_SIZE == outl);
 
     EVP_CIPHER_CTX_cleanup(ctx);                              // cleanup context
     EVP_CIPHER_CTX_free(ctx);
@@ -107,14 +151,14 @@ static inline void mixdecrypt_oaep_macroblock(
         exit(EXIT_FAILURE);
     }
 
-    EVP_DecryptInit(ctx, EVP_aes_128_ecb(), key, iv); // init decryption context
+    EVP_EncryptInit(ctx, EVP_aes_128_ecb(), key, iv); // init decryption context
     EVP_CIPHER_CTX_set_padding(ctx, 0);                       // disable padding
 
-    EVP_DecryptUpdate(ctx, out, &outl, macro, MACRO_SIZE); // preshuffle decrypt
-    D assert(MACRO_SIZE == outl);
+//    EVP_DecryptUpdate(ctx, out, &outl, macro, MACRO_SIZE); // preshuffle decrypt
+//    D assert(MACRO_SIZE == outl);
 
     do_step_decrypt_oaep(ctx, buffer, macro, out, MACRO_SIZE); // oaep unshuffle
-    memxor(out, iv, BLOCK_SIZE);                        // remove IV from output
+//    memxor(out, iv, BLOCK_SIZE);                        // remove IV from output
 
     EVP_CIPHER_CTX_cleanup(ctx);                              // cleanup context
     EVP_CIPHER_CTX_free(ctx);

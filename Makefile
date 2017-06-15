@@ -1,5 +1,5 @@
 .PHONY:	all callgrind clean cleanall debug fresh multitest printvars \
-		supertest test time
+		supertest test test_oaep time time_oaep
 
 # DEFINES
 MINI_SIZE      =    4
@@ -14,7 +14,7 @@ THREADS   = 8
 TIMES     = 1
 
 # DO NOT TOUCH
-TARGETS   = main blackbox multithread
+TARGETS   = main main_oaep blackbox blackbox_oaep multithread
 SRCDIR    = src
 CFLAGS   += -O6 -Wall -Wextra
 CFLAGS   += -DMINI_SIZE=$(MINI_SIZE)
@@ -49,7 +49,13 @@ callgrind: | clean main
 main: aes_mix.o debug.o main.o
 	$(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
+main_oaep: aes_mix.o debug.o main_oaep.o aes_mix_oaep.o
+	$(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@
+
 blackbox: aes_mix.o debug.o blackbox.o
+	$(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@
+
+blackbox_oaep: aes_mix.o debug.o blackbox_oaep.o aes_mix_oaep.o
 	$(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
 multithread: aes_mix.o aes_mix_multi.o multithread.o
@@ -74,9 +80,19 @@ test: | clean debug printvars
 	@ ./blackbox &> /dev/null || ./blackbox
 	@ echo -e "\033[0;32mALL OK\033[0m"
 
+test_oaep: | clean debug printvars
+	@ echo -e "\nRUNNING OAEP TESTS ..."
+	@ ./main_oaep 1 &> /dev/null || ./main_oaep 1
+	@ ./blackbox_oaep &> /dev/null || ./blackbox_oaep
+	@ echo -e "\033[0;32mALL OK\033[0m"
+
 time: | clean main printvars
 	@ echo -e "\nENCRYPTING 1GiB ..."
 	@ time ./main $$((1024*1024*1024 / ($(MINI_SIZE)*$(MINI_PER_MACRO))))
+
+time_oaep: | clean main_oaep printvars
+	@ echo -e "\nENCRYPTING 1GiB with OAEP ..."
+	@ time ./main_oaep $$((1024*1024*1024 / ($(MINI_SIZE)*$(MINI_PER_MACRO))))
 
 supertest: clean
 	@ for aesni in 1 0; do \
