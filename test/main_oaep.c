@@ -25,7 +25,7 @@ int main(int argc, char *argv[])
 
     macros = (argc > 1) ? atoi(argv[1]) : 1;
 
-    RAND_bytes(in, SIZE);
+//    RAND_bytes(in, SIZE);
     memcpy(orig, in, SIZE);
 
     printf("AESMIX-ing %d * %d macroblocks ...\n", SIZE/MACRO_SIZE, macros);
