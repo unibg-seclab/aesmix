@@ -5,7 +5,7 @@
 #include "debug.h"
 #include "aes_mix_oaep.h"
 
-#define SIZE   MACRO_SIZE
+#define SIZE   MACRO_SIZE*2
 
 unsigned char key[] = "SQUEAMISHOSSIFRA";
 
@@ -25,10 +25,10 @@ int main(int argc, char *argv[])
 
     macros = (argc > 1) ? atoi(argv[1]) : 1;
 
-//    RAND_bytes(in, SIZE);
+    RAND_bytes(in, SIZE);
     memcpy(orig, in, SIZE);
 
-    printf("AESMIX-ing %d * %d macroblocks of size %d ...\n", SIZE/MACRO_SIZE, macros, MACRO_SIZE);
+    printf("AESMIX-ing %d * %d macroblocks ...\n", SIZE/MACRO_SIZE, macros);
     for (i=0; i < macros; ++i) {
         D RAND_bytes(iv, BLOCK_SIZE);
         D printx("IV: ", iv, BLOCK_SIZE, MINI_SIZE);
