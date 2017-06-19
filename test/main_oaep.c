@@ -2,10 +2,15 @@
 #include <assert.h>
 #include <string.h>
 #include <stdio.h>
+
 #include "debug.h"
 #include "aes_mix_oaep.h"
 
-#define SIZE   MACRO_SIZE*2
+#ifdef DEBUG
+#define SIZE  (BIMACRO_SIZE*4)
+#else
+#define SIZE   BIMACRO_SIZE
+#endif
 
 unsigned char key[] = "SQUEAMISHOSSIFRA";
 
@@ -25,7 +30,12 @@ int main(int argc, char *argv[])
 
     macros = (argc > 1) ? atoi(argv[1]) : 1;
 
-//    RAND_bytes(in, SIZE);
+#ifndef DEBUG
+    fprintf(stderr, "no debug flag -> no assert performed\n");
+#endif
+
+    D RAND_bytes(in, SIZE);
+
     memcpy(orig, in, SIZE);
 
     printf("AESMIX-ing %d * %d macroblocks ...\n", SIZE/MACRO_SIZE, macros);
@@ -34,18 +44,10 @@ int main(int argc, char *argv[])
         D printx("IV: ", iv, BLOCK_SIZE, MINI_SIZE);
 
         mixencrypt_oaep(in, out, SIZE, key, iv);
-        D printf("after encryption\n");
-        D printx("orig: ", orig, SIZE, BLOCK_SIZE);
-        D printx("in:   ", in, SIZE, BLOCK_SIZE);
-        D printx("out:  ", out, SIZE, BLOCK_SIZE);
         D assert(0 != memcmp(in, out, SIZE));
         D assert(0 == memcmp(in, orig, SIZE));
 
         D mixdecrypt_oaep(out, dec, SIZE, key, iv);
-        D printf("after decryption\n");
-        D printx("out:  ", out, SIZE, BLOCK_SIZE);
-        D printx("dec:  ", dec, SIZE, BLOCK_SIZE);
-        D printx("orig: ", orig, SIZE, BLOCK_SIZE);
         D assert(0 == memcmp(in, dec, SIZE));
         D assert(0 == memcmp(in, orig, SIZE));
     }

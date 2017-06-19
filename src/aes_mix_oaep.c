@@ -5,8 +5,6 @@
 
 #include "aes_mix_oaep.h"
 
-#define BIMACRO_SIZE (2*MACRO_SIZE)
-
 #define SHUFFLE(STEP, OFF, BP, MACRO, BUFFER, FROM, TO)                       \
     unsigned int j, OFF, mask, start, dist;                                   \
     unsigned char *BP = buffer;                                               \
