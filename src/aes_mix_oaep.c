@@ -5,15 +5,15 @@
 
 #include "aes_mix_oaep.h"
 
-#define SHUFFLE(STEP, OFF, BP, MACRO, BUFFER, FROM, TO)                       \
+#define SHUFFLE(STEP, OFF, BP, MACRO, BUFFER, TO, FROM)                       \
     unsigned int j, OFF, mask, start, dist;                                   \
     unsigned char *BP = buffer;                                               \
     mask = ((1 << DOF) - 1) << (STEP * DOF);                                  \
     dist = (1 << (STEP * DOF)) * MINI_SIZE;                                   \
     for (start=0; start < (1<<DIGITS); start=((start|mask)+1)&~mask) {        \
         for (j=0, off=start*MINI_SIZE; j < MINI_PER_BLOCK; ++j, off+=dist) {  \
-            memcpy(FROM, TO, MINI_SIZE);                                      \
-            bp += MINI_SIZE;                                                  \
+            memcpy(TO, FROM, MINI_SIZE);                                      \
+            BP += MINI_SIZE;                                                  \
         }                                                                     \
     }
 
@@ -21,8 +21,13 @@ static inline void do_step_G(
     EVP_MD_CTX* ctx, unsigned char* buffer, const unsigned char* macro,
     unsigned char* gout, const unsigned int step
 ){
-    unsigned int outl;
-    SHUFFLE(step, off, bp, macro, buffer, bp, macro + off);
+    unsigned int outl, off;
+    if (step) {
+        SHUFFLE(step, off, bp, macro, buffer, bp, macro + off);
+    } else {
+        buffer = (unsigned char*) macro;
+    }
+
     for (off=0; off<MACRO_SIZE; off+=BLOCK_SIZE) {
         EVP_DigestInit_ex(ctx, EVP_md5(), NULL);
         EVP_DigestUpdate(ctx, buffer+off, BLOCK_SIZE);
@@ -42,9 +47,10 @@ static inline void oaep_G(
         exit(EXIT_FAILURE);
     }
 
-    // Steps 1 -> N
+    // Steps 0 -> N
     for (step=0; step < DIGITS/DOF; ++step) {
         do_step_G(ctx, buffer, macro, gout, step);
+        macro = gout;   // this is needed to avoid a starting memcpy
     }
 
     EVP_MD_CTX_free(ctx);
