@@ -76,23 +76,23 @@ printvars:
 
 test: | clean debug printvars
 	@ echo -e "\nRUNNING TESTS ..."
-	@ ./main 1 &> /dev/null || ./main 1
-	@ ./blackbox &> /dev/null || ./blackbox
+	./main 1 &> /dev/null || ./main 1
+	./blackbox &> /dev/null || ./blackbox
 	@ echo -e "\033[0;32mALL OK\033[0m"
 
 test_oaep: | clean debug printvars
 	@ echo -e "\nRUNNING OAEP TESTS ..."
-	@ ./main_oaep 1 &> /dev/null || ./main_oaep 1
-	@ ./blackbox_oaep &> /dev/null || ./blackbox_oaep
+	./main_oaep 1 &> /dev/null || ./main_oaep 1
+	./blackbox_oaep &> /dev/null || ./blackbox_oaep
 	@ echo -e "\033[0;32mALL OK\033[0m"
 
 time: | clean main printvars
 	@ echo -e "\nENCRYPTING 1GiB ..."
-	@ time ./main $$((1024*1024*1024 / ($(MINI_SIZE)*$(MINI_PER_MACRO))))
+	time ./main $$((1024*1024*1024 / ($(MINI_SIZE)*$(MINI_PER_MACRO))))
 
 time_oaep: | clean main_oaep printvars
 	@ echo -e "\nENCRYPTING 1GiB with OAEP ..."
-	@ time ./main_oaep $$((1024*1024*1024 / ($(MINI_SIZE)*$(MINI_PER_MACRO))))
+	time ./main_oaep $$((1024*1024*1024 / ($(MINI_SIZE)*$(MINI_PER_MACRO))))
 
 supertest: clean
 	@ for aesni in 1 0; do \
