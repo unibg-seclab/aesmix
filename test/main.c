@@ -29,7 +29,12 @@ int main(int argc, char *argv[])
 
     macros = (argc > 1) ? atoi(argv[1]) : 1;
 
-    //RAND_bytes(in, SIZE);
+#ifdef DEBUG
+    RAND_bytes(in, SIZE);
+#else
+    fprintf(stderr, "no debug flag -> no assert performed\n");
+#endif
+
     memcpy(orig, in, SIZE);
 
     printf("AESMIX-ing %d * %d macroblocks ...\n", SIZE/MACRO_SIZE, macros);

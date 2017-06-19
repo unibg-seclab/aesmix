@@ -30,11 +30,11 @@ int main(int argc, char *argv[])
 
     macros = (argc > 1) ? atoi(argv[1]) : 1;
 
-#ifndef DEBUG
+#ifdef DEBUG
+    RAND_bytes(in, SIZE);
+#else
     fprintf(stderr, "no debug flag -> no assert performed\n");
 #endif
-
-    D RAND_bytes(in, SIZE);
 
     memcpy(orig, in, SIZE);
 
