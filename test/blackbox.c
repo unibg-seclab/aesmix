@@ -24,7 +24,7 @@ int main()
     mixencrypt(in1, out1, MACRO_SIZE, key, iv1);
 
     for (i=0; i<MACRO_SIZE; i+=MINI_SIZE) {
-        printf("CHANGING MINIBLOCK %d  =>  ", i / MINI_SIZE);
+        printf("CHANGING MINIBLOCK %d\n", i / MINI_SIZE);
         memcpy(in2, in1, MACRO_SIZE);
         do { RAND_bytes(&in2[i], MINI_SIZE); }
         while (0 == memcmp((const char*)in1, (const char*)in2, MACRO_SIZE));
