@@ -14,7 +14,7 @@ THREADS   = 8
 TIMES     = 1
 
 # DO NOT TOUCH
-TARGETS   = main main_oaep blackbox blackbox_oaep multithread
+TARGETS   = main main_oaep blackbox blackbox_oaep multithread multithread_oaep
 SRCDIR    = src
 CFLAGS   += -O6 -Wall -Wextra
 CFLAGS   += -DMINI_SIZE=$(MINI_SIZE)
@@ -59,6 +59,9 @@ blackbox_oaep: aes_mix.o debug.o blackbox_oaep.o aes_mix_oaep.o
 	$(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
 multithread: aes_mix.o aes_mix_multi.o multithread.o
+	$(CC) $(LDFLAGS) $^ $(LDLIBS) -lpthread -o $@
+
+multithread_oaep: aes_mix.o aes_mix_multi_oaep.o multithread_oaep.o
 	$(CC) $(LDFLAGS) $^ $(LDLIBS) -lpthread -o $@
 
 %.o: %.c
@@ -107,6 +110,9 @@ supertest: clean
 	done
 
 multitest: | clean multithread $(DUMMYFILE) printvars
+	./multithread $(DUMMYFILE) $(DUMMYFILE).out $(THREADS) $(TIMES)
+
+multitest_oaep: | clean multithread_oaep $(DUMMYFILE) printvars
 	./multithread $(DUMMYFILE) $(DUMMYFILE).out $(THREADS) $(TIMES)
 
 clean:
