@@ -67,10 +67,8 @@ multithread_oaep: aes_mix.o aes_mix_multi_oaep.o multithread_oaep.o aes_mix_oaep
 %.o: %.c
 	$(CC) $(CFLAGS) $(INC) -c -o $@ $<
 
-$(TESTDIR)/data:
-	mkdir -p $@
-
-$(DUMMYFILE): $(TESTDIR)/data
+$(DUMMYFILE):
+	@ mkdir -p $(TESTDIR)/data
 	openssl rand -out $@ $(DUMMYSIZE)
 
 printvars:
@@ -113,7 +111,7 @@ multitest: | clean multithread $(DUMMYFILE) printvars
 	./multithread $(DUMMYFILE) $(DUMMYFILE).out $(THREADS) $(TIMES)
 
 multitest_oaep: | clean multithread_oaep $(DUMMYFILE) printvars
-	./multithread $(DUMMYFILE) $(DUMMYFILE).out $(THREADS) $(TIMES)
+	./multithread_oaep $(DUMMYFILE) $(DUMMYFILE).out $(THREADS) $(TIMES)
 
 clean:
 	@ rm -f $(TARGETS) *.o *.out

@@ -17,6 +17,7 @@ main_oaep
 blackbox
 blackbox_oaep
 multithread
+multithread_oaep
 
 # temporary files
 *.dec
