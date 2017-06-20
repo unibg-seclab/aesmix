@@ -40,7 +40,11 @@ static inline void oaep_G(
     const unsigned char* macro, unsigned char* gout, unsigned char* buffer
 ){
     int step;
+#if OPENSSL_VERSION_NUMBER < 0x10100000
+    EVP_MD_CTX *ctx = EVP_MD_CTX_create();
+#else
     EVP_MD_CTX *ctx = EVP_MD_CTX_new();
+#endif
 
     if ( NULL == ctx ) {
         printf("Cannot allocate needed memory\n");
@@ -53,7 +57,12 @@ static inline void oaep_G(
         macro = gout;   // this is needed to avoid a starting memcpy
     }
 
+#if OPENSSL_VERSION_NUMBER < 0x10100000
+    EVP_MD_CTX_destroy(ctx);
+#else
     EVP_MD_CTX_free(ctx);
+#endif
+
 }
 
 static inline void mixoaep_pad(
