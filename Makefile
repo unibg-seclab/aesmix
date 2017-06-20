@@ -61,7 +61,7 @@ blackbox_oaep: aes_mix.o debug.o blackbox_oaep.o aes_mix_oaep.o
 multithread: aes_mix.o aes_mix_multi.o multithread.o
 	$(CC) $(LDFLAGS) $^ $(LDLIBS) -lpthread -o $@
 
-multithread_oaep: aes_mix.o aes_mix_multi_oaep.o multithread_oaep.o
+multithread_oaep: aes_mix.o aes_mix_multi_oaep.o multithread_oaep.o aes_mix_oaep.o
 	$(CC) $(LDFLAGS) $^ $(LDLIBS) -lpthread -o $@
 
 %.o: %.c
