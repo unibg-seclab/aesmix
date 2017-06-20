@@ -127,7 +127,7 @@ static inline void mixencrypt_bimacroblock_oaep(
     mixoaep_pad(out, buffer);
 
     // encrypt
-    EVP_EncryptInit(ctx, EVP_aes_128_ecb(), key, iv);
+    EVP_EncryptInit(ctx, EVP_aes_128_ctr(), key, iv);
     EVP_CIPHER_CTX_set_padding(ctx, 0); // disable padding
     EVP_EncryptUpdate(ctx, out, &outl, out, BIMACRO_SIZE);
     D assert(BIMACRO_SIZE == outl);
@@ -148,7 +148,7 @@ static inline void mixdecrypt_bimacroblock_oaep(
     }
 
     // decrypt
-    EVP_DecryptInit(ctx, EVP_aes_128_ecb(), key, iv);
+    EVP_DecryptInit(ctx, EVP_aes_128_ctr(), key, iv);
     EVP_CIPHER_CTX_set_padding(ctx, 0); // disable padding
     EVP_DecryptUpdate(ctx, out, &outl, bimacro, BIMACRO_SIZE);
     D assert(BIMACRO_SIZE == outl);
