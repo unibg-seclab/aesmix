@@ -5,16 +5,16 @@
 
 #include "aes_mix_oaep.h"
 
-#define SHUFFLE(STEP, OFF, BP, MACRO, BUFFER, TO, FROM)                       \
-    unsigned int j, OFF, mask, start, dist;                                   \
-    unsigned char *BP = buffer;                                               \
-    mask = ((1 << DOF) - 1) << (STEP * DOF);                                  \
-    dist = (1 << (STEP * DOF)) * MINI_SIZE;                                   \
-    for (start=0; start < (1<<DIGITS); start=((start|mask)+1)&~mask) {        \
-        for (j=0, off=start*MINI_SIZE; j < MINI_PER_BLOCK; ++j, off+=dist) {  \
-            memcpy(TO, FROM, MINI_SIZE);                                      \
-            BP += MINI_SIZE;                                                  \
-        }                                                                     \
+#define SHUFFLE(STEP, OFF, BP, MACRO, BUFFER, TO, FROM)                        \
+    unsigned int j, OFF, mask, start, dist;                                    \
+    unsigned char *BP = buffer;                                                \
+    mask = ((1 << BIDOF) - 1) << (STEP * BIDOF);                               \
+    dist = (1 << (STEP * BIDOF)) * MINI_SIZE;                                  \
+    for (start=0; start < (1<<DIGITS); start=((start|mask)+1)&~mask) {         \
+        for (j=0, off=start*MINI_SIZE; j < BIMINI_PER_BLOCK; ++j, off+=dist) { \
+            memcpy(TO, FROM, MINI_SIZE);                                       \
+            BP += MINI_SIZE;                                                   \
+        }                                                                      \
     }
 
 static inline void do_step_G(
@@ -28,11 +28,11 @@ static inline void do_step_G(
         buffer = (unsigned char*) macro;
     }
 
-    for (off=0; off<MACRO_SIZE; off+=BLOCK_SIZE) {
-        EVP_DigestInit_ex(ctx, EVP_md5(), NULL);
-        EVP_DigestUpdate(ctx, buffer+off, BLOCK_SIZE);
+    for (off=0; off<MACRO_SIZE; off+=BIBLOCK_SIZE) {
+        EVP_DigestInit_ex(ctx, EVP_sha512(), NULL);
+        EVP_DigestUpdate(ctx, buffer+off, BIBLOCK_SIZE);
         EVP_DigestFinal_ex(ctx, gout+off, &outl);
-        D assert(BLOCK_SIZE == outl);
+        D assert(BIBLOCK_SIZE == outl);
     }
 }
 
@@ -48,7 +48,7 @@ static inline void oaep_G(
     }
 
     // Steps 0 -> N
-    for (step=0; step < DIGITS/DOF; ++step) {
+    for (step=0; step < DIGITS/BIDOF; ++step) {
         do_step_G(ctx, buffer, macro, gout, step);
         macro = gout;   // this is needed to avoid a starting memcpy
     }
