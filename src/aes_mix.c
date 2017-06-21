@@ -3,17 +3,18 @@
 #include <string.h>
 #include <stdio.h>
 #include <math.h>
+
 #include "aes_mix.h"
 
-#define SHUFFLE(STEP, OFF, BP, MACRO, BUFFER, FROM, TO)                       \
+#define SHUFFLE(STEP, OFF, BP, MACRO, BUFFER, TO, FROM)                       \
     unsigned int j, OFF, mask, start, dist;                                   \
     unsigned char *BP = buffer;                                               \
     mask = ((1 << DOF) - 1) << (STEP * DOF);                                  \
     dist = (1 << (STEP * DOF)) * MINI_SIZE;                                   \
     for (start=0; start < (1<<DIGITS); start=((start|mask)+1)&~mask) {        \
         for (j=0, off=start*MINI_SIZE; j < MINI_PER_BLOCK; ++j, off+=dist) {  \
-            memcpy(FROM, TO, MINI_SIZE);                                      \
-            bp += MINI_SIZE;                                                  \
+            memcpy(TO, FROM, MINI_SIZE);                                      \
+            BP += MINI_SIZE;                                                  \
         }                                                                     \
     }
 
@@ -35,7 +36,7 @@ static inline void do_step_decrypt(EVP_CIPHER_CTX* ctx, unsigned char* buffer,
     SHUFFLE(step, off, bp, macro, buffer, out + off, bp);
 }
 
-static inline void* memxor(void* dst, const void* src, size_t n){
+inline void* memxor(void* dst, const void* src, size_t n){
     char *d = dst;
     char const *s = src;
     for (; n>0; --n) {
@@ -104,7 +105,7 @@ static inline void mixdecrypt_macroblock(const unsigned char* macro,
     EVP_CIPHER_CTX_free(ctx);
 }
 
-static inline void process(const short enc, const unsigned char* data,
+inline void mixprocess(mixfn fn, const unsigned char* data,
     unsigned char* out, const unsigned long size,
     const unsigned char* key, const unsigned char* iv
 ){
@@ -121,8 +122,7 @@ static inline void process(const short enc, const unsigned char* data,
     memcpy(&miv, iv, sizeof(miv));
 
     for ( ; data < last; data+=MACRO_SIZE, out+=MACRO_SIZE, miv++) {
-        (enc ? mixencrypt_macroblock : mixdecrypt_macroblock)
-            (data, out, buffer, key, (unsigned char*) &miv);
+        fn(data, out, buffer, key, (unsigned char*) &miv);
     }
 
     free(buffer);
@@ -131,11 +131,11 @@ static inline void process(const short enc, const unsigned char* data,
 void mixencrypt(const unsigned char* data, unsigned char* out,
     const unsigned long size, const unsigned char* key, const unsigned char* iv
 ){
-    process(1, data, out, size, key, iv);
+    mixprocess(mixencrypt_macroblock, data, out, size, key, iv);
 }
 
 void mixdecrypt(const unsigned char* data, unsigned char* out,
     const unsigned long size, const unsigned char* key, const unsigned char* iv
 ){
-    process(0, data, out, size, key, iv);
+    mixprocess(mixdecrypt_macroblock, data, out, size, key, iv);
 }

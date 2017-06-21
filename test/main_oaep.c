@@ -2,13 +2,14 @@
 #include <assert.h>
 #include <string.h>
 #include <stdio.h>
+
 #include "debug.h"
-#include "aes_mix.h"
+#include "aes_mix_oaep.h"
 
 #ifdef DEBUG
-#define SIZE  (MACRO_SIZE*4)
+#define SIZE  (BIMACRO_SIZE*4)
 #else
-#define SIZE   MACRO_SIZE
+#define SIZE   BIMACRO_SIZE
 #endif
 
 unsigned char key[] = "SQUEAMISHOSSIFRA";
@@ -22,7 +23,7 @@ int main(int argc, char *argv[])
     unsigned char*  out = malloc(SIZE);
     unsigned char*  dec = malloc(SIZE);
 
-    if ( 0 == in || 0 == orig || 0 == out || 0 == dec ) {
+    if ( !in || !orig || !out || !dec ) {
         printf("Cannot allocate needed memory\n");
         exit(EXIT_FAILURE);
     }
@@ -42,11 +43,11 @@ int main(int argc, char *argv[])
         D RAND_bytes(iv, BLOCK_SIZE);
         D printx("IV: ", iv, BLOCK_SIZE, MINI_SIZE);
 
-        mixencrypt(in, out, SIZE, key, iv);
+        mixencrypt_oaep(in, out, SIZE, key, iv);
         D assert(0 != memcmp(in, out, SIZE));
         D assert(0 == memcmp(in, orig, SIZE));
 
-        D mixdecrypt(out, dec, SIZE, key, iv);
+        D mixdecrypt_oaep(out, dec, SIZE, key, iv);
         D assert(0 == memcmp(in, dec, SIZE));
         D assert(0 == memcmp(in, orig, SIZE));
     }

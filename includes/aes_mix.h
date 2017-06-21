@@ -1,6 +1,9 @@
 #ifndef AES_MIX_H
 #define AES_MIX_H
 
+#include <stdio.h>
+
+
 #ifndef BLOCK_SIZE
 #define BLOCK_SIZE                                 16
 #endif
@@ -22,12 +25,33 @@
 #define D if(0)
 #endif
 
-void mixencrypt(const unsigned char* data, unsigned char* out,
-                const unsigned long size, const unsigned char* key,
-                const unsigned char* iv);
+void mixencrypt (
+    const unsigned char* data, unsigned char* out, const unsigned long size,
+    const unsigned char* key, const unsigned char* iv
+);
 
-void mixdecrypt(const unsigned char* data, unsigned char* out,
-                const unsigned long size, const unsigned char* key,
-                const unsigned char* iv);
+void mixdecrypt (
+    const unsigned char* data, unsigned char* out, const unsigned long size,
+    const unsigned char* key, const unsigned char* iv
+);
+
+/* mixfn and process definitions are used to extend Mix&Slice to other types
+ * of mixes, shuffles and encryption methods */
+
+typedef void (*mixfn) (
+    const unsigned char* macro, unsigned char* out, unsigned char* buffer,
+    const unsigned char* key, const unsigned char* iv
+);
+
+void mixprocess (
+    mixfn fn, const unsigned char* data, unsigned char* out,
+    const unsigned long size, const unsigned char* key, const unsigned char* iv
+);
+
+/* utility functions */
+
+void* memxor (
+    void* dst, const void* src, size_t n
+);
 
 #endif // AES_MIX_H
