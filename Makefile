@@ -4,17 +4,17 @@
 # DEFINES
 MINI_SIZE      =    4
 BLOCK_SIZE     =   16
-MINI_PER_MACRO = 1024
+MINI_PER_MACRO = 4096
 
 # TEST
 TESTDIR   = test
 DUMMYFILE = $(TESTDIR)/data/file.dummy
 DUMMYSIZE = $$(( 1024 * 1024 * 1024 ))
-THREADS   = 8
+THREADS   = 32
 TIMES     = 1
 
 # DO NOT TOUCH
-TARGETS   = main main_oaep blackbox blackbox_oaep multithread
+TARGETS   = main main_oaep blackbox blackbox_oaep multithread multithread_oaep
 SRCDIR    = src
 CFLAGS   += -O6 -Wall -Wextra
 CFLAGS   += -DMINI_SIZE=$(MINI_SIZE)
@@ -61,13 +61,14 @@ blackbox_oaep: aes_mix.o debug.o blackbox_oaep.o aes_mix_oaep.o
 multithread: aes_mix.o aes_mix_multi.o multithread.o
 	$(CC) $(LDFLAGS) $^ $(LDLIBS) -lpthread -o $@
 
+multithread_oaep: aes_mix.o aes_mix_multi_oaep.o multithread_oaep.o aes_mix_oaep.o
+	$(CC) $(LDFLAGS) $^ $(LDLIBS) -lpthread -o $@
+
 %.o: %.c
 	$(CC) $(CFLAGS) $(INC) -c -o $@ $<
 
-$(TESTDIR)/data:
-	mkdir -p $@
-
-$(DUMMYFILE): $(TESTDIR)/data
+$(DUMMYFILE):
+	@ mkdir -p $(TESTDIR)/data
 	openssl rand -out $@ $(DUMMYSIZE)
 
 printvars:
@@ -108,6 +109,9 @@ supertest: clean
 
 multitest: | clean multithread $(DUMMYFILE) printvars
 	./multithread $(DUMMYFILE) $(DUMMYFILE).out $(THREADS) $(TIMES)
+
+multitest_oaep: | clean multithread_oaep $(DUMMYFILE) printvars
+	./multithread_oaep $(DUMMYFILE) $(DUMMYFILE).out $(THREADS) $(TIMES)
 
 clean:
 	@ rm -f $(TARGETS) *.o *.out
