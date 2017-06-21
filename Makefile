@@ -10,7 +10,7 @@ MINI_PER_MACRO = 4096
 TESTDIR   = test
 DUMMYFILE = $(TESTDIR)/data/file.dummy
 DUMMYSIZE = $$(( 1024 * 1024 * 1024 ))
-THREADS   = 8
+THREADS   = 32
 TIMES     = 1
 
 # DO NOT TOUCH
