@@ -44,11 +44,15 @@ int main(int argc, char *argv[])
 
         mixencrypt(in, out, SIZE, key, iv);
         D assert(0 != memcmp(in, out, SIZE));
+        D printf("in != out .. verified\n");
         D assert(0 == memcmp(in, orig, SIZE));
+        D printf("in == orig .. verified\n");
 
         D mixdecrypt(out, dec, SIZE, key, iv);
         D assert(0 == memcmp(in, dec, SIZE));
+        D printf("in == dec .. verified\n");
         D assert(0 == memcmp(in, orig, SIZE));
+        D printf("in == orig .. verified\n");
     }
 
     free(in);
