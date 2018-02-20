@@ -29,11 +29,14 @@ static inline void t_mixprocess(const short enc, unsigned int thr,
 ){
     pthread_t thread[thr];
     aesmix_args args[thr];
+    unsigned char tiv[thr][BLOCK_SIZE];
     unsigned long remaining_macro;
     unsigned int t;
+    unsigned __int128 miv;
 
     assert(0 == size % MACRO_SIZE);
     remaining_macro = size / MACRO_SIZE;
+    memcpy(&miv, iv, BLOCK_SIZE);
 
     for (t=0; t < thr; ++t) {
         // compute optimal number of macroblocks per thread
@@ -42,9 +45,10 @@ static inline void t_mixprocess(const short enc, unsigned int thr,
         remaining_macro -= tmacro;
 
         aesmix_args* a = &args[t];
-        a->data = data; a->out = out; a->size = tsize; a->key = key; a->iv = iv;
+        memcpy(tiv[t], &miv, BLOCK_SIZE);
+        a->data = data; a->out = out; a->size = tsize; a->key = key; a->iv = tiv[t];
         pthread_create(&thread[t], NULL, enc ? w_mixencrypt : w_mixdecrypt, a);
-        data += tsize; out += tsize;
+        data += tsize; out += tsize; miv += tmacro;
     }
 
     assert(!remaining_macro);
