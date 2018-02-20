@@ -1,7 +1,6 @@
 #include <pthread.h>
 #include <string.h>
 #include <assert.h>
-
 #include "aes_mix_multi.h"
 
 typedef struct aesmix_args_s {
@@ -30,8 +29,7 @@ static inline void t_mixprocess(const short enc, unsigned int thr,
 ){
     pthread_t thread[thr];
     aesmix_args args[thr];
-    unsigned long tsize, tmacro, remaining_macro;
-    aesmix_args* a;
+    unsigned long remaining_macro;
     unsigned int t;
 
     assert(0 == size % MACRO_SIZE);
@@ -39,11 +37,11 @@ static inline void t_mixprocess(const short enc, unsigned int thr,
 
     for (t=0; t < thr; ++t) {
         // compute optimal number of macroblocks per thread
-        tmacro = remaining_macro / (thr - t);
+        unsigned long tmacro = remaining_macro / (thr - t);
+        unsigned long tsize = tmacro * MACRO_SIZE;
         remaining_macro -= tmacro;
-        tsize = tmacro * MACRO_SIZE;
 
-        a = &args[t];
+        aesmix_args* a = &args[t];
         a->data = data; a->out = out; a->size = tsize; a->key = key; a->iv = iv;
         pthread_create(&thread[t], NULL, enc ? w_mixencrypt : w_mixdecrypt, a);
         data += tsize; out += tsize;
