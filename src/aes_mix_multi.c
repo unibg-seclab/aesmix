@@ -1,4 +1,5 @@
 #include <pthread.h>
+#include <string.h>
 #include <assert.h>
 
 #include "aes_mix_multi.h"
@@ -29,19 +30,26 @@ static inline void t_mixprocess(const short enc, unsigned int thr,
 ){
     pthread_t thread[thr];
     aesmix_args args[thr];
-    unsigned long tsize = size / thr;
+    unsigned long tsize, tmacro, remaining_macro;
     aesmix_args* a;
     unsigned int t;
 
     assert(0 == size % MACRO_SIZE);
+    remaining_macro = size / MACRO_SIZE;
 
     for (t=0; t < thr; ++t) {
+        // compute optimal number of macroblocks per thread
+        tmacro = remaining_macro / (thr - t);
+        remaining_macro -= tmacro;
+        tsize = tmacro * MACRO_SIZE;
+
         a = &args[t];
         a->data = data; a->out = out; a->size = tsize; a->key = key; a->iv = iv;
         pthread_create(&thread[t], NULL, enc ? w_mixencrypt : w_mixdecrypt, a);
         data += tsize; out += tsize;
     }
 
+    assert(!remaining_macro);
     for (t=0; t<thr; ++t) {
         pthread_join(thread[t], NULL);
     }
