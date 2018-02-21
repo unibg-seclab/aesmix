@@ -1,4 +1,5 @@
 #include <pthread.h>
+#include <string.h>
 #include <assert.h>
 
 #include "aes_mix_multi_oaep.h"
@@ -31,19 +32,30 @@ static inline void t_mixprocess_oaep (
 ){
     pthread_t thread[thr];
     aesmix_args args[thr];
-    unsigned long tsize = size / thr;
-    aesmix_args* a;
+    unsigned char tiv[thr][BLOCK_SIZE];
+    unsigned long remaining_bimacro;
     unsigned int t;
+    unsigned __int128 miv;
 
     assert(0 == size % BIMACRO_SIZE);
+    remaining_bimacro = size / BIMACRO_SIZE;
+    memcpy(&miv, iv, BLOCK_SIZE);
+
 
     for (t=0; t < thr; ++t) {
-        a = &args[t];
-        a->data = data; a->out = out; a->size = tsize; a->key = key; a->iv = iv;
+        //compute optimal number of bimacroblocks per thread
+        unsigned long tbimacro = remaining_bimacro / (thr - t);
+        unsigned long tsize = tbimacro * BIMACRO_SIZE;
+        remaining_bimacro -= tbimacro;
+
+        aesmix_args* a = &args[t];
+        memcpy(tiv[t], &miv, BLOCK_SIZE);
+        a->data = data; a->out = out; a->size = tsize; a->key = key; a->iv = tiv[t];
         pthread_create(&thread[t], NULL, fn, a);
-        data += tsize; out += tsize;
+        data += tsize; out += tsize; miv += tbimacro;
     }
 
+    assert(!remaining_bimacro);
     for (t=0; t < thr; ++t) {
         pthread_join(thread[t], NULL);
     }
