@@ -34,7 +34,7 @@ static inline void t_mixprocess_oaep (
     aesmix_args args[thr];
     unsigned char tiv[thr][BLOCK_SIZE];
     unsigned long remaining_bimacro;
-    unsigned int t;
+    unsigned int t, started_thr = 0;
     unsigned __int128 miv;
 
     assert(0 == size % BIMACRO_SIZE);
@@ -43,20 +43,23 @@ static inline void t_mixprocess_oaep (
 
 
     for (t=0; t < thr; ++t) {
+        if (!remaining_bimacro) break;
+
         //compute optimal number of bimacroblocks per thread
-        unsigned long tbimacro = remaining_bimacro / (thr - t);
+        unsigned long tbimacro = MAX(1UL, remaining_bimacro / (thr - t));
         unsigned long tsize = tbimacro * BIMACRO_SIZE;
         remaining_bimacro -= tbimacro;
+        D printf("%lu bimacroblocks assigned to thread %d\n", tbimacro, t);
 
         aesmix_args* a = &args[t];
         memcpy(tiv[t], &miv, BLOCK_SIZE);
         a->data = data; a->out = out; a->size = tsize; a->key = key; a->iv = tiv[t];
         pthread_create(&thread[t], NULL, fn, a);
-        data += tsize; out += tsize; miv += tbimacro;
+        data += tsize; out += tsize; miv += tbimacro; started_thr++;
     }
 
     assert(!remaining_bimacro);
-    for (t=0; t < thr; ++t) {
+    for (t=0; t < started_thr; ++t) {
         pthread_join(thread[t], NULL);
     }
 }
