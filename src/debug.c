@@ -20,4 +20,5 @@ void print_diff(const unsigned char *s1, const unsigned char *s2, unsigned long 
         printf("%02x", (unsigned char) s2[i]);
         printf(ANSI_COLOR_RESET);
     }
+    printf("\n");
 }

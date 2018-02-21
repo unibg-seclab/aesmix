@@ -1,5 +1,6 @@
 .PHONY:	all callgrind clean cleanall debug fresh multitest printvars \
-		supertest test test_oaep time time_oaep
+		supertest test test_oaep time time_oaep \
+		multidiff multidiff_oaep
 
 # DEFINES
 MINI_SIZE      =    4
@@ -14,7 +15,7 @@ THREADS   = 32
 TIMES     = 1
 
 # DO NOT TOUCH
-TARGETS   = main main_oaep blackbox blackbox_oaep multithread multithread_oaep
+TARGETS   = main main_oaep blackbox blackbox_oaep multithread multithread_oaep multidiff multidiff_oaep
 SRCDIR    = src
 CFLAGS   += -O6 -Wall -Wextra
 CFLAGS   += -DMINI_SIZE=$(MINI_SIZE)
@@ -64,6 +65,12 @@ multithread: aes_mix.o debug.o aes_mix_multi.o multithread.o
 multithread_oaep: aes_mix.o debug.o aes_mix_multi_oaep.o multithread_oaep.o aes_mix_oaep.o
 	$(CC) $(LDFLAGS) $^ $(LDLIBS) -lpthread -o $@
 
+multidiff: aes_mix.o debug.o aes_mix_multi.o multidiff.o
+	$(CC) $(LDFLAGS) $^ $(LDLIBS) -lpthread -o $@
+
+multidiff_oaep: aes_mix.o debug.o aes_mix_multi_oaep.o multidiff_oaep.o aes_mix_oaep.o
+	$(CC) $(LDFLAGS) $^ $(LDLIBS) -lpthread -o $@
+
 %.o: %.c
 	$(CC) $(CFLAGS) $(INC) -c -o $@ $<
 
@@ -79,12 +86,14 @@ test: | clean debug printvars
 	@ echo -e "\nRUNNING TESTS ..."
 	./main 1 &> /dev/null || ./main 1
 	./blackbox &> /dev/null || ./blackbox
+	./multidiff &> /dev/null || ./multidiff
 	@ echo -e "\033[0;32mALL OK\033[0m"
 
 test_oaep: | clean debug printvars
 	@ echo -e "\nRUNNING OAEP TESTS ..."
 	./main_oaep 1 &> /dev/null || ./main_oaep 1
 	./blackbox_oaep &> /dev/null || ./blackbox_oaep
+	./multidiff_oaep &> /dev/null || ./multidiff_oaep
 	@ echo -e "\033[0;32mALL OK\033[0m"
 
 time: | clean main printvars
