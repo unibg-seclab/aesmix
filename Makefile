@@ -3,9 +3,7 @@
 		multidiff multidiff_oaep
 
 # DEFINES
-MINI_SIZE      =    4
-BLOCK_SIZE     =   16
-MINI_PER_MACRO = 4096
+include config.properties
 
 # TEST
 TESTDIR   = test
