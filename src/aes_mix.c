@@ -37,8 +37,8 @@ static inline void do_step_decrypt(EVP_CIPHER_CTX* ctx, unsigned char* buffer,
 }
 
 inline void* memxor(void* dst, const void* src, size_t n){
-    char *d = dst;
-    char const *s = src;
+    char *d =(char *) dst;
+    char const *s =(char const*) src;
     for (; n>0; --n) {
         *d++ ^= *s++;
     }
@@ -111,7 +111,7 @@ inline void mixprocess(mixfn fn, const unsigned char* data,
 ){
     const unsigned char* last = data + size;
     unsigned __int128 miv;
-    unsigned char* buffer = malloc(MACRO_SIZE);
+    unsigned char* buffer =(unsigned char*) malloc(MACRO_SIZE);
 
     if ( NULL == buffer ) {
         printf("Cannot allocate needed memory\n");
