@@ -1,5 +1,10 @@
 #!/usr/bin/env python
 
+"""
+Implementation based on "Key Regression: Enabling Efficient Key Distribution
+for Secure Distributed Storage" (https://eprint.iacr.org/2005/303.pdf).
+"""
+
 import abc
 import six
 import hashlib
