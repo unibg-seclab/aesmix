@@ -5,6 +5,7 @@ __pycache__
 
 # C
 *.o
+*.so
 .ycm_extra_conf.py
 
 # profiling tools

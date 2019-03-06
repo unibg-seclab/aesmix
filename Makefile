@@ -15,7 +15,7 @@ TIMES     = 1
 # DO NOT TOUCH
 TARGETS   = main main_oaep blackbox blackbox_oaep multithread multithread_oaep multidiff multidiff_oaep
 SRCDIR    = src
-CFLAGS   += -O6 -Wall -Wextra
+CFLAGS   += -fPIC -O6 -Wall -Wextra
 CFLAGS   += -DMINI_SIZE=$(MINI_SIZE)
 CFLAGS   += -DBLOCK_SIZE=$(BLOCK_SIZE)
 CFLAGS   += -DMINI_PER_MACRO=$(MINI_PER_MACRO)
@@ -44,6 +44,9 @@ debug: all
 callgrind: CFLAGS += -g
 callgrind: | clean main
 	valgrind --tool=callgrind --callgrind-out-file=callgrind.out ./main 1024
+
+libaesmix.so: aes_mix.o aes_mix_oaep.o aes_mix_multi.o aes_mix_multi_oaep.o
+	$(CC) $(LDFLAGS) -shared -o $@ $^
 
 main: aes_mix.o debug.o main.o
 	$(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@
@@ -121,7 +124,7 @@ multitest_oaep: | clean multithread_oaep $(DUMMYFILE) printvars
 	./multithread_oaep $(DUMMYFILE) $(DUMMYFILE).out $(THREADS) $(TIMES)
 
 clean:
-	@ rm -f $(TARGETS) *.o *.out
+	@ rm -f $(TARGETS) *.o *.out *.so
 
 cleanall: clean
 	@ rm -f $(DUMMYFILE) $(DUMMYFILE).out
