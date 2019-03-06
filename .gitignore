@@ -29,3 +29,6 @@ multidiff_oaep
 # dummy files
 *.dummy
 *.dummy.out
+
+#cffi
+_*.c

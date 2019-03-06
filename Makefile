@@ -124,7 +124,7 @@ multitest_oaep: | clean multithread_oaep $(DUMMYFILE) printvars
 	./multithread_oaep $(DUMMYFILE) $(DUMMYFILE).out $(THREADS) $(TIMES)
 
 clean:
-	@ rm -f $(TARGETS) *.o *.out *.so
+	@ rm -f $(TARGETS) *.o *.out *.so _*.c
 
 cleanall: clean
 	@ rm -f $(DUMMYFILE) $(DUMMYFILE).out
