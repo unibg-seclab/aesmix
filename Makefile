@@ -34,7 +34,7 @@ endif
 
 vpath %.c $(SRCDIR) $(TESTDIR)
 
-all: $(TARGETS) cffi
+all: $(TARGETS)
 
 fresh: | clean all
 
@@ -47,10 +47,6 @@ callgrind: | clean main
 
 libaesmix.so: aes_mix.o aes_mix_oaep.o aes_mix_multi.o aes_mix_multi_oaep.o
 	$(CC) $(LDFLAGS) -shared -o $@ $^
-
-cffi: libaesmix.so python/build_aesmix_cffi.py
-	cp libaesmix.so python/
-	cd python; python build_aesmix_cffi.py
 
 main: aes_mix.o debug.o main.o
 	$(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@
