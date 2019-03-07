@@ -42,7 +42,6 @@ ffi.cdef("""
     #define BLOCK_SIZE               16
     #define MINI_SIZE                 4
     #define MINI_PER_MACRO         1024
-    #define MINI_PER_BLOCK          ...
     #define MACRO_SIZE              ...
 """)
 
@@ -59,6 +58,7 @@ ffi.set_source(
     include_dirs=[os.path.join(basepath, 'includes')],
     libraries=['aesmix', 'crypto'],
     library_dirs=[basepath],
+    extra_link_args=['-Wl,-rpath=.']
 )
 
 ffi.compile()
