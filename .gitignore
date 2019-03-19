@@ -3,11 +3,18 @@
 *.pyo
 __pycache__
 venv/
+.eggs
+*egg-info
 
 # C
 *.o
 *.so
 .ycm_extra_conf.py
+
+# libtool
+*.lo
+*.la
+.libs/
 
 # profiling tools
 callgrind.out*

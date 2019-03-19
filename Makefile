@@ -1,6 +1,6 @@
 .PHONY:	all callgrind clean cleanall debug fresh multitest printvars \
 		supertest test test_oaep time time_oaep \
-		multidiff multidiff_oaep
+		multidiff multidiff_oaep install
 
 # DEFINES
 include config.properties
@@ -14,6 +14,7 @@ TIMES     = 1
 
 # DO NOT TOUCH
 TARGETS   = main main_oaep blackbox blackbox_oaep multithread multithread_oaep multidiff multidiff_oaep
+LIBS      = libaesmix.la
 SRCDIR    = src
 CFLAGS   += -fPIC -O6 -Wall -Wextra
 CFLAGS   += -DMINI_SIZE=$(MINI_SIZE)
@@ -21,6 +22,8 @@ CFLAGS   += -DBLOCK_SIZE=$(BLOCK_SIZE)
 CFLAGS   += -DMINI_PER_MACRO=$(MINI_PER_MACRO)
 INC      += -Iincludes
 LDLIBS   += -lcrypto
+LIBTOOL   = libtool --tag=CC
+LIBDIR    = /usr/local/lib
 AESNI     = 1
 
 ifneq ($(AESNI),1)
@@ -34,7 +37,7 @@ endif
 
 vpath %.c $(SRCDIR) $(TESTDIR)
 
-all: $(TARGETS)
+all: $(TARGETS) $(LIBS)
 
 fresh: | clean all
 
@@ -45,35 +48,42 @@ callgrind: CFLAGS += -g
 callgrind: | clean main
 	valgrind --tool=callgrind --callgrind-out-file=callgrind.out ./main 1024
 
-libaesmix.so: aes_mix.o aes_mix_oaep.o aes_mix_multi.o aes_mix_multi_oaep.o
-	$(CC) $(LDFLAGS) -shared -o $@ $^
+main: aes_mix.lo debug.lo main.lo
+	$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
-main: aes_mix.o debug.o main.o
-	$(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@
+main_oaep: aes_mix.lo debug.lo main_oaep.lo aes_mix_oaep.lo
+	$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
-main_oaep: aes_mix.o debug.o main_oaep.o aes_mix_oaep.o
-	$(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@
+blackbox: aes_mix.lo debug.lo blackbox.lo
+	$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
-blackbox: aes_mix.o debug.o blackbox.o
-	$(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@
+blackbox_oaep: aes_mix.lo debug.lo blackbox_oaep.lo aes_mix_oaep.lo
+	$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
-blackbox_oaep: aes_mix.o debug.o blackbox_oaep.o aes_mix_oaep.o
-	$(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@
+multithread: aes_mix.lo debug.lo aes_mix_multi.lo multithread.lo
+	$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) $^ $(LDLIBS) -lpthread -o $@
 
-multithread: aes_mix.o debug.o aes_mix_multi.o multithread.o
-	$(CC) $(LDFLAGS) $^ $(LDLIBS) -lpthread -o $@
+multithread_oaep: aes_mix.lo debug.lo aes_mix_multi_oaep.lo multithread_oaep.lo aes_mix_oaep.lo
+	$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) $^ $(LDLIBS) -lpthread -o $@
 
-multithread_oaep: aes_mix.o debug.o aes_mix_multi_oaep.o multithread_oaep.o aes_mix_oaep.o
-	$(CC) $(LDFLAGS) $^ $(LDLIBS) -lpthread -o $@
+multidiff: aes_mix.lo debug.lo aes_mix_multi.lo multidiff.lo
+	$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) $^ $(LDLIBS) -lpthread -o $@
 
-multidiff: aes_mix.o debug.o aes_mix_multi.o multidiff.o
-	$(CC) $(LDFLAGS) $^ $(LDLIBS) -lpthread -o $@
+multidiff_oaep: aes_mix.lo debug.lo aes_mix_multi_oaep.lo multidiff_oaep.lo aes_mix_oaep.lo
+	$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) $^ $(LDLIBS) -lpthread -o $@
 
-multidiff_oaep: aes_mix.o debug.o aes_mix_multi_oaep.o multidiff_oaep.o aes_mix_oaep.o
-	$(CC) $(LDFLAGS) $^ $(LDLIBS) -lpthread -o $@
+%.lo: %.c
+	$(LIBTOOL) --mode=compile $(CC) $(CFLAGS) $(INC) -c -o $@ $<
 
-%.o: %.c
-	$(CC) $(CFLAGS) $(INC) -c -o $@ $<
+libaesmix.la: aes_mix.lo aes_mix_oaep.lo aes_mix_multi.lo aes_mix_multi_oaep.lo
+	$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) -o $@ $^ -rpath $(LIBDIR)
+
+install: libaesmix.la
+	$(LIBTOOL) --mode=install install -c $< $(LIBDIR)/$<
+	$(LIBTOOL) --mode=finish $(LIBDIR)
+
+uninstall: libaesmix.la
+	$(LIBTOOL) --mode=uninstall $(RM) $(LIBDIR)/$<
 
 $(DUMMYFILE):
 	@ mkdir -p $(TESTDIR)/data
@@ -125,7 +135,8 @@ multitest_oaep: | clean multithread_oaep $(DUMMYFILE) printvars
 
 clean:
 	@ rm -f $(TARGETS)
-	@ find . \( -iname '*.o' -or -iname '*.out' -or -iname '*.so' -or -iname '_*.c' \) -type f -delete
+	@ rm -rf .libs
+	@ find . \( -iname '*.o' -or -iname '*.lo' -or -iname '*.la' -or -iname '*.out' -or -iname '*.so' -or -iname '_*.c' \) -type f -delete
 
 cleanall: clean
 	@ rm -f $(DUMMYFILE) $(DUMMYFILE).out
