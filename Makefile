@@ -23,7 +23,7 @@ CFLAGS   += -DMINI_PER_MACRO=$(MINI_PER_MACRO)
 INC      += -Iincludes
 LDLIBS   += -lcrypto
 LIBTOOL   = libtool --tag=CC
-LIBDIR    = /usr/local/lib
+LIBDIR    = /usr/lib
 AESNI     = 1
 
 ifneq ($(AESNI),1)
@@ -76,7 +76,7 @@ multidiff_oaep: aes_mix.lo debug.lo aes_mix_multi_oaep.lo multidiff_oaep.lo aes_
 	$(LIBTOOL) --mode=compile $(CC) $(CFLAGS) $(INC) -c -o $@ $<
 
 libaesmix.la: aes_mix.lo aes_mix_oaep.lo aes_mix_multi.lo aes_mix_multi_oaep.lo
-	$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) -o $@ $^ -rpath $(LIBDIR)
+	$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) -o $@ $^ -rpath $(LIBDIR) $(LDLIBS)
 
 install: libaesmix.la
 	$(LIBTOOL) --mode=install install -c $< $(LIBDIR)/$<
