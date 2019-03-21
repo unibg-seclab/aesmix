@@ -120,3 +120,23 @@ There are three test suites:
     make test
 
 See the `Makefile` for all the compile and test targets.
+
+
+## installation
+
+To compile and install the dynamic library in your system you can:
+
+    make
+    sudo make install
+
+To remove the library simply do:
+
+    sudo make uninstall
+
+
+## python wrapper
+
+The python wrapper based on cffi can be found in the `python` directory. Please check the file `python/example.py` to understand how to use the library. The mixing phase is implemented in C (fast), whereas the slicing phase is implemented in python (not so fast).
+
+Since the slicing phase is only involved in file management and can be speed up easily with ad-hoc file management, if you need to benchmark the solution, we suggest to only benchmark the mixing phase.
+
