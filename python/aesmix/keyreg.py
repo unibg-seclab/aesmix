@@ -72,7 +72,8 @@ class KeyRegRSA(_KeyReg):
         return _hashlib.sha1(mS).digest()
 
 
-if __name__ == "__main__":
+def _main():
+    print("\n\ntest key regression using KeyRegRSA")
     iters = 5
     stp = KeyRegRSA()
 
@@ -85,3 +86,7 @@ if __name__ == "__main__":
     for i in range(iters - 1, -1, -1):
         print("k%i: %r" % (i, stm.keyder()))
         stm = stm.unwind()
+
+
+if __name__ == "__main__":
+    _main()

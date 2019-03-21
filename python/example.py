@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 
-from aesmix import mixencrypt, mixdecrypt, t_mixencrypt, t_mixdecrypt, slice, mix_and_slice, unslice_and_unmix
+from aesmix import mixencrypt, mixdecrypt
+from aesmix import t_mixencrypt, t_mixdecrypt
+from aesmix import slice
+from aesmix import mix_and_slice, unslice_and_unmix
+from aesmix import keyreg
 
 
 def test_single_thread():
@@ -64,3 +68,4 @@ if __name__ == "__main__":
     test_multi_thread()
     test_slice()
     test_mix_and_slice()
+    keyreg._main()
