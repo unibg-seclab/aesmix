@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from aesmix import mixencrypt, mixdecrypt, t_mixencrypt, t_mixdecrypt, slice
+from aesmix import mixencrypt, mixdecrypt, t_mixencrypt, t_mixdecrypt, slice, mix_and_slice, unslice_and_unmix
 
 
 def test_single_thread():
@@ -24,7 +24,7 @@ def test_multi_thread():
     iv = b"i" * 16
     threads = 8
 
-    plaintext = b"d" * (2 ** 30)  # 1 GiB
+    plaintext = b"d" * (2 ** 20) * 128  # 128 MiB
     print(b"plaintext: " + plaintext[:64] + b" ... " + plaintext[-64:])
 
     ciphertext = t_mixencrypt(plaintext, key, iv, threads, to_string=True)
@@ -35,6 +35,7 @@ def test_multi_thread():
 
 
 def test_slice():
+    print("\n\nTest slice")
     mini_size = 4
     macro_size = 16
     num_macros = 4
@@ -43,7 +44,23 @@ def test_slice():
     print("fragments: %s" % slice(data, mini_size, macro_size))
 
 
+def test_mix_and_slice():
+    print("\n\nTest mix and slice")
+    key = b"k" * 16
+    iv = b"i" * 16
+
+    plaintext = b"d" * (2 ** 20)  # 1 MiB
+    print(b"plaintext: " + plaintext[:64] + b" ... " + plaintext[-64:])
+
+    fragments = mix_and_slice(plaintext, key, iv)
+    print("num fragments: %s" % len(fragments))
+
+    decrypted = unslice_and_unmix(fragments, key, iv)
+    print(b"decrypted: " + decrypted[:64] + b" ... " + decrypted[-64:])
+
+
 if __name__ == "__main__":
     test_single_thread()
     test_multi_thread()
     test_slice()
+    test_mix_and_slice()
