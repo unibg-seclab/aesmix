@@ -136,13 +136,6 @@ To remove the library simply do:
 
 ## python wrapper
 
-The python wrapper based on cffi can be found in the `python` directory. Please check the file `python/example.py` to understand how to use the library. The python wrapper requires the dynamic library `libaesmix` to be available in your system. Follow the installation steps before using the python library.
+The python wrapper based on cffi can be found in the `python` directory. The python implementation contains the slicing phase based on the `libaesmix` library and the key regression mechanism.
 
-To run the example (after installing the library in your system), you can `cd` to the `python` directory and then run:
-
-    make run
-
-The mixing phase is implemented in C (fast), whereas the slicing phase is implemented in python (not so fast).
-
-Since the slicing phase is only involved in file management and can be speed up easily with ad-hoc file management, if you need to benchmark the solution, we suggest to only benchmark the mixing phase.
-
+Please refer to the `README.md` file contained in the `python` directory for more details.
