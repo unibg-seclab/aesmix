@@ -1,6 +1,8 @@
 from aesmix import keyreg
 from aesmix._aesmix import lib as _lib, ffi
 
+from six.moves import xrange as _xrange
+
 
 def _mixprocess(data, key, iv, fn, to_string, threads=1):
     assert len(key) == 16, "key must be 16 bytes long"
@@ -87,3 +89,81 @@ def t_mixdecrypt(data, key, iv, threads, to_string=True):
     return _mixprocess(data, key, iv, _lib.t_mixdecrypt, to_string, threads)
 
 
+def islice(data, mini_size=_lib.MINI_SIZE, macro_size=_lib.MACRO_SIZE):
+    """Slices data into fragments using Mix&Slice (slicing phase).
+
+    Args:
+        data (bytestr): The data to slice. Must be a multiple of MACRO_SIZE.
+        mini_size (int): The miniblock size. (default: provided by the lib).
+        macro_size (int): The macroblock size. (default: provided by the lib).
+
+    Yields:
+        Generates the encrypted fragments one at a time.
+    """
+    assert len(data) % macro_size == 0, \
+        "plaintext size must be a multiple of %d" % macro_size
+
+    dataview = memoryview(data)
+    for fragment_offset in _xrange(0, macro_size, mini_size):
+        yield b"".join(
+            dataview[mini_offset:mini_offset + mini_size]
+            for mini_offset in _xrange(fragment_offset, len(data), macro_size))
+
+
+def slice(data, mini_size=_lib.MINI_SIZE, macro_size=_lib.MACRO_SIZE):
+    """Slices data into fragments using Mix&Slice (slicing phase).
+
+    Args:
+        data (bytestr): The data to slice. Must be a multiple of MACRO_SIZE.
+        mini_size (int): The miniblock size. (default: provided by the lib).
+        macro_size (int): The macroblock size. (default: provided by the lib).
+
+    Returns:
+        A list of encrypted fragments.
+    """
+    return list(islice(data, mini_size, macro_size))
+
+
+def mix_and_slice(data, key, iv, threads=1,
+                  mini_size=_lib.MINI_SIZE, macro_size=_lib.MACRO_SIZE):
+    """Perform the whole Mix&Slice encryption (mixing and slicing phases).
+
+    Args:
+        data (bytestr): The data to decrypt. Must be a multiple of MACRO_SIZE.
+        key (bytestr): The key used for AES encryption. Must be 16 bytes long.
+        iv (bytestr): The iv used for AES encryption. Must be 16 bytes long.
+        threads (int): The number of threads used for encryption.
+        mini_size (int): The miniblock size. (default: provided by the lib).
+        macro_size (int): The macroblock size. (default: provided by the lib).
+
+    Returns:
+        A list of encrypted fragments.
+    """
+    ciphertext = t_mixencrypt(data, key, iv, threads, to_string=False)
+    return slice(ciphertext, mini_size, macro_size)
+
+
+def unslice_and_unmix(fragments, key, iv, threads=1,
+                      mini_size=_lib.MINI_SIZE, macro_size=_lib.MACRO_SIZE):
+    """Perform the whole Mix&Slice decryption (mixing and slicing phases).
+
+    Args:
+        fragments (list[bytestr]): The fragments to decrypt.
+        key (bytestr): The key used for AES decryption. Must be 16 bytes long.
+        iv (bytestr): The iv used for AES decryption. Must be 16 bytes long.
+        threads (int): The number of threads used for decryption.
+        mini_size (int): The miniblock size. (default: provided by the lib).
+        macro_size (int): The macroblock size. (default: provided by the lib).
+
+    Returns:
+        A list of encrypted fragments.
+    """
+    frag_length = len(fragments[0])
+    fragmentviews = list(map(memoryview, fragments))
+
+    ciphertext = b"".join(
+        fragmentview[mini_offset:mini_offset + mini_size]
+        for mini_offset in _xrange(0, frag_length, mini_size)
+        for fragmentview in fragmentviews)
+
+    return t_mixdecrypt(ciphertext, key, iv, threads, to_string=True)

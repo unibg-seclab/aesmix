@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from aesmix import mixencrypt, mixdecrypt, t_mixencrypt, t_mixdecrypt
+from aesmix import mixencrypt, mixdecrypt, t_mixencrypt, t_mixdecrypt, slice
 
 
 def test_single_thread():
@@ -34,6 +34,16 @@ def test_multi_thread():
     print(b"decrypted: " + decrypted[:64] + b" ... " + decrypted[-64:])
 
 
+def test_slice():
+    mini_size = 4
+    macro_size = 16
+    num_macros = 4
+    data = b"0123456789ABCDEF" * num_macros
+    print("data: %s" % data)
+    print("fragments: %s" % slice(data, mini_size, macro_size))
+
+
 if __name__ == "__main__":
     test_single_thread()
     test_multi_thread()
+    test_slice()
