@@ -38,15 +38,43 @@ class KeyRegRSA(_KeyReg):
     _STM = _collections.namedtuple("_STM", "N e S")
     _STP = _collections.namedtuple("_STP", "N e d S")
 
-    def __init__(self, stm=None, stp=None):
+    def __init__(self, stm=None, stp=None, S=None):
         if stm or stp:
             self._stm = stm
             self._stp = stp
         else:
             Krsa = _RSA.generate(self._size)
-            S = _random.randrange(3, Krsa.n)
+            S = S or _random.randrange(3, Krsa.n)
+            assert 3 <= S <= Krsa.n
             self._stm = None
             self._stp = self._STP(Krsa.n, Krsa.e, Krsa.d, S)
+
+    @staticmethod
+    def load(Krsa, S):
+        """Loads a KeyRegRSA from a private/public key data and state S.
+
+        Args:
+            Krsa (Crypto.PublicKey.Rsa): the RSA key.
+            S (long): the state of the KeyRegRSA.
+        """
+        if Krsa.has_private:
+            stp = KeyRegRSA._STP(Krsa.n, Krsa.e, Krsa.d, S)
+            return KeyRegRSA(stm=None, stp=stp)
+        else:
+            stm = KeyRegRSA._STM(Krsa.n, Krsa.e, S)
+            return KeyRegRSA(stm=stm, stp=None)
+
+    def get_state(self):
+        return self._stp.S if self.is_publisher() else self._stm.S
+
+    def get_rsakey(self):
+        if self.is_publisher():
+            return _RSA.construct(self._stp.N, self._stp.e, self._stp.d)
+        else:
+            return _RSA.construct(self._stm.N, self._stm.e)
+
+    def is_publisher(self):
+        return self._stp is not None
 
     def wind(self):
         if self._stp is None:
@@ -58,16 +86,15 @@ class KeyRegRSA(_KeyReg):
         return KeyRegRSA(stm=None, stp=stp1), KeyRegRSA(stm=stm, stp=None)
 
     def unwind(self):
-        if self._stm is None:
-            raise AttributeError("No member state. Can only wind.")
-        N, e, S = self._stm.N, self._stm.e, self._stm.S
+        stm = self._stm or self._stp
+        N, e, S = stm.N, stm.e, stm.S
         S1 = pow(S, e, N)
         stm1 = self._STM(N, e, S1)
         return KeyRegRSA(stm=stm1, stp=None)
 
     def keyder(self):
         if self._stm is None:
-            raise AttributeError("Do not keyder from publisher state.")
+            raise AttributeError("Unwind before keyder from publisher state.")
         mS = _number.long_to_bytes(self._stm.S, blocksize=self._K)
         return _hashlib.sha1(mS).digest()
 
