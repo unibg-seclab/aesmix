@@ -75,9 +75,9 @@ def test_manager():
 
 
 if __name__ == "__main__":
-    # test_single_thread()
-    # test_multi_thread()
-    # test_slice()
-    # test_mix_and_slice()
-    # keyreg._main()
+    test_single_thread()
+    test_multi_thread()
+    test_slice()
+    test_mix_and_slice()
+    keyreg._main()
     test_manager()
