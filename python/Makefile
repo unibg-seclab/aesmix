@@ -38,4 +38,5 @@ endif
 clean:
 	@ rm -rf $(VENV)
 	@ rm -rf *.egg-info build dist
+	@ rm *.out *.private *.public
 	@ find . \( -iname '*.o' -or -iname '*.out' -or -iname '*.so' -or -iname '_*.c' \) -type f -delete
