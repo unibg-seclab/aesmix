@@ -1,11 +1,16 @@
 #!/usr/bin/env python
 
+from six.moves import xrange
+
 from aesmix import mixencrypt, mixdecrypt
 from aesmix import t_mixencrypt, t_mixdecrypt
 from aesmix import slice
 from aesmix import mix_and_slice, unslice_and_unmix
 from aesmix import keyreg
 from aesmix.manager import MixSlice
+
+import logging
+logging.basicConfig(level=logging.DEBUG)
 
 
 def test_single_thread():
@@ -66,12 +71,23 @@ def test_mix_and_slice():
 
 def test_manager():
     print("\n\nTest mix and slice manager")
-    data = b"d" * 18
+    data = b"d" * 117 + b"ata"
     key = b"k" * 16
     iv = b"i" * 16
-    manager = MixSlice.encrypt(data, key, iv)
-    print(manager)
-    print(manager.decrypt())
+
+    print("input: ", data)
+    owner = MixSlice.encrypt(data, key, iv)
+    owner.save_to_files("example.out", "example.public", "example.private")
+
+    owner = MixSlice.load_from_file("example.out", "example.private")
+    print("\nPolicy updates ...")
+    for _ in xrange(int(1024 ** 0.5 * 2)):
+        owner.step_encrypt()
+    owner.save_to_files("example.out", "example.public", "example.private")
+
+    print("\nDecrypting ...")
+    reader = MixSlice.load_from_file("example.out", "example.public")
+    print("\noutput: ", reader.decrypt())
 
 
 if __name__ == "__main__":
