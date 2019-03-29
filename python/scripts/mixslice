@@ -1,0 +1,90 @@
+#!/usr/bin/env python
+
+from aesmix.manager import MixSlice
+
+import argparse
+import os.path
+import os
+
+
+def encrypt(args):
+    print("Encrypting")
+    key = args.key or os.urandom(16)
+    iv = args.iv or os.urandom(16)
+    output = args.output or (args.plainfile + ".enc")
+    public = args.public or (args.plainfile + ".public")
+    private = args.public or (args.plainfile + ".private")
+
+    with open(args.plainfile, "rb") as fp:
+        data = fp.read()
+
+    manager = MixSlice.encrypt(data, key, iv)
+    manager.save_to_files(output, public, private)
+
+
+def update(args):
+    public = args.public or (os.path.splitext(args.encfile)[0] + ".public")
+    private = args.public or (os.path.splitext(args.encfile)[0] + ".private")
+    manager = MixSlice.load_from_file(args.encfile, private)
+    manager.step_encrypt()
+    manager.save_to_files(args.encfile, public, private)
+
+
+def decrypt(args):
+    base = os.path.splitext(args.encfile)[0]
+    keyfile = (args.public if args.public else
+               args.private if args.private else
+               base + ".public" if os.path.isfile(base + ".public") else
+               base + ".private")
+    assert os.path.isfile(keyfile), "keyfile not found."
+
+    output = args.output or (args.encfile + ".dec")
+    manager = MixSlice.load_from_file(args.encfile, keyfile)
+    plaindata = manager.decrypt()
+    with open(output, "wb") as fp:
+        fp.write(plaindata)
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Mix&Slice tool for encrypting/decrypting files",
+        epilog="More info at: https://doi.org/10.1145/2976749.2978377")
+    subparsers = parser.add_subparsers(help="sub-command help")
+
+    keyparser = argparse.ArgumentParser(add_help=False)
+    keyparser.add_argument("--public", default=None,
+                           help="public key file (default: $INPUT.public)")
+    keyparser.add_argument("--private", default=None,
+                           help="private key file (default: $INPUT.private)")
+
+    # parser for the encrypt command
+    encrypt = subparsers.add_parser("encrypt", parents=[keyparser],
+                                    help="encrypt a file")
+    encrypt.add_argument("PLAINFILE", help="path to input file")
+    encrypt.add_argument("--key", default=None, help="encryption key (16B)")
+    encrypt.add_argument("--iv", default=None, help="encryption iv (16B)")
+    encrypt.add_argument("--output", default=None,
+                         help="output file (default: $INPUT.enc)")
+    encrypt.set_defaults(func=encrypt)
+
+    # parser for the update command
+    update = subparsers.add_parser("update", parents=[keyparser],
+                                   help="perform policy update")
+    update.add_argument("ENCFILE", help="path to encrypted file")
+    update.set_defaults(func=update)
+
+    # parser for the decrypt command
+    decrypt = subparsers.add_parser("decrypt", parents=[keyparser],
+                                    help="decrypt a file")
+    decrypt.add_argument("ENCFILE", help="path to encrypted file")
+    decrypt.add_argument("--output", default=None,
+                         help="output file (default: $ENCFILE.dec)")
+    decrypt.set_defaults(func=decrypt)
+
+    parser.parse_args()
+
+
+if __name__ == "__main__":
+    main()
+
+# vim: set syntax=python:

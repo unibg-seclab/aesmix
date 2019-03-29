@@ -13,5 +13,6 @@ setup(name='aesmix',
       zip_safe=False,
       packages=['aesmix'],
       cffi_modules=['build_aesmix.py:ffibuilder'],
+      scripts=['scripts/mixslice'],
       setup_requires=['cffi'],
       install_requires=install_requires)
