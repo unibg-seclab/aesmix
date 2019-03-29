@@ -68,3 +68,10 @@ config.py
 
 # virtualenv
 /venv
+
+# datafiles
+*.out
+*.public
+*.private
+*.pubkey
+*.privkey
