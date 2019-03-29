@@ -5,6 +5,7 @@ from aesmix import t_mixencrypt, t_mixdecrypt
 from aesmix import slice
 from aesmix import mix_and_slice, unslice_and_unmix
 from aesmix import keyreg
+from aesmix.manager import MixSlice
 
 
 def test_single_thread():
@@ -63,9 +64,20 @@ def test_mix_and_slice():
     print(b"decrypted: " + decrypted[:64] + b" ... " + decrypted[-64:])
 
 
+def test_manager():
+    print("\n\nTest mix and slice manager")
+    data = b"d" * 18
+    key = b"k" * 16
+    iv = b"i" * 16
+    manager = MixSlice.encrypt(data, key, iv)
+    print(manager)
+    print(manager.decrypt())
+
+
 if __name__ == "__main__":
-    test_single_thread()
-    test_multi_thread()
-    test_slice()
-    test_mix_and_slice()
-    keyreg._main()
+    # test_single_thread()
+    # test_multi_thread()
+    # test_slice()
+    # test_mix_and_slice()
+    # keyreg._main()
+    test_manager()
