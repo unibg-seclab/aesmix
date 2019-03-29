@@ -57,21 +57,34 @@ class KeyRegRSA(_KeyReg):
             Krsa (Crypto.PublicKey.Rsa): the RSA key.
             S (long): the state of the KeyRegRSA.
         """
-        if Krsa.has_private:
+        if Krsa.has_private():
             stp = KeyRegRSA._STP(Krsa.n, Krsa.e, Krsa.d, S)
             return KeyRegRSA(stm=None, stp=stp)
         else:
             stm = KeyRegRSA._STM(Krsa.n, Krsa.e, S)
             return KeyRegRSA(stm=stm, stp=None)
 
-    def get_state(self):
-        return self._stp.S if self.is_publisher() else self._stm.S
-
-    def get_rsakey(self):
-        if self.is_publisher():
-            return _RSA.construct(self._stp.N, self._stp.e, self._stp.d)
+    def get_state(self, private):
+        if private:
+            if self.is_publisher():
+                return self._stp.S
+            else:
+                raise Exception("Can't save private state from STM.")
         else:
-            return _RSA.construct(self._stm.N, self._stm.e)
+            if self.is_publisher():
+                return self.unwind().get_state(private)
+            else:
+                return self._stm.S
+
+    def get_rsakey(self, private):
+        if private:
+            if self.is_publisher():
+                return _RSA.construct((self._stp.N, self._stp.e, self._stp.d))
+            else:
+                raise Exception("Can't save private state from STM.")
+        else:
+            stm = self._stp if self.is_publisher() else self._stm
+            return _RSA.construct((stm.N, stm.e))
 
     def is_publisher(self):
         return self._stp is not None
