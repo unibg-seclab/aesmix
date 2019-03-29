@@ -159,7 +159,7 @@ def unslice_and_unmix(fragments, key, iv, threads=None,
         macro_size (int): The macroblock size. (default: provided by the lib).
 
     Returns:
-        A list of encrypted fragments.
+        The decrypted bytestring.
     """
     frag_length = len(fragments[0])
     fragmentviews = list(map(memoryview, fragments))
