@@ -11,6 +11,7 @@ import aesmix as _aesmix
 from base64 import b64encode as _b64encode, b64decode as _b64decode
 import json as _json
 import random as _random
+import logging as _logging
 
 # cryptographically secure PRNG
 _random = _random.SystemRandom()
@@ -58,9 +59,9 @@ class _MixSliceMetadata(object):
             metadata = _json.load(fp)
 
         return _MixSliceMetadata(
-            key=metadata["key"],
-            iv=_b64decode(metadata["iv"]),
-            rsakey=_RSA.importKey(metadata["rsakey"]),
+            key=_b64decode(metadata["key"].encode("ascii")),
+            iv=_b64decode(metadata["iv"].encode("ascii")),
+            rsakey=_RSA.importKey(metadata["rsakey"].encode("ascii")),
             order=metadata["order"],
             state=metadata["state"])
 
@@ -71,15 +72,13 @@ class _MixSliceMetadata(object):
             metadatafile (path): The path for the metadatafile.
             private (bool): Save also the private key.
         """
-        state = self._keyreg.get_state()
-        rsakey = self._keyreg.get_rsakey()
-        if not private:
-            rsakey = rsakey.publickey()
+        state = self._keyreg.get_state(private)
+        rsakey = self._keyreg.get_rsakey(private)
 
         metadata = {
-            "key": _b64encode(self._key),
-            "iv": _b64encode(self._iv),
-            "rsakey": rsakey.exportKey(),
+            "key": _b64encode(self._key).decode("ascii"),
+            "iv": _b64encode(self._iv).decode("ascii"),
+            "rsakey": rsakey.exportKey().decode("ascii"),
             "order": self._order,
             "state": state,
         }
@@ -95,7 +94,7 @@ class _MixSliceMetadata(object):
         self._keyreg, stm = self._keyreg.wind()
         return stm.keyder()
 
-    def decrypt_steps(self):
+    def decryption_steps(self):
         keyreg = self._keyreg
         stm = keyreg.unwind() if keyreg.is_publisher() else keyreg
         for fragment_id in reversed(self._order):
