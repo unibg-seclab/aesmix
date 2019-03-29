@@ -1,5 +1,6 @@
 from Crypto.PublicKey import RSA as _RSA
 from Crypto.Cipher import AES as _AES
+from Crypto.Util import Counter as _Counter
 from six.moves import xrange as _xrange
 
 from aesmix.keyreg import KeyRegRSA as _KeyRegRSA
@@ -171,15 +172,25 @@ class MixSlice(object):
 
     def step_encrypt(self, fragment_id=None):
         fragment_id = (fragment_id if fragment_id is not None
-                       else _random.randrange())
-        key = self._metadata.step(fragment_id)
-        cipher = _AES.new(key, mode=_AES.MODE_ECB)
+                       else _random.randrange(len(self._fragments)))
+        key = self._metadata.add_encryption_step(fragment_id)
+        ctr = _Counter.new(128)
+        cipher = _AES.new(key[:16], mode=_AES.MODE_CTR, counter=ctr)
         self._fragments[fragment_id] = cipher.encrypt(
             self._fragments[fragment_id])
+        _logging.info("Encrypting frag #%d (key: %r)" % (fragment_id, key))
+        return fragment_id
 
     def decrypt(self, threads=None, padder=None):
+        fragments = self._fragments
+        for fragment_id, key in self._metadata.decryption_steps():
+            _logging.info("Decrypting frag #%d (key: %r)" % (fragment_id, key))
+            ctr = _Counter.new(128)
+            cipher = _AES.new(key[:16], mode=_AES.MODE_CTR, counter=ctr)
+            fragments[fragment_id] = cipher.decrypt(fragments[fragment_id])
+
         padded_data = _aesmix.unslice_and_unmix(
-            fragments=self._fragments,
+            fragments=fragments,
             key=self._metadata._key,
             iv=self._metadata._iv,
             threads=threads)
