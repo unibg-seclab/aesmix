@@ -3,46 +3,58 @@
 from aesmix.manager import MixSlice
 
 import argparse
+import logging
 import os.path
 import os
 
+# enable logging
+logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 
-def encrypt(args):
-    print("Encrypting")
+
+def fn_encrypt(args):
     key = args.key or os.urandom(16)
     iv = args.iv or os.urandom(16)
-    output = args.output or (args.plainfile + ".enc")
-    public = args.public or (args.plainfile + ".public")
-    private = args.public or (args.plainfile + ".private")
+    output = args.output or (args.PLAINFILE + ".enc")
+    public = args.public or (args.PLAINFILE + ".public")
+    private = args.public or (args.PLAINFILE + ".private")
 
-    with open(args.plainfile, "rb") as fp:
+    with open(args.PLAINFILE, "rb") as fp:
         data = fp.read()
 
+    logging.info("[*] Encrypting file %s ..." % args.PLAINFILE)
     manager = MixSlice.encrypt(data, key, iv)
     manager.save_to_files(output, public, private)
+    logging.info("Output file:      %s" % output)
+    logging.info("Public key file:  %s" % public)
+    logging.info("Private key file: %s" % private)
 
 
-def update(args):
-    public = args.public or (os.path.splitext(args.encfile)[0] + ".public")
-    private = args.public or (os.path.splitext(args.encfile)[0] + ".private")
-    manager = MixSlice.load_from_file(args.encfile, private)
+def fn_update(args):
+    public = args.public or (os.path.splitext(args.ENCFILE)[0] + ".public")
+    private = args.public or (os.path.splitext(args.ENCFILE)[0] + ".private")
+    logging.info("[*] Performing policy update on %s ..." % args.ENCFILE)
+    manager = MixSlice.load_from_file(args.ENCFILE, private)
     manager.step_encrypt()
-    manager.save_to_files(args.encfile, public, private)
+    manager.save_to_files(args.ENCFILE, public, private)
+    logging.info("Done")
 
 
-def decrypt(args):
-    base = os.path.splitext(args.encfile)[0]
+def fn_decrypt(args):
+    base = os.path.splitext(args.ENCFILE)[0]
     keyfile = (args.public if args.public else
                args.private if args.private else
                base + ".public" if os.path.isfile(base + ".public") else
                base + ".private")
     assert os.path.isfile(keyfile), "keyfile not found."
 
-    output = args.output or (args.encfile + ".dec")
-    manager = MixSlice.load_from_file(args.encfile, keyfile)
+    logging.info("[*] Decrypting file %s using key %s ..." %
+                 (args.ENCFILE, keyfile))
+    output = args.output or (args.ENCFILE + ".dec")
+    manager = MixSlice.load_from_file(args.ENCFILE, keyfile)
     plaindata = manager.decrypt()
     with open(output, "wb") as fp:
         fp.write(plaindata)
+    logging.info("Decrypted file: %s" % output)
 
 
 def main():
@@ -65,13 +77,13 @@ def main():
     encrypt.add_argument("--iv", default=None, help="encryption iv (16B)")
     encrypt.add_argument("--output", default=None,
                          help="output file (default: $INPUT.enc)")
-    encrypt.set_defaults(func=encrypt)
+    encrypt.set_defaults(func=fn_encrypt)
 
     # parser for the update command
     update = subparsers.add_parser("update", parents=[keyparser],
                                    help="perform policy update")
     update.add_argument("ENCFILE", help="path to encrypted file")
-    update.set_defaults(func=update)
+    update.set_defaults(func=fn_update)
 
     # parser for the decrypt command
     decrypt = subparsers.add_parser("decrypt", parents=[keyparser],
@@ -79,9 +91,10 @@ def main():
     decrypt.add_argument("ENCFILE", help="path to encrypted file")
     decrypt.add_argument("--output", default=None,
                          help="output file (default: $ENCFILE.dec)")
-    decrypt.set_defaults(func=decrypt)
+    decrypt.set_defaults(func=fn_decrypt)
 
-    parser.parse_args()
+    args = parser.parse_args()
+    args.func(args)
 
 
 if __name__ == "__main__":
