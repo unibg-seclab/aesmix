@@ -1,10 +1,27 @@
-# aesmix python wrapper
+# aesmix python wrapper and CLI
 
-Python wrapper for the libaesmix mixing library that also implements the slicing phase.
+Python wrapper and command line tool for the libaesmix mixing library.
+
 
 ## description
 
-This directory contains the python wrapper based on cffi. Please check the file `python/example.py` to understand how to use the library. The python wrapper requires the dynamic library `libaesmix` to be available in your system. Follow the installation steps in the `REAMDE.md` file in the parent directory before using the python library.
+This directory contains the python wrapper based on cffi and the command line
+tool to use Mix&Slice on your files.
+
+The C implementation has been built with performance in mind, whereas the python
+wrapper and the CLI tool has been implemented to offer a more widespread access
+of the Mix&Slice capabilities. The mixing and slicing phases use the C
+implementation, but the python conversion adds a big overhead since it has
+to materialize all the buffers in memory.
+
+Please check the file `python/example.py` to understand how to use the library.
+
+
+## installation
+
+The python wrapper requires the dynamic library `libaesmix` to be available in
+your system. Follow the installation steps in the `REAMDE.md` file in the
+parent directory before using the python library.
 
 
 ## example
@@ -14,16 +31,44 @@ To run the example (after installing the library in your system) run:
     make run
 
 
-## details
+To install the command line tool in your system (you can also use it from the
+virtual environment), first follow the installation steps above, then run:
 
-The mixing phase is implemented in C (fast), whereas the slicing phase is implemented in python (not so fast).
+    sudo python setup.py install
 
-Since the slicing phase is only involved in file management and can be speed up easily with ad-hoc file management, if you need to benchmark the solution, we suggest to only benchmark the mixing phase.
 
+Once the `mixslice` tool is installed, you can encrypt a file as follows:
+
+    $ mixslice encrypt sample.txt
+    INFO: [*] Encrypting file sample.txt ...
+    INFO: Output file:      sample.txt.enc
+    INFO: Public key file:  sample.txt.public
+    INFO: Private key file: sample.txt.private
+
+To perform a policy update:
+
+    $ mixslice update sample.txt.enc
+    INFO: [*] Performing policy update on sample.txt.enc ...
+    INFO: Encrypting frag #68
+    INFO: Done
+
+To decrypt a file:
+
+    $ mixslice decrypt sample.txt.enc
+    INFO: [*] Decrypting file sample.txt.enc using key sample.txt.public ...
+    INFO: Decrypting frag #68
+    INFO: Decrypted file: sample.txt.enc.dec
+
+    $ sha1sum sample.txt sample.txt.enc.dec
+    d3e92d3c3bf278e533f75818ee94d472347fa32a  sample.txt
+    d3e92d3c3bf278e533f75818ee94d472347fa32a  sample.txt.enc.dec
+
+--------------------------------------------------------------------------------
 
 # key regression mechanism
 
-The key regression mechanism implementation is based on ["Key Regression: Enabling Efficient Key Distribution for Secure Distributed Storage"](https://eprint.iacr.org/2005/303.pdf).
+The key regression mechanism implementation is based on
+["Key Regression: Enabling Efficient Key Distribution for Secure Distributed Storage"](https://eprint.iacr.org/2005/303.pdf).
 
 
 ## example

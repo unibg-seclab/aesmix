@@ -78,23 +78,60 @@ The parameters are as follows.
  * `key`: symmetric key (string) used for the AES functions
  * `iv`: initialization vector for the AES functions
 
-See the file `test/main.c` for an example of use of Mix&Slice.
+See the file `test/main.c` for an example.
 
 
 ### multi-thread APIs
 
-The file `includes/aes_mix_multi.h` contains the prototype of the only two
+The file `includes/aes_mix_multi.h` contains the prototypes of the only two
 methods that are necessary to use Mix&Slice in multi-threaded mode:
 
-    void t_mixencrypt(unsigned int thr, const unsigned char* data, unsigned char* out,
-        const unsigned long size, const unsigned char* key, const unsigned char* iv);
+    void t_mixencrypt(unsigned int thr, const unsigned char* data,
+                      unsigned char* out, const unsigned long size,
+                      const unsigned char* key, const unsigned char* iv);
 
-    void t_mixdecrypt(unsigned int thr, const unsigned char* data, unsigned char* out,
-        const unsigned long size, const unsigned char* key, const unsigned char* iv);
+    void t_mixdecrypt(unsigned int thr, const unsigned char* data,
+                      unsigned char* out, const unsigned long size,
+                      const unsigned char* key, const unsigned char* iv);
 
 The only additional parameter is `thr`, the number of threads to use.
 
-See the file `test/multithread.c` for an example of use of Mix&Slice.
+See the file `test/multithread.c` for an example.
+
+
+### slicing phase
+
+The mixing phase is the real encryption phase. The slicing phase strongly depends
+on the file management and should be implemented according to the ratio of policy
+updates with respect to decryption processes and can be easily sped up with as-hoc
+file management. Because of this, the performance of the mixing phase is a good
+proxy of the performance of the whole Mix&Slice technique.
+
+The version implemented here keeps the fragments together. This benefits the
+policy update process, whereas the decryption process has to pay the overhead
+for rearranging the bytes before performing the unmixing phase.
+
+The file `includes/aes_mixslice.h` contains the prototypes of the two methods
+that perform the whole Mix&Slice encryption:
+
+    void mixslice(unsigned int thr, const unsigned char* data,
+                  unsigned char* fragdata, const unsigned long size,
+                  const unsigned char* key, const unsigned char* iv);
+
+    void unsliceunmix(unsigned int thr, const unsigned char* fragdata,
+                      unsigned char* out, const unsigned long size,
+                      const unsigned char* key, const unsigned char* iv);
+
+The `mixslice` method first uses `t_mixencrypt` to perform the mixing phase.
+The slicing phase rearranges the output of the mixing phase in slices.
+The user is responsible for creating the buffer that will contain the `fragdata`.
+The slices are concatenated and written to the `fragdata` buffer. The user
+of the function, can read the fragments directly from there as follows:
+
+ * each fragment consists of `fragsize = size / MINI_PER_MACRO` bytes;
+ * the first fragment spans the `fragdata` bytes in range `[0, fragsize)`;
+ * the second fragment spans the `fragdata` bytes in range `[fragsize, fragsize*2)`;
+ * and so on until `[size - fragsize, size)`.
 
 
 ## test
