@@ -75,7 +75,7 @@ multidiff_oaep: aes_mix.lo debug.lo aes_mix_multi_oaep.lo multidiff_oaep.lo aes_
 %.lo: %.c
 	$(LIBTOOL) --mode=compile $(CC) $(CFLAGS) $(INC) -c -o $@ $<
 
-libaesmix.la: aes_mix.lo aes_mix_oaep.lo aes_mix_multi.lo aes_mix_multi_oaep.lo
+libaesmix.la: aes_mix.lo aes_mix_oaep.lo aes_mix_multi.lo aes_mix_multi_oaep.lo aes_mixslice.lo
 	$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) -o $@ $^ -rpath $(LIBDIR) $(LDLIBS)
 
 install: libaesmix.la
