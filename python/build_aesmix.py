@@ -23,6 +23,16 @@ ffibuilder.cdef("""
                       unsigned char* out, const unsigned long size,
                       const unsigned char* key, const unsigned char* iv);
 
+    /* aes_mixslice.h */
+    void mixslice(unsigned int thr, const unsigned char* data,
+                  unsigned char* fragdata, const unsigned long size,
+                  const unsigned char* key, const unsigned char* iv);
+
+    void unsliceunmix(unsigned int thr, const unsigned char* fragdata,
+                      unsigned char* out, const unsigned long size,
+                      const unsigned char* key, const unsigned char* iv);
+
+
     #define BLOCK_SIZE              ...
     #define MINI_SIZE               ...
     #define MINI_PER_MACRO          ...
@@ -37,6 +47,7 @@ ffibuilder.set_source(
     """
     #include "aes_mix.h"
     #include "aes_mix_multi.h"
+    #include "aes_mixslice.h"
     """,
     include_dirs=[os.path.join(basepath, 'includes')],
     libraries=['crypto', 'aesmix'],

@@ -23,6 +23,8 @@ def _mixprocess(data, key, iv, fn, to_string, threads=None):
         fn(_data, _out, _size, _key, _iv)
     elif fn in (_lib.t_mixencrypt, _lib.t_mixdecrypt):
         fn(_thr, _data, _out, _size, _key, _iv)
+    elif fn in (_lib.mixslice, _lib.unsliceunmix):
+        fn(_thr, _data, _out, _size, _key, _iv)
     else:
         raise Exception("unknown mix function %r" % fn)
 
@@ -92,43 +94,7 @@ def t_mixdecrypt(data, key, iv, threads=None, to_string=True):
     return _mixprocess(data, key, iv, _lib.t_mixdecrypt, to_string, threads)
 
 
-def islice(data, mini_size=_lib.MINI_SIZE, macro_size=_lib.MACRO_SIZE):
-    """Slices data into fragments using Mix&Slice (slicing phase).
-
-    Args:
-        data (bytestr): The data to slice. Must be a multiple of MACRO_SIZE.
-        mini_size (int): The miniblock size. (default: provided by the lib).
-        macro_size (int): The macroblock size. (default: provided by the lib).
-
-    Yields:
-        Generates the encrypted fragments one at a time.
-    """
-    assert len(data) % macro_size == 0, \
-        "plaintext size must be a multiple of %d" % macro_size
-
-    dataview = memoryview(data)
-    for fragment_offset in _xrange(0, macro_size, mini_size):
-        yield b"".join(
-            dataview[mini_offset:mini_offset + mini_size]
-            for mini_offset in _xrange(fragment_offset, len(data), macro_size))
-
-
-def slice(data, mini_size=_lib.MINI_SIZE, macro_size=_lib.MACRO_SIZE):
-    """Slices data into fragments using Mix&Slice (slicing phase).
-
-    Args:
-        data (bytestr): The data to slice. Must be a multiple of MACRO_SIZE.
-        mini_size (int): The miniblock size. (default: provided by the lib).
-        macro_size (int): The macroblock size. (default: provided by the lib).
-
-    Returns:
-        A list of encrypted fragments.
-    """
-    return list(islice(data, mini_size, macro_size))
-
-
-def mix_and_slice(data, key, iv, threads=None,
-                  mini_size=_lib.MINI_SIZE, macro_size=_lib.MACRO_SIZE):
+def mix_and_slice(data, key, iv, threads=None, to_string=True):
     """Perform the whole Mix&Slice encryption (mixing and slicing phases).
 
     Args:
@@ -138,16 +104,19 @@ def mix_and_slice(data, key, iv, threads=None,
         threads (int): The number of threads used. (default: cpu count).
         mini_size (int): The miniblock size. (default: provided by the lib).
         macro_size (int): The macroblock size. (default: provided by the lib).
+        to_string (bool): returns a bytestr if true, ffi.buffer otherwise.
 
     Returns:
         A list of encrypted fragments.
     """
-    ciphertext = t_mixencrypt(data, key, iv, threads, to_string=False)
-    return slice(ciphertext, mini_size, macro_size)
+    fragdata = _mixprocess(data, key, iv, _lib.mixslice, to_string, threads)
+    fragview = memoryview(fragdata)
+    size = len(data)
+    fragsize = size // _lib.MINI_PER_MACRO
+    return [fragview[off:off+fragsize] for off in _xrange(0, size, fragsize)]
 
 
-def unslice_and_unmix(fragments, key, iv, threads=None,
-                      mini_size=_lib.MINI_SIZE, macro_size=_lib.MACRO_SIZE):
+def unslice_and_unmix(fragments, key, iv, threads=None, to_string=True):
     """Perform the whole Mix&Slice decryption (mixing and slicing phases).
 
     Args:
@@ -155,18 +124,10 @@ def unslice_and_unmix(fragments, key, iv, threads=None,
         key (bytestr): The key used for AES decryption. Must be 16 bytes long.
         iv (bytestr): The iv used for AES decryption. Must be 16 bytes long.
         threads (int): The number of threads used. (default: cpu count).
-        mini_size (int): The miniblock size. (default: provided by the lib).
-        macro_size (int): The macroblock size. (default: provided by the lib).
+        to_string (bool): returns a bytestr if true, ffi.buffer otherwise.
 
     Returns:
         The decrypted bytestring.
     """
-    frag_length = len(fragments[0])
-    fragmentviews = list(map(memoryview, fragments))
-
-    ciphertext = b"".join(
-        fragmentview[mini_offset:mini_offset + mini_size]
-        for mini_offset in _xrange(0, frag_length, mini_size)
-        for fragmentview in fragmentviews)
-
-    return t_mixdecrypt(ciphertext, key, iv, threads, to_string=True)
+    data = b"".join(fragments)
+    return _mixprocess(data, key, iv, _lib.unsliceunmix, to_string, threads)

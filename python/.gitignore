@@ -71,6 +71,7 @@ config.py
 
 # datafiles
 *.out
+*.enc
 *.public
 *.private
 *.pubkey

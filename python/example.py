@@ -4,7 +4,6 @@ from six.moves import xrange
 
 from aesmix import mixencrypt, mixdecrypt
 from aesmix import t_mixencrypt, t_mixdecrypt
-from aesmix import slice
 from aesmix import mix_and_slice, unslice_and_unmix
 from aesmix import keyreg
 from aesmix.manager import MixSlice
@@ -44,16 +43,6 @@ def test_multi_thread():
     print(b"decrypted: " + decrypted[:64] + b" ... " + decrypted[-64:])
 
 
-def test_slice():
-    print("\n\nTest slice")
-    mini_size = 4
-    macro_size = 16
-    num_macros = 4
-    data = b"0123456789ABCDEF" * num_macros
-    print("data: %s" % data)
-    print("fragments: %s" % slice(data, mini_size, macro_size))
-
-
 def test_mix_and_slice():
     print("\n\nTest mix and slice")
     key = b"k" * 16
@@ -77,23 +66,25 @@ def test_manager():
 
     print("input: ", data)
     owner = MixSlice.encrypt(data, key, iv)
-    owner.save_to_files("example.out", "example.public", "example.private")
+    owner.save_to_files("example.enc", "example.public", "example.private")
 
-    owner = MixSlice.load_from_file("example.out", "example.private")
+    owner = MixSlice.load_from_file("example.enc", "example.private")
     print("\nPolicy updates ...")
-    for _ in xrange(int(1024 ** 0.5 * 2)):
+    for _ in xrange(int(10)):
         owner.step_encrypt()
-    owner.save_to_files("example.out", "example.public", "example.private")
+    print("Let's also re-encrypt the same fragment")
+    owner.step_encrypt(fragment_id=1)
+    owner.step_encrypt(fragment_id=1)
+    owner.save_to_files("example.enc", "example.public", "example.private")
 
     print("\nDecrypting ...")
-    reader = MixSlice.load_from_file("example.out", "example.public")
+    reader = MixSlice.load_from_file("example.enc", "example.public")
     print("\noutput: ", reader.decrypt())
 
 
 if __name__ == "__main__":
     test_single_thread()
     test_multi_thread()
-    test_slice()
     test_mix_and_slice()
     keyreg._main()
     test_manager()
