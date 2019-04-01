@@ -34,7 +34,8 @@ To run the example (after installing the library in your system) run:
 To install the command line tool in your system (you can also use it from the
 virtual environment), first follow the installation steps above, then run:
 
-    sudo python setup.py install
+    make
+    sudo make install
 
 
 Once the `mixslice` tool is installed, you can encrypt a file as follows:

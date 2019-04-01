@@ -7,7 +7,8 @@ PIP     := $(VENV)/bin/pip
 APP     := example.py
 
 
-all: $(VENV)
+all: _aesmix
+	python setup.py build sdist
 
 run: $(VENV) $(APP) _aesmix
 	$(PYTHON) $(APP)
