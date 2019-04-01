@@ -9,8 +9,11 @@ from aesmix._aesmix import lib as _lib
 import aesmix as _aesmix
 
 from base64 import b64encode as _b64encode, b64decode as _b64decode
+from io import BytesIO as _BytesIO
+import os as _os
 import json as _json
 import random as _random
+import shutil as _shutil
 import logging as _logging
 
 # cryptographically secure PRNG
@@ -104,9 +107,11 @@ class _MixSliceMetadata(object):
 
 class MixSlice(object):
 
-    def __init__(self, fragments, metadata):
+    def __init__(self, fragments, metadata, changed=None):
         self._fragments = fragments
         self._metadata = metadata
+        self._changed = set(changed if changed is not None
+                         else _xrange(len(self._fragments)))
 
     @staticmethod
     def encrypt(data, key, iv, threads=None, rsakey=None,
@@ -130,44 +135,58 @@ class MixSlice(object):
         padded_data = padder.pad(data)
         fragments = _aesmix.mix_and_slice(data=padded_data, key=key,
                                           iv=iv, threads=threads)
+        fragments = [_BytesIO(f) for f in fragments]
         metadata = _MixSliceMetadata(key=key, iv=iv, order=None,
                                      rsakey=rsakey, state=state)
         return MixSlice(fragments, metadata)
 
     @staticmethod
-    def load_from_file(datafile, metadatafile):
+    def load_from_file(fragsdir, metadatafile):
         """Load a MixSlice from data and metadata files.
 
         Args:
-            datafile (path): The path to the encrypted file.
+            fragsdir (path): The path to the encrypted fragments directory.
             metadatafile (path): The path to the metadatafile.
 
         Returns:
             A new MixSlice that holds the encrypted fragments.
         """
-        with open(datafile, "rb") as fp:
-            data = fp.read()
-
-        size = len(data)
-        assert (size % _lib.MINI_PER_MACRO == 0) \
-            and (size % _lib.MACRO_SIZE == 0), \
-            "datafile must be a multiple of MINI_PER_MACRO and MACRO_SIZE"
-
-        frag_size = size // _lib.MINI_PER_MACRO
-        dataview = memoryview(data)
-        fragments = [dataview[offset:offset + frag_size]
-                     for offset in _xrange(0, size, frag_size)]
-
+        fragfiles = sorted(_os.listdir(fragsdir))
+        assert len(fragfiles) == _lib.MINI_PER_MACRO, \
+            "exactly MINI_PER_MACRO files required in fragsdir."
+        fragments = [_os.path.join(fragsdir, f) for f in fragfiles]
         metadata = _MixSliceMetadata.load_from_file(metadatafile)
-        return MixSlice(fragments, metadata)
+        return MixSlice(fragments, metadata, changed=[])
 
-    def save_to_files(self, datafile, public_metafile, private_metafile):
-        with open(datafile, "wb") as fp:
-            for fragment in self._fragments:
-                fp.write(fragment)
+    def save_to_files(self, fragsdir, public_metafile, private_metafile):
+        if not _os.path.exists(fragsdir):
+            _os.makedirs(fragsdir)
+
+        fragids = self._changed or _xrange(len(self._fragments))
+        name = "frag_%%0%dd.dat" % len(str(len(self._fragments)))
+        for fragid in fragids:
+            fragment = self._fragments[fragid]
+            assert isinstance(fragment, _BytesIO)
+            fragment.seek(0)
+            destination = _os.path.join(fragsdir, name % fragid)
+            with open(destination, "wb") as fp:
+                _shutil.copyfileobj(fragment, fp)
+            fragment.close()
+            self._fragments[fragid] = destination
 
         self._metadata.save_to_file(public_metafile, private=False)
         self._metadata.save_to_file(private_metafile, private=True)
+
+    @staticmethod
+    def _read_fragment(fragment):
+        if isinstance(fragment, _BytesIO):
+            fragment.seek(0)
+            data = fragment.read()
+            fragment.seek(0)
+        else:
+            with open(fragment, "rb") as fp:
+                data = fp.read()
+        return data
 
     def step_encrypt(self, fragment_id=None):
         fragment_id = (fragment_id if fragment_id is not None
@@ -175,15 +194,16 @@ class MixSlice(object):
         key = self._metadata.add_encryption_step(fragment_id)
         ctr = _Counter.new(128)
         cipher = _AES.new(key[:16], mode=_AES.MODE_CTR, counter=ctr)
-        self._fragments[fragment_id] = cipher.encrypt(
-            self._fragments[fragment_id])
-        _logging.info("Encrypting frag #%d (key: %r)" % (fragment_id, key))
+        _logging.info("Encrypting frag #%d" % fragment_id)
+        self._fragments[fragment_id] = _BytesIO(
+            cipher.encrypt(self._read_fragment(self._fragments[fragment_id])))
+        self._changed.add(fragment_id)
         return fragment_id
 
     def decrypt(self, threads=None, padder=None):
-        fragments = self._fragments
+        fragments = [self._read_fragment(f) for f in self._fragments]
         for fragment_id, key in self._metadata.decryption_steps():
-            _logging.info("Decrypting frag #%d (key: %r)" % (fragment_id, key))
+            _logging.info("Decrypting frag #%d" % fragment_id)
             ctr = _Counter.new(128)
             cipher = _AES.new(key[:16], mode=_AES.MODE_CTR, counter=ctr)
             fragments[fragment_id] = cipher.decrypt(fragments[fragment_id])

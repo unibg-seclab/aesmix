@@ -30,17 +30,17 @@ def fn_encrypt(args):
 
 
 def fn_update(args):
-    public = args.public or (os.path.splitext(args.ENCFILE)[0] + ".public")
-    private = args.public or (os.path.splitext(args.ENCFILE)[0] + ".private")
-    logging.info("[*] Performing policy update on %s ..." % args.ENCFILE)
-    manager = MixSlice.load_from_file(args.ENCFILE, private)
+    public = args.public or (os.path.splitext(args.FRAGDIR)[0] + ".public")
+    private = args.public or (os.path.splitext(args.FRAGDIR)[0] + ".private")
+    logging.info("[*] Performing policy update on %s ..." % args.FRAGDIR)
+    manager = MixSlice.load_from_file(args.FRAGDIR, private)
     manager.step_encrypt()
-    manager.save_to_files(args.ENCFILE, public, private)
+    manager.save_to_files(args.FRAGDIR, public, private)
     logging.info("Done")
 
 
 def fn_decrypt(args):
-    base = os.path.splitext(args.ENCFILE)[0]
+    base = os.path.splitext(args.FRAGDIR)[0]
     keyfile = (args.public if args.public else
                args.private if args.private else
                base + ".public" if os.path.isfile(base + ".public") else
@@ -48,9 +48,9 @@ def fn_decrypt(args):
     assert os.path.isfile(keyfile), "keyfile not found."
 
     logging.info("[*] Decrypting file %s using key %s ..." %
-                 (args.ENCFILE, keyfile))
-    output = args.output or (args.ENCFILE + ".dec")
-    manager = MixSlice.load_from_file(args.ENCFILE, keyfile)
+                 (args.FRAGDIR, keyfile))
+    output = args.output or (args.FRAGDIR + ".dec")
+    manager = MixSlice.load_from_file(args.FRAGDIR, keyfile)
     plaindata = manager.decrypt()
     with open(output, "wb") as fp:
         fp.write(plaindata)
@@ -82,15 +82,15 @@ def main():
     # parser for the update command
     update = subparsers.add_parser("update", parents=[keyparser],
                                    help="perform policy update")
-    update.add_argument("ENCFILE", help="path to encrypted file")
+    update.add_argument("FRAGDIR", help="path to the fragments directory")
     update.set_defaults(func=fn_update)
 
     # parser for the decrypt command
     decrypt = subparsers.add_parser("decrypt", parents=[keyparser],
                                     help="decrypt a file")
-    decrypt.add_argument("ENCFILE", help="path to encrypted file")
+    decrypt.add_argument("FRAGDIR", help="path to the fragments directory")
     decrypt.add_argument("--output", default=None,
-                         help="output file (default: $ENCFILE.dec)")
+                         help="output file (default: $FRAGDIR.dec)")
     decrypt.set_defaults(func=fn_decrypt)
 
     args = parser.parse_args()
