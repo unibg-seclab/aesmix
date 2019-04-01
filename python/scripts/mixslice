@@ -24,7 +24,7 @@ def fn_encrypt(args):
     logging.info("[*] Encrypting file %s ..." % args.PLAINFILE)
     manager = MixSlice.encrypt(data, key, iv)
     manager.save_to_files(output, public, private)
-    logging.info("Output file:      %s" % output)
+    logging.info("Output fragdir: %s" % output)
     logging.info("Public key file:  %s" % public)
     logging.info("Private key file: %s" % private)
 
@@ -47,7 +47,7 @@ def fn_decrypt(args):
                base + ".private")
     assert os.path.isfile(keyfile), "keyfile not found."
 
-    logging.info("[*] Decrypting file %s using key %s ..." %
+    logging.info("[*] Decrypting fragdir %s using key %s ..." %
                  (args.FRAGDIR, keyfile))
     output = args.output or (args.FRAGDIR + ".dec")
     manager = MixSlice.load_from_file(args.FRAGDIR, keyfile)
@@ -93,7 +93,14 @@ def main():
                          help="output file (default: $FRAGDIR.dec)")
     decrypt.set_defaults(func=fn_decrypt)
 
+    # parse args
     args = parser.parse_args()
+
+    # normalize args
+    args.key = None if args.key is None else args.key.encode("ascii")
+    args.iv = None if args.iv is None else args.iv.encode("ascii")
+
+    # invoke function
     args.func(args)
 
 

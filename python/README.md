@@ -41,7 +41,7 @@ Once the `mixslice` tool is installed, you can encrypt a file as follows:
 
     $ mixslice encrypt sample.txt
     INFO: [*] Encrypting file sample.txt ...
-    INFO: Output file:      sample.txt.enc
+    INFO: Output fragdir:   sample.txt.enc
     INFO: Public key file:  sample.txt.public
     INFO: Private key file: sample.txt.private
 
@@ -49,14 +49,14 @@ To perform a policy update:
 
     $ mixslice update sample.txt.enc
     INFO: [*] Performing policy update on sample.txt.enc ...
-    INFO: Encrypting frag #68
+    INFO: Encrypting fragment #68
     INFO: Done
 
 To decrypt a file:
 
     $ mixslice decrypt sample.txt.enc
-    INFO: [*] Decrypting file sample.txt.enc using key sample.txt.public ...
-    INFO: Decrypting frag #68
+    INFO: [*] Decrypting fragdir sample.txt.enc using key sample.txt.public ...
+    INFO: Decrypting fragment #68
     INFO: Decrypted file: sample.txt.enc.dec
 
     $ sha1sum sample.txt sample.txt.enc.dec

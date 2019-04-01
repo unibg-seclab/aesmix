@@ -194,7 +194,7 @@ class MixSlice(object):
         key = self._metadata.add_encryption_step(fragment_id)
         ctr = _Counter.new(128)
         cipher = _AES.new(key[:16], mode=_AES.MODE_CTR, counter=ctr)
-        _logging.info("Encrypting frag #%d" % fragment_id)
+        _logging.info("Encrypting fragment #%d" % fragment_id)
         self._fragments[fragment_id] = _BytesIO(
             cipher.encrypt(self._read_fragment(self._fragments[fragment_id])))
         self._changed.add(fragment_id)
@@ -203,7 +203,7 @@ class MixSlice(object):
     def decrypt(self, threads=None, padder=None):
         fragments = [self._read_fragment(f) for f in self._fragments]
         for fragment_id, key in self._metadata.decryption_steps():
-            _logging.info("Decrypting frag #%d" % fragment_id)
+            _logging.info("Decrypting fragment #%d" % fragment_id)
             ctr = _Counter.new(128)
             cipher = _AES.new(key[:16], mode=_AES.MODE_CTR, counter=ctr)
             fragments[fragment_id] = cipher.decrypt(fragments[fragment_id])
