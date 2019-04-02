@@ -97,8 +97,15 @@ def main():
     args = parser.parse_args()
 
     # normalize args
-    args.key = None if args.key is None else args.key.encode("ascii")
-    args.iv = None if args.iv is None else args.iv.encode("ascii")
+    try:
+        args.key = args.key.encode("ascii")
+    except Exception:
+        pass
+
+    try:
+        args.iv = args.iv.encode("ascii")
+    except Exception:
+        pass
 
     # invoke function
     args.func(args)
