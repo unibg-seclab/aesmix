@@ -1,0 +1,4 @@
+include README.rst
+recursive-include lib *.py
+recursive-include lib/src *.c
+recursive-include lib/includes *.h
