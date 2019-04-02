@@ -40,17 +40,16 @@ ffibuilder.cdef("""
 
 """)
 
-basepath = os.path.join(os.path.dirname(__file__), os.pardir)
-
 ffibuilder.set_source(
     'aesmix._aesmix',
     """
-    #include "aes_mix.h"
-    #include "aes_mix_multi.h"
-    #include "aes_mixslice.h"
+    #include "aes_mix.c"
+    #include "aes_mix_multi.c"
+    #include "aes_mixslice.c"
     """,
-    include_dirs=[os.path.join(basepath, 'includes')],
-    libraries=['crypto', 'aesmix'],
+    include_dirs=[os.path.join(os.getcwd(), 'lib', 'includes'),
+                  os.path.join(os.getcwd(), 'lib', 'src')],
+    libraries=['crypto'],
 )
 
 if __name__ == "__main__":
