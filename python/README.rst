@@ -37,6 +37,7 @@ Then you can install the package in your system with:
 
 .. code-block:: shell
 
+   make build
    sudo make install
 
 To install the package in a virtual environment, use:

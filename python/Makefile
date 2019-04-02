@@ -10,7 +10,7 @@ APP     := example/example.py
 all: build
 
 build: aesmix setup.py
-	python setup.py build
+	python setup.py build sdist egg_info
 
 install:
 	python setup.py install
