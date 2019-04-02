@@ -45,6 +45,35 @@ symmetric encryption primitives. The use of OpenSSL EVP APIs leverages
 hardware-accelerated AES-NI primitives when available.
 
 
+## installation
+
+Before proceeding please install `libtool` and the `openssl` headers.
+In ubuntu you can proceed as follows:
+
+    sudo apt install libtool-bin libssl-dev
+
+To compile and install the dynamic library in your system you can:
+
+    make
+    sudo make install
+
+To remove the library simply do:
+
+    sudo make uninstall
+
+
+## python wrapper
+
+The python wrapper based on cffi can be found in the [`python`](python)
+directory. The python implementation wraps both the phases and offers a
+CLI tool that wraps the `libaesmix` library.
+
+The key regression mechanism is also implemented in the python wrapper.
+
+Please refer to the [`README.md`](python/README.md) file contained in the
+[`python`](python) directory for more details.
+
+
 ## usage
 
 The file `includes/aes_mix.h` contains the following three definitions:
@@ -157,22 +186,3 @@ There are three test suites:
     make test
 
 See the `Makefile` for all the compile and test targets.
-
-
-## installation
-
-To compile and install the dynamic library in your system you can:
-
-    make
-    sudo make install
-
-To remove the library simply do:
-
-    sudo make uninstall
-
-
-## python wrapper
-
-The python wrapper based on cffi can be found in the `python` directory. The python implementation contains the slicing phase based on the `libaesmix` library and the key regression mechanism.
-
-Please refer to the `README.md` file contained in the `python` directory for more details.

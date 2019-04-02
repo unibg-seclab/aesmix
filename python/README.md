@@ -14,6 +14,10 @@ of the Mix&Slice capabilities. The mixing and slicing phases use the C
 implementation, but the python conversion adds a big overhead since it has
 to materialize all the buffers in memory.
 
+Since the tool materializes all the buffers in memory and has to perform both
+the mixing and the slicing phases, you should only use the CLI tool on files
+that are at maximum as large as a third of your available memory.
+
 Please check the file `python/example.py` to understand how to use the library.
 
 
@@ -38,7 +42,7 @@ virtual environment), first follow the installation steps above, then run:
     sudo make install
 
 
-Once the `mixslice` tool is installed, you can encrypt a file as follows:
+Once the `mixslice` tool is installed, you can encrypt a file as follows.
 
     $ mixslice encrypt sample.txt
     INFO: [*] Encrypting file sample.txt ...
