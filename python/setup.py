@@ -4,9 +4,6 @@ with open('README.rst') as README:
     long_description = README.read()
     long_description = long_description[long_description.index('Description'):]
 
-with open('requirements.txt', 'r') as fp:
-    install_requires = [el.strip() for el in fp.readlines() if el.strip()]
-
 setup(name='aesmix',
       version='0.1',
       description='Mix&Slice',
@@ -20,4 +17,4 @@ setup(name='aesmix',
       cffi_modules=['lib/build_aesmix.py:ffibuilder'],
       scripts=['scripts/mixslice'],
       setup_requires=['cffi'],
-      install_requires=install_requires)
+      install_requires=['cffi', 'pycryptodome', 'six'])

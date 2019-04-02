@@ -9,7 +9,7 @@ APP     := example/example.py
 
 all: build
 
-build: aesmix setup.py requirements.txt
+build: aesmix setup.py
 	python setup.py build
 
 install:
@@ -18,9 +18,8 @@ install:
 run: $(VENV) $(APP)
 	cd example; ../$(PYTHON) ../$(APP)
 
-$(VENV): requirements.txt
+$(VENV):
 	test -d $@ || virtualenv $@
-	$(PIP) install -r $<
 	$(PYTHON) setup.py install
 
 shell: $(VENV)
