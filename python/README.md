@@ -18,14 +18,15 @@ Since the tool materializes all the buffers in memory and has to perform both
 the mixing and the slicing phases, you should only use the CLI tool on files
 that are at maximum as large as a third of your available memory.
 
-Please check the file `python/example.py` to understand how to use the library.
+Please check the file [`example.py`](example.py) to understand how to use the
+library.
 
 
 ## installation
 
 The python wrapper requires the dynamic library `libaesmix` to be available in
-your system. Follow the installation steps in the `REAMDE.md` file in the
-parent directory before using the python library.
+your system. Follow the installation steps in the [`README.md`](../README.md)
+file in the parent directory before using the python library.
 
 
 ## example
