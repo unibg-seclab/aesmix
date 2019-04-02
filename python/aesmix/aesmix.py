@@ -1,4 +1,4 @@
-from aesmix._aesmix import lib as _lib, ffi
+from ._aesmix import lib as _lib, ffi
 
 from multiprocessing import cpu_count as _cpu_count
 from six.moves import xrange as _xrange
@@ -12,7 +12,7 @@ def _mixprocess(data, key, iv, fn, to_string, threads=None):
     assert len(data) % _lib.MACRO_SIZE == 0, \
         "plaintext size must be a multiple of %d" % _lib.MACRO_SIZE
 
-    _data = ffi.new("unsigned char[]", data)
+    _data = ffi.from_buffer("unsigned char[]", data)
     _out = ffi.new("unsigned char[]", len(data))
     _size = ffi.cast("unsigned long", len(data))
     _thr = ffi.cast("unsigned int", threads)
@@ -129,5 +129,10 @@ def unslice_and_unmix(fragments, key, iv, threads=None, to_string=True):
     Returns:
         The decrypted bytestring.
     """
-    data = b"".join(fragments)
+    data = bytearray(sum(map(len, fragments)))
+    offset = 0
+    for fragment in fragments:
+        size = len(fragment)
+        data[offset:offset+size] = fragment
+        offset += size
     return _mixprocess(data, key, iv, _lib.unsliceunmix, to_string, threads)

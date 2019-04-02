@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
+
 from six.moves import xrange
 
 from aesmix import mixencrypt, mixdecrypt
@@ -18,13 +20,13 @@ def test_single_thread():
     iv = b"i" * 16
 
     plaintext = b"d" * 4096
-    print(b"plaintext: " + plaintext[:64] + b" ... " + plaintext[-64:])
+    print("plaintext: %s ... %s" % (plaintext[:64], plaintext[-64:]))
 
     ciphertext = mixencrypt(plaintext, key, iv, to_string=True)
-    print(b"ciphertext: " + ciphertext[:64] + b" ... " + ciphertext[-64:])
+    print("ciphertext: %r ... %r" % (ciphertext[:64], ciphertext[-64:]))
 
     decrypted = mixdecrypt(ciphertext, key, iv, to_string=True)
-    print(b"decrypted: " + decrypted[:64] + b" ... " + decrypted[-64:])
+    print("decrypted: %s ... %s" % (decrypted[:64], decrypted[-64:]))
 
 
 def test_multi_thread():
@@ -34,13 +36,13 @@ def test_multi_thread():
     threads = 8
 
     plaintext = b"d" * (2 ** 20) * 128  # 128 MiB
-    print(b"plaintext: " + plaintext[:64] + b" ... " + plaintext[-64:])
+    print("plaintext: %s ... %s" % (plaintext[:64], plaintext[-64:]))
 
     ciphertext = t_mixencrypt(plaintext, key, iv, threads, to_string=True)
-    print(b"ciphertext: " + ciphertext[:64] + b" ... " + ciphertext[-64:])
+    print("ciphertext: %r ... %r" % (ciphertext[:64], ciphertext[-64:]))
 
     decrypted = t_mixdecrypt(ciphertext, key, iv, threads, to_string=False)
-    print(b"decrypted: " + decrypted[:64] + b" ... " + decrypted[-64:])
+    print("decrypted: %s ... %s" % (decrypted[:64], decrypted[-64:]))
 
 
 def test_mix_and_slice():
@@ -49,13 +51,13 @@ def test_mix_and_slice():
     iv = b"i" * 16
 
     plaintext = b"d" * (2 ** 20)  # 1 MiB
-    print(b"plaintext: " + plaintext[:64] + b" ... " + plaintext[-64:])
+    print("plaintext: %s ... %s" % (plaintext[:64], plaintext[-64:]))
 
     fragments = mix_and_slice(plaintext, key, iv)
     print("num fragments: %s" % len(fragments))
 
     decrypted = unslice_and_unmix(fragments, key, iv)
-    print(b"decrypted: " + decrypted[:64] + b" ... " + decrypted[-64:])
+    print("decrypted: %s ... %s" % (decrypted[:64], decrypted[-64:]))
 
 
 def test_manager():

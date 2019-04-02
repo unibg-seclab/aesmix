@@ -28,8 +28,10 @@ shell: $(VENV)
 
 clean:
 	@ rm -rf $(VENV)
-	@ rm -rf *.egg-info build dist
+	@ rm -rf *.egg-info .eggs build dist
 	@ find . \( -iname '*.public' -or -iname '*.private' \) -type f -delete
 	@ find . \( -path '*.enc/*' \) -type f -delete
 	@ find . \( -name '*.enc' \) -type d -delete
+	@ find . \( -path '*/__pycache__/*' \) -type f -delete
+	@ find . \( -name '__pycache__' \) -type d -delete
 	@ find . \( -iname '*.o' -or -iname '*.out' -or -iname '*.so' -or -iname '_*.c' \) -type f -delete

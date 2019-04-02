@@ -3,10 +3,11 @@ from Crypto.Cipher import AES as _AES
 from Crypto.Util import Counter as _Counter
 from six.moves import xrange as _xrange
 
-from aesmix.keyreg import KeyRegRSA as _KeyRegRSA
-from aesmix.padder import Padder as _Padder
-from aesmix._aesmix import lib as _lib
-import aesmix as _aesmix
+from .keyreg import KeyRegRSA as _KeyRegRSA
+from .padder import Padder as _Padder
+from ._aesmix import lib as _lib
+from .aesmix import mix_and_slice as _mix_and_slice
+from .aesmix import unslice_and_unmix as _unslice_and_unmix
 
 from base64 import b64encode as _b64encode, b64decode as _b64decode
 from io import BytesIO as _BytesIO
@@ -133,8 +134,8 @@ class MixSlice(object):
         """
         padder = padder or _Padder(blocksize=_lib.MACRO_SIZE)
         padded_data = padder.pad(data)
-        fragments = _aesmix.mix_and_slice(data=padded_data, key=key,
-                                          iv=iv, threads=threads)
+        fragments = _mix_and_slice(data=padded_data, key=key,
+                                   iv=iv, threads=threads)
         fragments = [_BytesIO(f) for f in fragments]
         metadata = _MixSliceMetadata(key=key, iv=iv, order=None,
                                      rsakey=rsakey, state=state)
@@ -208,7 +209,7 @@ class MixSlice(object):
             cipher = _AES.new(key[:16], mode=_AES.MODE_CTR, counter=ctr)
             fragments[fragment_id] = cipher.decrypt(fragments[fragment_id])
 
-        padded_data = _aesmix.unslice_and_unmix(
+        padded_data = _unslice_and_unmix(
             fragments=fragments,
             key=self._metadata._key,
             iv=self._metadata._iv,
