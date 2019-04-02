@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from aesmix.manager import MixSlice
+from aesmix import MixSlice
 
 import argparse
 import logging

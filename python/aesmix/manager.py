@@ -3,11 +3,11 @@ from Crypto.Cipher import AES as _AES
 from Crypto.Util import Counter as _Counter
 from six.moves import xrange as _xrange
 
+from ._aesmix import lib as _lib
 from .keyreg import KeyRegRSA as _KeyRegRSA
 from .padder import Padder as _Padder
-from ._aesmix import lib as _lib
-from .aesmix import mix_and_slice as _mix_and_slice
-from .aesmix import unslice_and_unmix as _unslice_and_unmix
+from .wrapper import mix_and_slice as _mix_and_slice
+from .wrapper import unslice_and_unmix as _unslice_and_unmix
 
 from base64 import b64encode as _b64encode, b64decode as _b64decode
 from io import BytesIO as _BytesIO

@@ -8,7 +8,7 @@ from aesmix import mixencrypt, mixdecrypt
 from aesmix import t_mixencrypt, t_mixdecrypt
 from aesmix import mix_and_slice, unslice_and_unmix
 from aesmix import keyreg
-from aesmix.manager import MixSlice
+from aesmix import MixSlice
 
 import logging
 logging.basicConfig(level=logging.DEBUG)
