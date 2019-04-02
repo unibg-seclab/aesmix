@@ -1,9 +1,9 @@
-# aesmix python wrapper and CLI
+# aesmix
 
 Python wrapper and command line tool for the libaesmix mixing library.
 
 
-## description
+## Description
 
 This directory contains the python wrapper based on cffi and the command line
 tool to use Mix&Slice on your files.
@@ -18,32 +18,32 @@ Since the tool materializes all the buffers in memory and has to perform both
 the mixing and the slicing phases, you should only use the CLI tool on files
 that are at maximum as large as a third of your available memory.
 
-Please check the file [`example.py`](example.py) to understand how to use the
-library.
+Please check the file `example.py` to understand how to use the library.
 
 
-## installation
+## Requirements
 
-The python wrapper requires the dynamic library `libaesmix` to be available in
-your system. Follow the installation steps in the [`README.md`](../README.md)
-file in the parent directory before using the python library.
+Before proceeding please install the `openssl/crypto` library source.  In
+ubuntu you can proceed as follows:
 
+    sudo apt install libssl-dev
 
-## example
+Then you can install the package in your system with:
 
-To run the example (after installing the library in your system) run:
-
-    make run
-
-
-To install the command line tool in your system (you can also use it from the
-virtual environment), first follow the installation steps above, then run:
-
-    make
     sudo make install
 
+To install the package in a virtual environment, use:
 
-Once the `mixslice` tool is installed, you can encrypt a file as follows.
+    python setup.py install
+
+The python wrapper will also compile the `libaesmix` library.
+
+
+## Command Line Interface
+
+This package also installs the `mixslice` tool that can be used as follows.
+
+To encrypt a file:
 
     $ mixslice encrypt sample.txt
     INFO: [*] Encrypting file sample.txt ...
@@ -71,13 +71,13 @@ To decrypt a file:
 
 --------------------------------------------------------------------------------
 
-# key regression mechanism
+# Key regression mechanism
 
 The key regression mechanism implementation is based on
 ["Key Regression: Enabling Efficient Key Distribution for Secure Distributed Storage"](https://eprint.iacr.org/2005/303.pdf).
 
 
-## example
+## Example
 
 The key regression library can be used as follows.
 

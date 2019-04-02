@@ -10,7 +10,7 @@ presented at the 23rd ACM Conference on Computer and Communication Security (CCS
 </p>
 
 
-## idea
+## Idea
 
 The approach relies on a resource transformation that provides strong mutual
 inter-dependency in its encrypted representation. To revoke access on a resource,
@@ -37,7 +37,7 @@ The approach identifies the following basic concepts:
        alt="Mix&Slice blocks" width="60%" />
 </p>
 
-## implementation
+## Implementation
 
 The implementation is done in C and consists of single-threaded and a
 multi-threaded encryption/decryption functions that make use of AES as base
@@ -45,10 +45,10 @@ symmetric encryption primitives. The use of OpenSSL EVP APIs leverages
 hardware-accelerated AES-NI primitives when available.
 
 
-## installation
+## Installation
 
-Before proceeding please install `libtool` and the `openssl` headers.
-In ubuntu you can proceed as follows:
+Before proceeding please install the `openssl/crypto` library source and the
+`libtool` binary.  In ubuntu you can proceed as follows:
 
     sudo apt install libtool-bin libssl-dev
 
@@ -62,7 +62,7 @@ To remove the library simply do:
     sudo make uninstall
 
 
-## python wrapper
+## Python wrapper
 
 The python wrapper based on cffi can be found in the [`python`](python)
 directory. The python implementation wraps both the phases and offers a
@@ -74,7 +74,7 @@ Please refer to the [`README.md`](python/README.md) file contained in the
 [`python`](python) directory for more details.
 
 
-## usage
+## Usage
 
 The file `includes/aes_mix.h` contains the following three definitions:
 
@@ -85,7 +85,7 @@ The file `includes/aes_mix.h` contains the following three definitions:
 *These entities can be modified at compile time to try with different sizes*
 
 
-### single-thread APIs
+### Single-thread APIs
 
 The file `includes/aes_mix.h` contains the prototype of the only two
 methods that are necessary to use Mix&Slice:
@@ -110,7 +110,7 @@ The parameters are as follows.
 See the file `test/main.c` for an example.
 
 
-### multi-thread APIs
+### Multi-thread APIs
 
 The file `includes/aes_mix_multi.h` contains the prototypes of the only two
 methods that are necessary to use Mix&Slice in multi-threaded mode:
@@ -128,7 +128,7 @@ The only additional parameter is `thr`, the number of threads to use.
 See the file `test/multithread.c` for an example.
 
 
-### slicing phase
+### Slicing phase
 
 The mixing phase is the real encryption phase. The slicing phase strongly depends
 on the file management and should be implemented according to the ratio of policy
@@ -163,7 +163,7 @@ of the function, can read the fragments directly from there as follows:
  * and so on until `[size - fragsize, size)`.
 
 
-## test
+## Test
 
 There are three test suites:
 
@@ -177,10 +177,8 @@ There are three test suites:
    are enforced in the multi-threaded implementation.
 
 
-## compile
-
-*Make* is used for compilation and testing purposes. A basic
-*compile-and-test* setup is made by the steps:
+*make* is used for compilation and testing purposes. A basic *compile-and-test*
+setup is made by the steps:
 
     make
     make test
