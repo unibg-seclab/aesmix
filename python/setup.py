@@ -17,5 +17,5 @@ setup(name='aesmix',
       packages=['aesmix'],
       cffi_modules=['lib/build_aesmix.py:ffibuilder'],
       scripts=['scripts/mixslice'],
-      setup_requires=['cffi'],
-      install_requires=['cffi', 'pycryptodome', 'six'])
+      setup_requires=['cffi>=1.12'],
+      install_requires=['cffi>=1.12', 'pycryptodome', 'six'])
