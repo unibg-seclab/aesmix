@@ -1,43 +1,36 @@
-.PHONY:	all clean shell install run _aesmix
+.PHONY:	all clean install run
 
 SHELL   := /bin/bash
 VENV    := venv
 PYTHON  := $(VENV)/bin/python
 PIP     := $(VENV)/bin/pip
-APP     := example.py
+APP     := example/example.py
 
 
-all: _aesmix
-	python setup.py build sdist
+all: build
 
-run: $(VENV) $(APP) _aesmix
-	$(PYTHON) $(APP)
+build: aesmix setup.py requirements.txt
+	python setup.py build
+
+install:
+	python setup.py install
+
+run: $(VENV) $(APP)
+	cd example; ../$(PYTHON) ../$(APP)
 
 $(VENV): requirements.txt
 	test -d $@ || virtualenv $@
 	$(PIP) install -r $<
 	$(PYTHON) setup.py install
 
-shell: $(VENV) _aesmix
+shell: $(VENV)
 	$(PIP) install ipython
 	- $(VENV)/bin/ipython
-
-install: _aesmix
-	python setup.py install
-
-_aesmix: build_aesmix.py
-ifeq ("","$(wildcard aesmix/_aesmix*.so)")
-	@ echo "building aesmix/_aesmix.so"
-	@ python $<
-else
-	@ if [[ "$<" -nt "$(wildcard aesmix/_aesmix*.so)" ]]; then \
-		echo "building aesmix/_aesmix.so" ; \
-		python $< ; \
-	fi
-endif
 
 clean:
 	@ rm -rf $(VENV)
 	@ rm -rf *.egg-info build dist
-	@ rm -rf *.enc *.private *.public *.out
+	@ find . \( -iname '*.public' -or -iname '*.private' \) -type f -delete
+	@ find . \( -path '*.enc/*' \) -type f -delete
+	@ find . \( -name '*.enc' \) -type d -delete
 	@ find . \( -iname '*.o' -or -iname '*.out' -or -iname '*.so' -or -iname '_*.c' \) -type f -delete
