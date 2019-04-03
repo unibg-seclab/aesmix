@@ -7,9 +7,9 @@
 #include "aes_mix_oaep.h"
 
 #ifdef DEBUG
-#define SIZE  (BIMACRO_SIZE*4)
+#define SIZE  (OAEP_BIMACRO_SIZE*4)
 #else
-#define SIZE   BIMACRO_SIZE
+#define SIZE   OAEP_BIMACRO_SIZE
 #endif
 
 unsigned char key[] = "SQUEAMISHOSSIFRA";
@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
 
     memcpy(orig, in, SIZE);
 
-    printf("AESMIX-ing %d * %d macroblocks ...\n", SIZE/MACRO_SIZE, macros);
+    printf("AESMIX-ing %d * %d macroblocks ...\n", SIZE/OAEP_MACRO_SIZE, macros);
     for (i=0; i < macros; ++i) {
         D RAND_bytes(iv, BLOCK_SIZE);
         D printx("IV: ", iv, BLOCK_SIZE, MINI_SIZE);

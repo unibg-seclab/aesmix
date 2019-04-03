@@ -5,7 +5,7 @@
 #include "debug.h"
 #include "aes_mix_multi_oaep.h"
 
-#define SIZE (4L*BIMACRO_SIZE)
+#define SIZE (4L*OAEP_BIMACRO_SIZE)
 #define ENC_THREADS 3
 #define DEC_THREADS 2
 

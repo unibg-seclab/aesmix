@@ -3,13 +3,22 @@
 
 #include "aes_mix.h"
 
-#ifndef BIBLOCK_SIZE
-#define BIBLOCK_SIZE                               64
+#ifndef OAEP_BLOCK_SIZE
+#define OAEP_BLOCK_SIZE                                          64
+#endif
+#ifndef OAEP_MINI_SIZE
+#define OAEP_MINI_SIZE                                            4
+#endif
+#ifndef OAEP_MINI_PER_MACRO
+#define OAEP_MINI_PER_MACRO                                    4096
 #endif
 
-#define BIMINI_PER_BLOCK   (BIBLOCK_SIZE / MINI_SIZE)
-#define BIMACRO_SIZE                 (2 * MACRO_SIZE)
-#define BIDOF          ((int) log2(BIMINI_PER_BLOCK))
+
+#define OAEP_MINI_PER_BLOCK      (OAEP_BLOCK_SIZE / OAEP_MINI_SIZE)
+#define OAEP_MACRO_SIZE      (OAEP_MINI_SIZE * OAEP_MINI_PER_MACRO)
+#define OAEP_BIMACRO_SIZE                     (2 * OAEP_MACRO_SIZE)
+#define OAEP_DIGITS               ((int) log2(OAEP_MINI_PER_MACRO))
+#define OAEP_DOF                  ((int) log2(OAEP_MINI_PER_BLOCK))
 
 void mixencrypt_oaep (
     const unsigned char* data, unsigned char* out, const unsigned long size,

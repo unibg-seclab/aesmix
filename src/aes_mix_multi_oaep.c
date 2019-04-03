@@ -4,6 +4,17 @@
 
 #include "aes_mix_multi_oaep.h"
 
+
+// avoid using AES specific defines
+#define AES_BLOCK_SIZE BLOCK_SIZE
+#undef MINI_SIZE
+#undef MINI_PER_MACRO
+#undef MINI_PER_BLOCK
+#undef MACRO_SIZE
+#undef DIGITS
+#undef DOF
+
+
 typedef struct aesmix_args_s {
     const unsigned char* data;
     unsigned char* out;
@@ -32,14 +43,14 @@ static inline void t_mixprocess_oaep (
 ){
     pthread_t thread[thr];
     aesmix_args args[thr];
-    unsigned char tiv[thr][BLOCK_SIZE];
+    unsigned char tiv[thr][AES_BLOCK_SIZE];
     unsigned long remaining_bimacro;
     unsigned int t, started_thr = 0;
     unsigned __int128 miv;
 
-    assert(0 == size % BIMACRO_SIZE);
-    remaining_bimacro = size / BIMACRO_SIZE;
-    memcpy(&miv, iv, BLOCK_SIZE);
+    assert(0 == size % OAEP_BIMACRO_SIZE);
+    remaining_bimacro = size / OAEP_BIMACRO_SIZE;
+    memcpy(&miv, iv, AES_BLOCK_SIZE);
 
 
     for (t=0; t < thr; ++t) {
@@ -47,12 +58,12 @@ static inline void t_mixprocess_oaep (
 
         //compute optimal number of bimacroblocks per thread
         unsigned long tbimacro = MAX(1UL, remaining_bimacro / (thr - t));
-        unsigned long tsize = tbimacro * BIMACRO_SIZE;
+        unsigned long tsize = tbimacro * OAEP_BIMACRO_SIZE;
         remaining_bimacro -= tbimacro;
         D printf("%lu bimacroblocks assigned to thread %d\n", tbimacro, t);
 
         aesmix_args* a = &args[t];
-        memcpy(tiv[t], &miv, BLOCK_SIZE);
+        memcpy(tiv[t], &miv, AES_BLOCK_SIZE);
         a->data = data; a->out = out; a->size = tsize; a->key = key; a->iv = tiv[t];
         pthread_create(&thread[t], NULL, fn, a);
         data += tsize; out += tsize; miv += tbimacro; started_thr++;

@@ -20,6 +20,9 @@ CFLAGS   += -fPIC -O6 -Wall -Wextra
 CFLAGS   += -DMINI_SIZE=$(MINI_SIZE)
 CFLAGS   += -DBLOCK_SIZE=$(BLOCK_SIZE)
 CFLAGS   += -DMINI_PER_MACRO=$(MINI_PER_MACRO)
+CFLAGS   += -DOAEP_MINI_SIZE=$(OAEP_MINI_SIZE)
+CFLAGS   += -DOAEP_BLOCK_SIZE=$(OAEP_BLOCK_SIZE)
+CFLAGS   += -DOAEP_MINI_PER_MACRO=$(OAEP_MINI_PER_MACRO)
 INC      += -Iincludes
 LDLIBS   += -lcrypto
 LIBTOOL   = libtool --tag=CC
@@ -90,8 +93,8 @@ $(DUMMYFILE):
 	openssl rand -out $@ $(DUMMYSIZE)
 
 printvars:
-	@ printf "\nAESNI=%d MINI=%d MPM=%d\n" \
-		$(AESNI) $(MINI_SIZE) $(MINI_PER_MACRO)
+	@ printf "\nAESNI: %d\nAES: MINI=%d MPM=%d\nOAEP: MINI=%d MPM=%d" \
+		$(AESNI) $(MINI_SIZE) $(MINI_PER_MACRO) $(OAEP_MINI_SIZE) $(OAEP_MINI_PER_MACRO)
 
 test: | clean debug printvars
 	@ echo -e "\nRUNNING TESTS ..."
@@ -113,7 +116,7 @@ time: | clean main printvars
 
 time_oaep: | clean main_oaep printvars
 	@ echo -e "\nENCRYPTING 1GiB with OAEP ..."
-	time ./main_oaep $$((1024*1024*1024 / ($(MINI_SIZE)*$(MINI_PER_MACRO))))
+	time ./main_oaep $$((1024*1024*1024 / ($(OAEP_MINI_SIZE)*$(OAEP_MINI_PER_MACRO))))
 
 supertest: clean
 	@ for aesni in 1 0; do \
