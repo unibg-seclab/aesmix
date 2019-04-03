@@ -4,6 +4,19 @@ matrix:
     - language: c
       os: linux
       compiler:
+        - gcc
+      before_install:
+        - sudo apt-get install -y libssl-dev libtool-bin
+      install:
+        - make all
+        - sudo make install
+      script:
+        - make test
+        - make test_oaep OAEP_MINI_PER_MACRO=256
+
+    - language: c
+      os: linux
+      compiler:
         - clang
         - gcc
       before_install:
@@ -16,11 +29,18 @@ matrix:
         - make test_oaep OAEP_MINI_PER_MACRO=256
 
     - language: python
-      python:
-        - '2.7'
-        - '3.4'
-        - '3.5'
-        - '3.6'
+      python: '2.7'
+      before_install:
+        - cd python
+        - sudo apt-get update
+        - sudo apt-get install -y libssl-dev
+      install:
+        - python setup.py install
+      script:
+        - python example/example.py
+
+    - language: python
+      python: '3.6'
       before_install:
         - cd python
         - sudo apt-get update
@@ -31,7 +51,6 @@ matrix:
         - python example/example.py
       deploy:
         provider: pypi
-        python: '3.6'
         skip_existing: true
         on:
           tags: true
