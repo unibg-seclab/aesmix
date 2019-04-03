@@ -109,6 +109,8 @@ inline void mixprocess(mixfn fn, const unsigned char* data,
     unsigned char* out, const unsigned long size,
     const unsigned char* key, const unsigned char* iv
 ){
+    D assert(1 == ISPOWEROF(MINI_PER_MACRO, BLOCK_SIZE / MINI_SIZE)
+             && "MINI_PER_MACRO must be a power of (BLOCK_SIZE / MINI_SIZE)");
     const unsigned char* last = data + size;
     unsigned __int128 miv;
     unsigned char* buffer =(unsigned char*) malloc(MACRO_SIZE);

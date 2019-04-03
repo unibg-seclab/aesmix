@@ -2,6 +2,7 @@
 #define AES_MIX_H
 
 #include <stdio.h>
+#include <math.h>
 
 
 #ifndef BLOCK_SIZE
@@ -27,6 +28,8 @@
 
 #define MAX(a,b) ({ __typeof__ (a) _a = (a); __typeof__ (b) _b = (b); _a > _b ? _a : _b; })
 #define MIN(a,b) ({ __typeof__ (a) _a = (a); __typeof__ (b) _b = (b); _a < _b ? _a : _b; })
+#define LOG(x,base) (log(x) / log(base))
+#define ISPOWEROF(x,base) (x == pow(base, (int) LOG(x, base)))
 
 void mixencrypt (
     const unsigned char* data, unsigned char* out, const unsigned long size,

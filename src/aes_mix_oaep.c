@@ -185,6 +185,8 @@ inline void mixbiprocess(
     mixfn fn, const unsigned char* data, unsigned char* out,
     const unsigned long size, const unsigned char* key, const unsigned char* iv
 ){
+    D assert(1 == ISPOWEROF(OAEP_MINI_PER_MACRO, OAEP_BLOCK_SIZE / OAEP_MINI_SIZE)
+             && "OAEP_MINI_PER_MACRO must be a power of (OAEP_BLOCK_SIZE / OAEP_MINI_SIZE)");
     const unsigned char* last = data + size;
     unsigned __int128 miv;
     unsigned char* buffer = malloc(OAEP_MACRO_SIZE);
