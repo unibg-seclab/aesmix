@@ -24,7 +24,7 @@ CFLAGS   += -DOAEP_MINI_SIZE=$(OAEP_MINI_SIZE)
 CFLAGS   += -DOAEP_BLOCK_SIZE=$(OAEP_BLOCK_SIZE)
 CFLAGS   += -DOAEP_MINI_PER_MACRO=$(OAEP_MINI_PER_MACRO)
 INC      += -Iincludes
-LDLIBS   += -lcrypto
+LDLIBS   += -lcrypto -lm
 LIBTOOL   = libtool --tag=CC
 LIBDIR    = /usr/lib
 AESNI     = 1
