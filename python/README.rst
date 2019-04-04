@@ -36,7 +36,17 @@ In ubuntu you can proceed as follows:
 
    sudo apt install libssl-dev
 
-Then you can install the package in your system with:
+Installation
+------------
+
+The package has been uploaded to `PyPI`_ so, after installing the
+requirements, you can install the latest released version using pip:
+
+.. code-block:: shell
+
+    pip install aesmix
+
+To install the version from this repository, you can use the commands:
 
 .. code-block:: shell
 
@@ -121,5 +131,5 @@ The key regression library can be used as follows.
        print("k%i: %r" % (i, stm.keyder()))
        stm = stm.unwind()
 
-
+.. _PyPI: https://pypi.org/project/aesmix
 .. _`“Key Regression: Enabling Efficient Key Distribution for Secure Distributed Storage”`: https://eprint.iacr.org/2005/303.pdf
