@@ -49,7 +49,7 @@ ffibuilder.set_source(
     """,
     include_dirs=[os.path.join(os.getcwd(), 'lib', 'includes'),
                   os.path.join(os.getcwd(), 'lib', 'src')],
-    libraries=['lm', 'crypto'],
+    libraries=['m', 'crypto'],
 )
 
 if __name__ == "__main__":
