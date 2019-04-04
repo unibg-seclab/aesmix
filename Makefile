@@ -29,6 +29,23 @@ LIBTOOL   = libtool --tag=CC
 LIBDIR    = /usr/lib
 AESNI     = 1
 
+
+# check_params,MINI_SIZE,BLOCK_SIZE,MINI_PER_MACRO
+define check_params
+    $(eval miniperblock=$(shell echo "$(2) / $(1)" | bc))
+    $(eval exp=$(shell echo "l($(3)) / l($(miniperblock))" | bc -l))
+    $(shell printf "%d==%d^%.0f\n" $(3) $(miniperblock) $(exp) | bc)
+endef
+
+ifneq (1,$(strip $(call check_params,$(MINI_SIZE),$(BLOCK_SIZE),$(MINI_PER_MACRO))))
+    $(error "MINI_PER_MACRO ($(MINI_PER_MACRO)) is not a power of BLOCK_SIZE ($(BLOCK_SIZE)) / MINI_SIZE ($(MINI_SIZE))")
+endif
+
+ifneq (1,$(strip $(call check_params,$(OAEP_MINI_SIZE),$(OAEP_BLOCK_SIZE),$(OAEP_MINI_PER_MACRO))))
+    $(error "OAEP_MINI_PER_MACRO ($(OAEP_MINI_PER_MACRO)) is not a power of OAEP_BLOCK_SIZE ($(OAEP_BLOCK_SIZE)) / OAEP_MINI_SIZE ($(OAEP_MINI_SIZE))")
+endif
+
+
 ifneq ($(AESNI),1)
 export OPENSSL_ia32cap = "~0x200000200000000"
 endif
