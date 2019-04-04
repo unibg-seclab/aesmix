@@ -5,7 +5,7 @@ with open('README.rst') as README:
     long_description = long_description[long_description.index('Description'):]
 
 setup(name='aesmix',
-      version='1.4',
+      version='1.5',
       description='Mix&Slice',
       long_description=long_description,
       url='http://github.com/unibg-seclab/aesmix',
