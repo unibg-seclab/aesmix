@@ -3,7 +3,7 @@
 		multidiff multidiff_oaep install
 
 # DEFINES
-include config.properties
+include Makefile.properties
 
 # TEST
 TESTDIR   = test
