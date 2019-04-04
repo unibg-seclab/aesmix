@@ -72,7 +72,7 @@ CLI tool that wraps the `libaesmix` library.
 
 The key regression mechanism is also implemented in the python wrapper.
 
-Please refer to the [`README.md`](python/README.md) file contained in the
+Please refer to the [`README.rst`](python/README.rst) file contained in the
 [`python`](python) directory for more details.
 
 
