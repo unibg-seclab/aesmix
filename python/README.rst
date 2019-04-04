@@ -6,6 +6,9 @@ Python wrapper and command line tool for the libaesmix mixing library.
 Description
 -----------
 
+.. image:: https://travis-ci.org/unibg-seclab/aesmix.svg?branch=master
+    :target: https://travis-ci.org/unibg-seclab/aesmix
+
 This directory contains the python wrapper based on cffi and the command
 line tool to use Mix&Slice on your files.
 

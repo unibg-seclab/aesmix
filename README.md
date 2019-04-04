@@ -1,5 +1,7 @@
 # aesmix
 
+[![Build Status](https://travis-ci.org/unibg-seclab/aesmix.svg?branch=master)](https://travis-ci.org/unibg-seclab/aesmix)
+
 Open source base implementation of the _Mix&Slice_ encryption mode described in the paper:
 [Mix&Slice: Efficient Access Revocation in the Cloud](http://spdp.di.unimi.it/papers/bdfprs-ccs2016.pdf)
 presented at the 23rd ACM Conference on Computer and Communication Security (CCS 2016).
