@@ -98,16 +98,16 @@ printvars:
 
 test: | clean debug printvars
 	@ echo -e "\nRUNNING TESTS ..."
-	./main 1 &> /dev/null || ./main 1
-	./blackbox &> /dev/null || ./blackbox
-	./multidiff &> /dev/null || ./multidiff
+	./main 1 > /dev/null || ./main 1
+	./blackbox > /dev/null || ./blackbox
+	./multidiff > /dev/null || ./multidiff
 	@ echo -e "\033[0;32mALL OK\033[0m"
 
 test_oaep: | clean debug printvars
 	@ echo -e "\nRUNNING OAEP TESTS ..."
-	./main_oaep 1 &> /dev/null || ./main_oaep 1
-	./blackbox_oaep &> /dev/null || ./blackbox_oaep
-	./multidiff_oaep &> /dev/null || ./multidiff_oaep
+	./main_oaep 1 > /dev/null || ./main_oaep 1
+	./blackbox_oaep > /dev/null || ./blackbox_oaep
+	./multidiff_oaep > /dev/null || ./multidiff_oaep
 	@ echo -e "\033[0;32mALL OK\033[0m"
 
 time: | clean main printvars
