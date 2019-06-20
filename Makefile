@@ -29,6 +29,11 @@ LIBTOOL   = libtool --tag=CC
 LIBDIR    = /usr/lib
 AESNI     = 1
 
+ifeq ($(RECURSIVE_SHA512),1)
+    CFLAGS += -DRECURSIVE_SHA512
+else
+    CFLAGS += -DRECURSIVE_AES
+endif
 
 # check_params,MINI_SIZE,BLOCK_SIZE,MINI_PER_MACRO
 define check_params
@@ -143,15 +148,15 @@ test_oaep_recursive: | clean debug printvars
 	@ echo -e "\033[0;32mALL OK\033[0m"
 
 time: | clean main printvars
-	@ echo -e "\nENCRYPTING 1GiB ..."
+	@ echo -e "\nENCRYPTING 64MiB ..."
 	time ./main $$((1024*1024*64 / ($(MINI_SIZE)*$(MINI_PER_MACRO))))
 
 time_oaep: | clean main_oaep printvars
-	@ echo -e "\nENCRYPTING 1GiB with OAEP ..."
+	@ echo -e "\nENCRYPTING 64MiB with OAEP ..."
 	time ./main_oaep $$((1024*1024*64 / ($(OAEP_MINI_SIZE)*$(OAEP_MINI_PER_MACRO))))
 
 time_oaep_recursive: | clean main_oaep_recursive printvars
-	@ echo -e "\nENCRYPTING 1GiB with OAEP ..."
+	@ echo -e "\nENCRYPTING 64MiB with OAEP RECURSIVE ..."
 	time ./main_oaep_recursive $$((1024*1024*64 / ($(OAEP_MINI_SIZE)*$(OAEP_MINI_PER_MACRO))))
 
 supertest: clean
