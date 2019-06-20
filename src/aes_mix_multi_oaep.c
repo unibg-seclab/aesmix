@@ -15,16 +15,6 @@
 #undef DOF
 
 
-typedef struct aesmix_args_s {
-    const unsigned char* data;
-    unsigned char* out;
-    unsigned long size;
-    const unsigned char* key;
-    const unsigned char* iv;
-} aesmix_args;
-
-typedef void* (*w_fn) (void* data);
-
 static void *w_mixencrypt_oaep(void *data){
     aesmix_args *args = data;
     mixencrypt_oaep(args->data, args->out, args->size, args->key, args->iv);
@@ -37,7 +27,7 @@ static void *w_mixdecrypt_oaep(void *data){
     return NULL;
 }
 
-static inline void t_mixprocess_oaep (
+inline void t_mixprocess_oaep (
     w_fn fn, unsigned int thr, const unsigned char* data, unsigned char* out,
     const unsigned long size, const unsigned char* key, const unsigned char* iv
 ){

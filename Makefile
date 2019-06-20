@@ -1,5 +1,5 @@
-.PHONY:	all callgrind clean cleanall debug fresh multitest printvars \
-		supertest test test_oaep time time_oaep \
+.PHONY:	all callgrind clean cleanall debug fresh multitest multitest_oaep multitest_oaep_recursive printvars \
+		supertest test test_oaep test_oaep_recursive time time_oaep \
 		multidiff multidiff_oaep install
 
 # DEFINES
@@ -13,7 +13,7 @@ THREADS   = 32
 TIMES     = 1
 
 # DO NOT TOUCH
-TARGETS   = main main_oaep blackbox blackbox_oaep multithread multithread_oaep multidiff multidiff_oaep
+TARGETS   = main main_oaep main_oaep_recursive blackbox blackbox_oaep blackbox_oaep_recursive multithread multithread_oaep multithread_oaep_recursive multidiff multidiff_oaep
 LIBS      = libaesmix.la
 SRCDIR    = src
 CFLAGS   += -fPIC -O6 -Wall -Wextra
@@ -74,16 +74,25 @@ main: aes_mix.lo debug.lo main.lo
 main_oaep: aes_mix.lo debug.lo main_oaep.lo aes_mix_oaep.lo
 	$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
+main_oaep_recursive: aes_mix.lo debug.lo main_oaep_recursive.lo aes_mix_oaep_recursive.lo
+	$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@
+
 blackbox: aes_mix.lo debug.lo blackbox.lo
 	$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
 blackbox_oaep: aes_mix.lo debug.lo blackbox_oaep.lo aes_mix_oaep.lo
 	$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
+blackbox_oaep_recursive: aes_mix.lo debug.lo blackbox_oaep_recursive.lo aes_mix_oaep_recursive.lo
+	$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@
+
 multithread: aes_mix.lo debug.lo aes_mix_multi.lo multithread.lo
 	$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) $^ $(LDLIBS) -lpthread -o $@
 
 multithread_oaep: aes_mix.lo debug.lo aes_mix_multi_oaep.lo multithread_oaep.lo aes_mix_oaep.lo
+	$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) $^ $(LDLIBS) -lpthread -o $@
+
+multithread_oaep_recursive: aes_mix.lo debug.lo aes_mix_multi_oaep.lo aes_mix_multi_oaep_recursive.lo multithread_oaep_recursive.lo aes_mix_oaep.lo aes_mix_oaep_recursive.lo
 	$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) $^ $(LDLIBS) -lpthread -o $@
 
 multidiff: aes_mix.lo debug.lo aes_mix_multi.lo multidiff.lo
@@ -127,13 +136,23 @@ test_oaep: | clean debug printvars
 	./multidiff_oaep > /dev/null || ./multidiff_oaep
 	@ echo -e "\033[0;32mALL OK\033[0m"
 
+test_oaep_recursive: | clean debug printvars
+	@ echo -e "\nRUNNING OAEP RECURSIVE TESTS ..."
+	./main_oaep_recursive 1 > /dev/null || ./main_oaep_recursive 1
+	./blackbox_oaep_recursive > /dev/null || ./blackbox_oaep_recursive
+	@ echo -e "\033[0;32mALL OK\033[0m"
+
 time: | clean main printvars
 	@ echo -e "\nENCRYPTING 1GiB ..."
-	time ./main $$((1024*1024*1024 / ($(MINI_SIZE)*$(MINI_PER_MACRO))))
+	time ./main $$((1024*1024*64 / ($(MINI_SIZE)*$(MINI_PER_MACRO))))
 
 time_oaep: | clean main_oaep printvars
 	@ echo -e "\nENCRYPTING 1GiB with OAEP ..."
-	time ./main_oaep $$((1024*1024*1024 / ($(OAEP_MINI_SIZE)*$(OAEP_MINI_PER_MACRO))))
+	time ./main_oaep $$((1024*1024*64 / ($(OAEP_MINI_SIZE)*$(OAEP_MINI_PER_MACRO))))
+
+time_oaep_recursive: | clean main_oaep_recursive printvars
+	@ echo -e "\nENCRYPTING 1GiB with OAEP ..."
+	time ./main_oaep_recursive $$((1024*1024*64 / ($(OAEP_MINI_SIZE)*$(OAEP_MINI_PER_MACRO))))
 
 supertest: clean
 	@ for aesni in 1 0; do \
@@ -152,6 +171,9 @@ multitest: | clean multithread $(DUMMYFILE) printvars
 
 multitest_oaep: | clean multithread_oaep $(DUMMYFILE) printvars
 	./multithread_oaep $(DUMMYFILE) $(DUMMYFILE).out $(THREADS) $(TIMES)
+
+multitest_oaep_recursive: | clean multithread_oaep_recursive $(DUMMYFILE) printvars
+	./multithread_oaep_recursive $(DUMMYFILE) $(DUMMYFILE).out $(THREADS) $(TIMES)
 
 clean:
 	@ rm -f $(TARGETS)

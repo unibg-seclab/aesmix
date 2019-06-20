@@ -23,12 +23,16 @@ gmon.out
 # binaries
 main
 main_oaep
+main_oaep_recursive
 blackbox
 blackbox_oaep
+blackbox_oaep_recursive
 multithread
 multithread_oaep
+multithread_oaep_recursive
 multidiff
 multidiff_oaep
+multidiff_oaep_recursive
 
 # temporary files
 *.dec
