@@ -58,6 +58,8 @@ endif
 ifeq ($(shell uname), Darwin)  # OSX
     LDFLAGS  += -L/usr/local/opt/openssl/lib
     CFLAGS   += -I/usr/local/opt/openssl/include
+    LIBTOOL   = glibtool --tag=CC
+    CFLAGS   += -O3
 endif
 
 vpath %.c $(SRCDIR) $(TESTDIR)
