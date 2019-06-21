@@ -17,7 +17,7 @@ logging.basicConfig(level=logging.DEBUG)
 def test_single_thread():
     print("\n\nTest single thread")
     key = b"k" * 16
-    iv = b"i" * 16
+    iv = b"i" * 64
 
     plaintext = b"d" * 4096
     print("plaintext: %s ... %s" % (plaintext[:64], plaintext[-64:]))
@@ -27,12 +27,13 @@ def test_single_thread():
 
     decrypted = mixdecrypt(ciphertext, key, iv, to_string=True)
     print("decrypted: %s ... %s" % (decrypted[:64], decrypted[-64:]))
+    assert(plaintext == decrypted)
 
 
 def test_multi_thread():
     print("\n\nTest multi thread")
     key = b"k" * 16
-    iv = b"i" * 16
+    iv = b"i" * 64
     threads = 8
 
     plaintext = b"d" * (2 ** 20) * 128  # 128 MiB
@@ -43,12 +44,13 @@ def test_multi_thread():
 
     decrypted = t_mixdecrypt(ciphertext, key, iv, threads, to_string=False)
     print("decrypted: %s ... %s" % (decrypted[:64], decrypted[-64:]))
+    assert(plaintext == decrypted)
 
 
 def test_mix_and_slice():
     print("\n\nTest mix and slice")
     key = b"k" * 16
-    iv = b"i" * 16
+    iv = b"i" * 64
 
     plaintext = b"d" * (2 ** 20)  # 1 MiB
     print("plaintext: %s ... %s" % (plaintext[:64], plaintext[-64:]))
@@ -58,13 +60,14 @@ def test_mix_and_slice():
 
     decrypted = unslice_and_unmix(fragments, key, iv)
     print("decrypted: %s ... %s" % (decrypted[:64], decrypted[-64:]))
+    assert(plaintext == decrypted)
 
 
 def test_manager():
     print("\n\nTest mix and slice manager")
     data = b"d" * 117 + b"ata"
     key = b"k" * 16
-    iv = b"i" * 16
+    iv = b"i" * 64
 
     print("input: ", data)
     owner = MixSlice.encrypt(data, key, iv)

@@ -6,13 +6,13 @@
 
 
 #ifndef BLOCK_SIZE
-#define BLOCK_SIZE                                 16
+#define BLOCK_SIZE                                 64
 #endif
 #ifndef MINI_SIZE
-#define MINI_SIZE                                   4
+#define MINI_SIZE                                  32
 #endif
 #ifndef MINI_PER_MACRO
-#define MINI_PER_MACRO                           1024
+#define MINI_PER_MACRO                             16
 #endif
 
 #define MINI_PER_BLOCK       (BLOCK_SIZE / MINI_SIZE)
