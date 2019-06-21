@@ -235,7 +235,7 @@ static inline void mixdecrypt_bimacroblock_oaep_recursive(
 #endif
 }
 
-inline void mixbiprocess(
+static inline void mixbiprocess(
     mixfn fn, const unsigned char* data, unsigned char* out,
     const unsigned long size, const unsigned char* key, const unsigned char* iv
 ){
