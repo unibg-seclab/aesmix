@@ -185,25 +185,35 @@ inline void mixbiprocess(
     mixfn fn, const unsigned char* data, unsigned char* out,
     const unsigned long size, const unsigned char* key, const unsigned char* iv
 ){
+    assert(0 == size % OAEP_BIMACRO_SIZE);
     D assert(1 == ISPOWEROF(OAEP_MINI_PER_MACRO, OAEP_BLOCK_SIZE / OAEP_MINI_SIZE)
              && "OAEP_MINI_PER_MACRO must be a power of (OAEP_BLOCK_SIZE / OAEP_MINI_SIZE)");
-    const unsigned char* last = data + size;
-    unsigned __int128 miv;
-    unsigned char* buffer = malloc(OAEP_MACRO_SIZE);
 
-    if ( !buffer ) {
+    const unsigned char* last = data + size;
+    unsigned char* buffer = malloc(OAEP_MACRO_SIZE);
+    unsigned char* miv = (unsigned char*) malloc(BLOCK_SIZE);
+    int outl;
+
+    EVP_CIPHER_CTX *mivctx = EVP_CIPHER_CTX_new();
+    EVP_EncryptInit(mivctx, EVP_aes_128_ecb(), key, iv);
+    EVP_CIPHER_CTX_set_padding(mivctx, 0);
+
+    if ( !buffer || !miv || !mivctx) {
         printf("Cannot allocate needed memory\n");
         exit(EXIT_FAILURE);
     }
 
-    assert(0 == size % OAEP_BIMACRO_SIZE);
-    memcpy(&miv, iv, sizeof(miv));
-
-    for ( ; data < last; data+=OAEP_BIMACRO_SIZE, out+=OAEP_BIMACRO_SIZE, miv++) {
-        fn(data, out, buffer, key, (unsigned char*) &miv);
+    memcpy(miv, iv, BLOCK_SIZE);
+    for ( ; data < last; data+=OAEP_BIMACRO_SIZE, out+=OAEP_BIMACRO_SIZE) {
+        fn(data, out, buffer, key, miv);
+        EVP_EncryptUpdate(mivctx, miv, &outl, miv, BLOCK_SIZE);
+        D assert(BLOCK_SIZE == outl);
     }
 
+    EVP_CIPHER_CTX_cleanup(mivctx);
+    EVP_CIPHER_CTX_free(mivctx);
     free(buffer);
+    free(miv);
 }
 
 void mixencrypt_oaep(const unsigned char* data, unsigned char* out,

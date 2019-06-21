@@ -171,7 +171,7 @@ inline void mixprocess(mixfn fn, const unsigned char* data,
     EVP_EncryptInit(mivctx, EVP_aes_128_ecb(), key, iv);
     EVP_CIPHER_CTX_set_padding(mivctx, 0);
 
-    if ( NULL == buffer || NULL == miv || NULL == mivctx) {
+    if ( !buffer || !miv || !mivctx) {
         printf("Cannot allocate needed memory\n");
         exit(EXIT_FAILURE);
     }

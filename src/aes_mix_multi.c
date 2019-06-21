@@ -28,6 +28,8 @@ static inline void t_mixprocess(const short enc, unsigned int thr,
     const unsigned char* data, unsigned char* out, const unsigned long size,
     const unsigned char* key, const unsigned char* iv
 ){
+    assert(0 == size % MACRO_SIZE);
+
     pthread_t thread[thr];
     aesmix_args args[thr];
     unsigned char tiv[thr][BLOCK_SIZE];
@@ -40,7 +42,12 @@ static inline void t_mixprocess(const short enc, unsigned int thr,
     EVP_EncryptInit(mivctx, EVP_aes_128_ecb(), key, iv);
     EVP_CIPHER_CTX_set_padding(mivctx, 0);
 
-    assert(0 == size % MACRO_SIZE);
+    if ( !miv || !mivctx) {
+        printf("Cannot allocate needed memory\n");
+        exit(EXIT_FAILURE);
+    }
+
+    memcpy(miv, iv, BLOCK_SIZE);
     remaining_macro = size / MACRO_SIZE;
 
     for (t=0; t < thr; ++t) {
@@ -70,7 +77,7 @@ static inline void t_mixprocess(const short enc, unsigned int thr,
 
     EVP_CIPHER_CTX_cleanup(mivctx);
     EVP_CIPHER_CTX_free(mivctx);
-    /* free(miv); */
+    free(miv);
 }
 
 void t_mixencrypt(unsigned int thr, const unsigned char* data, unsigned char* out,
