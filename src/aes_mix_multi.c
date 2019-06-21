@@ -1,3 +1,4 @@
+#include <openssl/evp.h>
 #include <pthread.h>
 #include <string.h>
 #include <assert.h>
@@ -31,12 +32,16 @@ static inline void t_mixprocess(const short enc, unsigned int thr,
     aesmix_args args[thr];
     unsigned char tiv[thr][BLOCK_SIZE];
     unsigned long remaining_macro;
-    unsigned int t, started_thr = 0;
-    unsigned __int128 miv;
+    unsigned int i, t, started_thr = 0;
+    unsigned char* miv = (unsigned char*) malloc(BLOCK_SIZE);
+    int outl;
+
+    EVP_CIPHER_CTX *mivctx = EVP_CIPHER_CTX_new();
+    EVP_EncryptInit(mivctx, EVP_aes_128_ecb(), key, iv);
+    EVP_CIPHER_CTX_set_padding(mivctx, 0);
 
     assert(0 == size % MACRO_SIZE);
     remaining_macro = size / MACRO_SIZE;
-    memcpy(&miv, iv, BLOCK_SIZE);
 
     for (t=0; t < thr; ++t) {
         if (!remaining_macro) break;
@@ -48,16 +53,24 @@ static inline void t_mixprocess(const short enc, unsigned int thr,
         D printf("%lu macroblocks assigned to thread %d\n", tmacro, t);
 
         aesmix_args* a = &args[t];
-        memcpy(tiv[t], &miv, BLOCK_SIZE);
+        memcpy(tiv[t], miv, BLOCK_SIZE);
         a->data = data; a->out = out; a->size = tsize; a->key = key; a->iv = tiv[t];
         pthread_create(&thread[t], NULL, enc ? w_mixencrypt : w_mixdecrypt, a);
-        data += tsize; out += tsize; miv += tmacro; started_thr++;
+        data += tsize; out += tsize; started_thr++;
+        for (i=0; i<tmacro; i++) {
+            EVP_EncryptUpdate(mivctx, miv, &outl, miv, BLOCK_SIZE);
+            D assert(outl == BLOCK_SIZE);
+        }
     }
 
     assert(!remaining_macro);
     for (t=0; t<started_thr; ++t) {
         pthread_join(thread[t], NULL);
     }
+
+    EVP_CIPHER_CTX_cleanup(mivctx);
+    EVP_CIPHER_CTX_free(mivctx);
+    /* free(miv); */
 }
 
 void t_mixencrypt(unsigned int thr, const unsigned char* data, unsigned char* out,

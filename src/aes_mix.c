@@ -30,6 +30,7 @@ static void recursive_mixing(EVP_CIPHER_CTX* ctx,
     unsigned char tmp[partsize];
 
     if (partsize == 16) {
+        D printf("16: AES\n");
         EVP_EncryptUpdate(ctx, outright, &outl, left, 16);
         D assert(16 == outl);
         memxor(outright, right, 16);
@@ -43,7 +44,7 @@ static void recursive_mixing(EVP_CIPHER_CTX* ctx,
         memxor(outright, tmp, 16);
 
     } else if (partsize > 16) {
-        exit(1);
+        D printf("%lu: RECURSE\n", partsize);
         recursive_mixing(ctx, left, outright, partsize);
         memxor(outright, right, partsize);
 
@@ -65,24 +66,25 @@ static inline void mix(EVP_CIPHER_CTX* ctx,
     const unsigned char* last = input + MACRO_SIZE;
     unsigned char tmp[BLOCK_SIZE];
     for ( ; input < last; input+=BLOCK_SIZE, output+=BLOCK_SIZE) {
+        D printf("mixing block %p\n", input);
         recursive_mixing(ctx, input, tmp, BLOCK_SIZE);
         memcpy(output, tmp, BLOCK_SIZE);
     }
 }
 
-/* static inline void do_step_encrypt(EVP_CIPHER_CTX* ctx, unsigned char* buffer, */
-/*     const unsigned char* macro, unsigned char* out, const unsigned int step */
-/* ){ */
-/*     SHUFFLE(step, off, bp, macro, buffer, bp, macro + off); */
-/*     mix(ctx, buffer, out); */
-/* } */
+static inline void do_step_encrypt(EVP_CIPHER_CTX* ctx, unsigned char* buffer,
+    const unsigned char* macro, unsigned char* out, const unsigned int step
+){
+    SHUFFLE(step, off, bp, macro, buffer, bp, macro + off);
+    mix(ctx, buffer, out);
+}
 
-/* static inline void do_step_decrypt(EVP_CIPHER_CTX* ctx, unsigned char* buffer, */
-/*     const unsigned char* macro, unsigned char* out, const unsigned int step */
-/* ){ */
-/*     mix(ctx, macro, buffer); */
-/*     SHUFFLE(step, off, bp, macro, buffer, out + off, bp); */
-/* } */
+static inline void do_step_decrypt(EVP_CIPHER_CTX* ctx, unsigned char* buffer,
+    const unsigned char* macro, unsigned char* out, const unsigned int step
+){
+    mix(ctx, macro, buffer);
+    SHUFFLE(step, off, bp, macro, buffer, out + off, bp);
+}
 
 inline void* memxor(void* dst, const void* src, size_t n){
     char *d =(char *) dst;
@@ -110,14 +112,13 @@ static inline void mixencrypt_macroblock(const unsigned char* macro,
 
     // Step 0
     memxor((unsigned char*) macro, iv, BLOCK_SIZE);  // add IV to input
-    /* memcpy(buffer, macro, MACRO_SIZE); */
     mix(ctx, macro, out);
     memxor((unsigned char*) macro, iv, BLOCK_SIZE);  // add IV to input
 
     // Steps 1 -> N
-    /* for (step=1; step < DIGITS/DOF; ++step) { */
-    /*     do_step_encrypt(ctx, buffer, out, out, step); */
-    /* } */
+    for (step=1; step < DIGITS/DOF; ++step) {
+        do_step_encrypt(ctx, buffer, out, out, step);
+    }
 
     EVP_CIPHER_CTX_cleanup(ctx);
     EVP_CIPHER_CTX_free(ctx);
@@ -139,14 +140,13 @@ static inline void mixdecrypt_macroblock(const unsigned char* macro,
     EVP_CIPHER_CTX_set_padding(ctx, 0); // disable padding
 
     // Steps N -> 1
-    /* for (step = DIGITS/DOF - 1; step >= 1; --step) { */
-    /*     do_step_decrypt(ctx, buffer, macro, out, step); */
-    /*     macro = out;   // this is needed to avoid a starting memcpy */
-    /* } */
+    for (step = DIGITS/DOF - 1; step >= 1; --step) {
+        do_step_decrypt(ctx, buffer, macro, out, step);
+        macro = out;   // this is needed to avoid a starting memcpy
+    }
 
     // Step 0
-    /* memcpy(buffer, out, MACRO_SIZE); */
-    mix(ctx, macro, out);
+    mix(ctx, out, out);
     memxor(out, iv, BLOCK_SIZE);         // remove IV from output
 
     EVP_CIPHER_CTX_cleanup(ctx);
