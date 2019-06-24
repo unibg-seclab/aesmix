@@ -14,8 +14,8 @@ int main(int argc, char *argv[]) {
     (void) argc;
     (void) argv;
 
-    unsigned char key[BLOCK_SIZE];
-    unsigned char  iv[BLOCK_SIZE];
+    unsigned char key[KEYSIZE];
+    unsigned char  iv[IVSIZE];
     unsigned char *in;
     unsigned char *dec;
     unsigned char *out;
@@ -25,8 +25,8 @@ int main(int argc, char *argv[]) {
     out = malloc(SIZE);
 
     RAND_bytes(in, SIZE);
-    RAND_bytes(key, BLOCK_SIZE);
-    RAND_bytes(iv, BLOCK_SIZE);
+    RAND_bytes(key, KEYSIZE);
+    RAND_bytes(iv, IVSIZE);
 
     printf("ENCRYPTION with %d threads (SIZE %lu)\n", ENC_THREADS, SIZE);
     t_mixencrypt_oaep(ENC_THREADS, in, out, SIZE, key, iv);

@@ -16,7 +16,7 @@ unsigned char key[] = "SQUEAMISHOSSIFRA";
 int main(int argc, char *argv[])
 {
     int i, macros;
-    unsigned char iv[BLOCK_SIZE];
+    unsigned char iv[IVSIZE];
     unsigned char*   in = malloc(SIZE);
     unsigned char* orig = malloc(SIZE);
     unsigned char*  out = malloc(SIZE);
@@ -39,8 +39,8 @@ int main(int argc, char *argv[])
 
     printf("AESMIX-ing %d * %d macroblocks ...\n", SIZE/MACRO_SIZE, macros);
     for (i=0; i < macros; ++i) {
-        D RAND_bytes(iv, BLOCK_SIZE);
-        D printx("IV: ", iv, BLOCK_SIZE, MINI_SIZE);
+        D RAND_bytes(iv, IVSIZE);
+        D printx("IV: ", iv, IVSIZE, MINI_SIZE);
 
         mixencrypt(in, out, SIZE, key, iv);
         D assert(0 != memcmp(in, out, SIZE));

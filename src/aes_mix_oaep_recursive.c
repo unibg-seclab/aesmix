@@ -245,29 +245,19 @@ static inline void mixbiprocess(
 
     const unsigned char* last = data + size;
     unsigned char* buffer = malloc(OAEP_BIMACRO_SIZE);
-    unsigned char* miv = (unsigned char*) malloc(BLOCK_SIZE);
-    int outl;
+    unsigned __int128 miv;
 
-    EVP_CIPHER_CTX *mivctx = EVP_CIPHER_CTX_new();
-    EVP_EncryptInit(mivctx, EVP_aes_128_ecb(), key, iv);
-    EVP_CIPHER_CTX_set_padding(mivctx, 0);
-
-    if ( !buffer || !mivctx || !mivctx) {
+    if ( !buffer ) {
         printf("Cannot allocate needed memory\n");
         exit(EXIT_FAILURE);
     }
 
-    memcpy(miv, iv, BLOCK_SIZE);
-    for ( ; data < last; data+=OAEP_BIMACRO_SIZE, out+=OAEP_BIMACRO_SIZE) {
-        fn(data, out, buffer, key, miv);
-        EVP_EncryptUpdate(mivctx, miv, &outl, miv, BLOCK_SIZE);
-        D assert(BLOCK_SIZE == outl);
+    memcpy(&miv, iv, IVSIZE);
+    for ( ; data < last; data+=OAEP_BIMACRO_SIZE, out+=OAEP_BIMACRO_SIZE, miv+=1) {
+        fn(data, out, buffer, key, (unsigned char*) &miv);
     }
 
-    EVP_CIPHER_CTX_cleanup(mivctx);
-    EVP_CIPHER_CTX_free(mivctx);
     free(buffer);
-    free(miv);
 }
 
 void mixencrypt_oaep_recursive(const unsigned char* data, unsigned char* out,

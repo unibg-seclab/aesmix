@@ -38,21 +38,10 @@ inline void t_mixprocess_oaep (
     aesmix_args args[thr];
     unsigned char tiv[thr][AES_BLOCK_SIZE];
     unsigned long remaining_bimacro;
-    unsigned int i, t, started_thr = 0;
-    int outl;
+    unsigned int t, started_thr = 0;
+    unsigned __int128 miv;
 
-    unsigned char* miv = (unsigned char*) malloc(BLOCK_SIZE);
-
-    EVP_CIPHER_CTX *mivctx = EVP_CIPHER_CTX_new();
-    EVP_EncryptInit(mivctx, EVP_aes_128_ecb(), key, iv);
-    EVP_CIPHER_CTX_set_padding(mivctx, 0);
-
-    if ( !miv || !mivctx) {
-        printf("Cannot allocate needed memory\n");
-        exit(EXIT_FAILURE);
-    }
-
-    memcpy(miv, iv, BLOCK_SIZE);
+    memcpy(&miv, iv, IVSIZE);
     remaining_bimacro = size / OAEP_BIMACRO_SIZE;
 
     for (t=0; t < thr; ++t) {
@@ -65,24 +54,16 @@ inline void t_mixprocess_oaep (
         D printf("%lu bimacroblocks assigned to thread %d\n", tbimacro, t);
 
         aesmix_args* a = &args[t];
-        memcpy(tiv[t], miv, BLOCK_SIZE);
+        memcpy(tiv[t], &miv, BLOCK_SIZE);
         a->data = data; a->out = out; a->size = tsize; a->key = key; a->iv = tiv[t];
         pthread_create(&thread[t], NULL, fn, a);
-        data += tsize; out += tsize; started_thr++;
-        for (i=0; i<tbimacro; i++) {
-            EVP_EncryptUpdate(mivctx, miv, &outl, miv, BLOCK_SIZE);
-            D assert(outl == BLOCK_SIZE);
-        }
+        data += tsize; out += tsize; started_thr++; miv+=tbimacro;
     }
 
     assert(!remaining_bimacro);
     for (t=0; t < started_thr; ++t) {
         pthread_join(thread[t], NULL);
     }
-
-    EVP_CIPHER_CTX_cleanup(mivctx);
-    EVP_CIPHER_CTX_free(mivctx);
-    free(miv);
 }
 
 void t_mixencrypt_oaep (

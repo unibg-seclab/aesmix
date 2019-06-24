@@ -14,13 +14,13 @@ int main()
     unsigned char out1[OAEP_BIMACRO_SIZE];
     unsigned char out2[OAEP_BIMACRO_SIZE*2];
     unsigned char out3[OAEP_BIMACRO_SIZE];
-    unsigned char  iv1[BLOCK_SIZE];
-    unsigned char  iv2[BLOCK_SIZE];
+    unsigned char  iv1[IVSIZE];
+    unsigned char  iv2[IVSIZE];
     int i, j;
 
     RAND_bytes(in1, OAEP_BIMACRO_SIZE);
-    RAND_bytes(iv1, BLOCK_SIZE);
-    RAND_bytes(iv2, BLOCK_SIZE);
+    RAND_bytes(iv1, IVSIZE);
+    RAND_bytes(iv2, IVSIZE);
     mixencrypt_oaep_recursive(in1, out1, OAEP_BIMACRO_SIZE, key, iv1);
 
     for (i=0; i<OAEP_BIMACRO_SIZE; i+=OAEP_MINI_SIZE) {

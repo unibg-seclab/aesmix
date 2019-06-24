@@ -14,13 +14,13 @@ int main()
     unsigned char out1[MACRO_SIZE];
     unsigned char out2[MACRO_SIZE*2];
     unsigned char out3[MACRO_SIZE];
-    unsigned char  iv1[BLOCK_SIZE];
-    unsigned char  iv2[BLOCK_SIZE];
+    unsigned char  iv1[IVSIZE];
+    unsigned char  iv2[IVSIZE];
     int i, j;
 
     RAND_bytes(in1, MACRO_SIZE);
-    RAND_bytes(iv1, BLOCK_SIZE);
-    RAND_bytes(iv2, BLOCK_SIZE);
+    RAND_bytes(iv1, IVSIZE);
+    RAND_bytes(iv2, IVSIZE);
     mixencrypt(in1, out1, MACRO_SIZE, key, iv1);
 
     for (i=0; i<MACRO_SIZE; i+=MINI_SIZE) {

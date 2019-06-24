@@ -111,9 +111,9 @@ static inline void mixencrypt_macroblock(const unsigned char* macro,
     EVP_CIPHER_CTX_set_padding(ctx, 0); // disable padding
 
     // Step 0
-    memxor((unsigned char*) macro, iv, BLOCK_SIZE);  // add IV to input
+    memxor((unsigned char*) macro, iv, IVSIZE);  // add IV to input
     mix(ctx, macro, out);
-    memxor((unsigned char*) macro, iv, BLOCK_SIZE);  // add IV to input
+    memxor((unsigned char*) macro, iv, IVSIZE);  // add IV to input
 
     // Steps 1 -> N
     for (step=1; step < DIGITS/DOF; ++step) {
@@ -147,7 +147,7 @@ static inline void mixdecrypt_macroblock(const unsigned char* macro,
 
     // Step 0
     mix(ctx, out, out);
-    memxor(out, iv, BLOCK_SIZE);         // remove IV from output
+    memxor(out, iv, IVSIZE);         // remove IV from output
 
     EVP_CIPHER_CTX_cleanup(ctx);
     EVP_CIPHER_CTX_free(ctx);
@@ -158,35 +158,24 @@ inline void mixprocess(mixfn fn, const unsigned char* data,
     const unsigned char* key, const unsigned char* iv
 ){
     assert(0 == size % MACRO_SIZE);
-    assert(0 == BLOCK_SIZE % 16); // iv is BLOCK_SIZE and passes through AES
     D assert(1 == ISPOWEROF(MINI_PER_MACRO, BLOCK_SIZE / MINI_SIZE)
              && "MINI_PER_MACRO must be a power of (BLOCK_SIZE / MINI_SIZE)");
 
-    int outl;
     const unsigned char* last = data + size;
     unsigned char* buffer = (unsigned char*) malloc(MACRO_SIZE);
-    unsigned char* miv = (unsigned char*) malloc(BLOCK_SIZE);
+    unsigned __int128 miv;
 
-    EVP_CIPHER_CTX *mivctx = EVP_CIPHER_CTX_new();
-    EVP_EncryptInit(mivctx, EVP_aes_128_ecb(), key, iv);
-    EVP_CIPHER_CTX_set_padding(mivctx, 0);
-
-    if ( !buffer || !miv || !mivctx) {
+    if ( !buffer ) {
         printf("Cannot allocate needed memory\n");
         exit(EXIT_FAILURE);
     }
 
-    memcpy(miv, iv, BLOCK_SIZE);
-    for ( ; data < last; data+=MACRO_SIZE, out+=MACRO_SIZE) {
-        fn(data, out, buffer, key, miv);
-        EVP_EncryptUpdate(mivctx, miv, &outl, miv, BLOCK_SIZE);
-        D assert(BLOCK_SIZE == outl);
+    memcpy(&miv, iv, IVSIZE);
+    for ( ; data < last; data+=MACRO_SIZE, out+=MACRO_SIZE, miv+=1) {
+        fn(data, out, buffer, key, (unsigned char*) &miv);
     }
 
-    EVP_CIPHER_CTX_cleanup(mivctx);
-    EVP_CIPHER_CTX_free(mivctx);
     free(buffer);
-    free(miv);
 }
 
 void mixencrypt(const unsigned char* data, unsigned char* out,

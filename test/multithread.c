@@ -17,8 +17,8 @@ double test(
     unsigned int threads,
     unsigned int times
 ) {
-    unsigned char key[BLOCK_SIZE];
-    unsigned char  iv[BLOCK_SIZE];
+    unsigned char key[KEYSIZE];
+    unsigned char  iv[IVSIZE];
     unsigned char *in;
     unsigned char *dec;
     unsigned char *out;
@@ -41,8 +41,8 @@ double test(
         return EXIT_FAILURE;
     }
 
-    RAND_bytes(key, BLOCK_SIZE);
-    RAND_bytes(iv, BLOCK_SIZE);
+    RAND_bytes(key, KEYSIZE);
+    RAND_bytes(iv, IVSIZE);
 
     for (i=0; i < times; ++i) {
         clock_gettime(CLOCK_MONOTONIC, &start);

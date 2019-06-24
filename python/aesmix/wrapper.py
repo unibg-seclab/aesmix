@@ -7,7 +7,7 @@ from six.moves import xrange as _xrange
 def _mixprocess(data, key, iv, fn, to_string, threads=None):
     threads = threads if threads is not None else _cpu_count()
     assert len(key) == 16, "key must be 16 bytes long"
-    assert len(iv) == 64, "iv must be 64 bytes long"
+    assert len(iv) == 16, "iv must be 16 bytes long"
     assert threads >= 1, "you must use at least one thread"
     assert len(data) % _lib.MACRO_SIZE == 0, \
         "plaintext size must be a multiple of %d" % _lib.MACRO_SIZE
