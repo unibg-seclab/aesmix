@@ -153,7 +153,7 @@ static inline void mixencrypt_bimacroblock_oaep_recursive(
 
     // add IV
     memcpy(out, bimacro, OAEP_BIMACRO_SIZE);
-    memxor(out, iv, AES_BLOCK_SIZE);
+    memxor(out, iv, IVSIZE);
 
     // OAEP pad
     mixoaep_pad(gctx, out, buffer, OAEP_BIMACRO_SIZE);
@@ -220,7 +220,7 @@ static inline void mixdecrypt_bimacroblock_oaep_recursive(
     mixoaep_unpad(gctx, out, buffer, OAEP_BIMACRO_SIZE);
 
     // remove IV
-    memxor(out, iv, AES_BLOCK_SIZE);
+    memxor(out, iv, IVSIZE);
 
 #ifdef RECURSIVE_SHA512
 #if OPENSSL_VERSION_NUMBER < 0x10100000
