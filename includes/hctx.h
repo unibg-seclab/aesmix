@@ -8,8 +8,10 @@ typedef struct hctx_fn_s {
     BN_CTX *ctx;
     BIGNUM* p;
     BIGNUM* a;
+    BIGNUM* a_inv;
     BIGNUM* b;
-    BIGNUM *tmp;
+    BIGNUM *x;
+    BIGNUM *y;
 } HCTX_FN;
 
 
@@ -20,7 +22,7 @@ typedef struct hctx_s {
 } HCTX;
 
 
-HCTX* create_hctx(const unsigned char *iv);
+HCTX* create_hctx(const unsigned char *seed, int seedsize);
 
 void destroy_hctx(HCTX* hctx);
 

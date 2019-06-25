@@ -178,8 +178,8 @@ static inline void mixprocess(mixfnv2 fn, const unsigned char* data,
 
     const unsigned char* last = data + size;
     unsigned char* buffer = (unsigned char*) malloc(MACRO_SIZE);
-    HCTX* hctx1 = create_hctx(key);
-    HCTX* hctx2 = create_hctx(iv);
+    HCTX* hctx1 = create_hctx(key, KEYSIZE);
+    HCTX* hctx2 = create_hctx(iv, IVSIZE);
     unsigned __int128 miv;
 
     if ( !buffer ) {

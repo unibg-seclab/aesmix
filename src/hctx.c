@@ -37,7 +37,9 @@ static inline void get_irreducible_polynomial(BIGNUM* p, int size) {
     }
 }
 
-static HCTX_FN* create_hctx_fn(int size, const unsigned char *iv) {
+static HCTX_FN* create_hctx_fn(
+        int size, const unsigned char *seed, int seedsize
+){
     HCTX_FN* hctx_fn = (HCTX_FN*) malloc(sizeof(HCTX_FN));
     EVP_MD_CTX *mdctx = EVP_MD_CTX_create();
     unsigned char* tmp = OPENSSL_malloc(size);
@@ -52,9 +54,12 @@ static HCTX_FN* create_hctx_fn(int size, const unsigned char *iv) {
 
     hctx_fn->a = BN_new();
     EVP_DigestInit_ex(mdctx, type, NULL);
-    EVP_DigestUpdate(mdctx, iv, IVSIZE);
+    EVP_DigestUpdate(mdctx, seed, seedsize);
     EVP_DigestFinal_ex(mdctx, tmp, NULL);
     BN_bin2bn(tmp, size, hctx_fn->a);
+
+    hctx_fn->a_inv = BN_new();
+    BN_GF2m_mod_inv(hctx_fn->a_inv, hctx_fn->a, hctx_fn->p, hctx_fn->ctx);
 
     hctx_fn->b = BN_new();
     EVP_DigestInit_ex(mdctx, type, NULL);
@@ -62,8 +67,8 @@ static HCTX_FN* create_hctx_fn(int size, const unsigned char *iv) {
     EVP_DigestFinal_ex(mdctx, tmp, NULL);
     BN_bin2bn(tmp, size, hctx_fn->b);
 
-    hctx_fn->tmp = BN_new();
-    BN_zero(hctx_fn->tmp);
+    hctx_fn->x = BN_new();
+    hctx_fn->y = BN_new();
 
     OPENSSL_free(tmp);
     EVP_MD_CTX_destroy(mdctx);
@@ -71,26 +76,54 @@ static HCTX_FN* create_hctx_fn(int size, const unsigned char *iv) {
     return hctx_fn;
 }
 
-static void destroy_hctx_fn(HCTX_FN* hctx_fn) {
+static void destroy_hctx_fn(
+        HCTX_FN* hctx_fn
+){
     BN_free(hctx_fn->p);
     BN_free(hctx_fn->a);
+    BN_free(hctx_fn->a_inv);
     BN_free(hctx_fn->b);
-    BN_free(hctx_fn->tmp);
+    BN_free(hctx_fn->x);
+    BN_free(hctx_fn->y);
     BN_CTX_free(hctx_fn->ctx);
     free(hctx_fn);
 }
 
-HCTX* create_hctx(const unsigned char *iv) {
+HCTX* create_hctx(
+        const unsigned char *seed, int seedsize
+){
     HCTX* hctx = (HCTX*) malloc(sizeof(HCTX));
-    hctx->p128 = create_hctx_fn(16, iv);
-    hctx->p256 = create_hctx_fn(32, iv);
-    hctx->p512 = create_hctx_fn(64, iv);
+    hctx->p128 = create_hctx_fn(16, seed, seedsize);
+    hctx->p256 = create_hctx_fn(32, seed, seedsize);
+    hctx->p512 = create_hctx_fn(64, seed, seedsize);
     return hctx;
 }
 
-void destroy_hctx(HCTX* hctx) {
+void destroy_hctx(
+        HCTX* hctx
+){
     destroy_hctx_fn(hctx->p128);
     destroy_hctx_fn(hctx->p256);
     destroy_hctx_fn(hctx->p512);
     free(hctx);
+}
+
+void do_h(
+        HCTX* hctx, int size, unsigned char* data, unsigned char* out
+) {
+    HCTX_FN* fn = size == 16 ? hctx->p128 : (size == 32 ? hctx->p256 : hctx->p512);
+    BN_bin2bn(data, size, fn->x);
+    BN_GF2m_mod_mul(fn->y, fn->a, fn->x, fn->p, fn->ctx);
+    BN_GF2m_add(fn->y, fn->y, fn->b);
+    BN_bn2bin(fn->y, out);
+}
+
+void do_h_inv(
+        HCTX* hctx, int size, unsigned char* data, unsigned char* out
+) {
+    HCTX_FN* fn = size == 16 ? hctx->p128 : (size == 32 ? hctx->p256 : hctx->p512);
+    BN_bin2bn(data, size, fn->y);
+    BN_GF2m_sub(fn->y, fn->y, fn->b);
+    BN_GF2m_mod_mul(fn->x, fn->a_inv, fn->y, fn->p, fn->ctx);
+    BN_bn2bin(fn->x, out);
 }
