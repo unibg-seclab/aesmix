@@ -34,8 +34,12 @@ else
     CFLAGS += -DRECURSIVE_AES
 endif
 
-ifeq ($(NO_NAOR),1)
-    CFLAGS += -DNO_NAOR
+ifeq ($(NAOR),1)
+    CFLAGS += -DNAOR
+endif
+
+ifeq ($(NAOR_EXTERNAL_ONLY),1)
+    CFLAGS += -DNAOR_EXTERNAL_ONLY
 endif
 
 # check_params,MINI_SIZE,BLOCK_SIZE,MINI_PER_MACRO

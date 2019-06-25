@@ -15,19 +15,19 @@ unsigned char key[] = "SQUEAMISHOSSIFRA";
 
 int main(int argc, char *argv[])
 {
-    int i, macros;
+    int macros;
+    macros = (argc > 1) ? atoi(argv[1]) : 1;
+
     unsigned char iv[IVSIZE];
-    unsigned char*   in = malloc(SIZE);
-    unsigned char* orig = malloc(SIZE);
-    unsigned char*  out = malloc(SIZE);
-    unsigned char*  dec = malloc(SIZE);
+    unsigned char*   in = malloc(SIZE * macros);
+    unsigned char* orig = malloc(SIZE * macros);
+    unsigned char*  out = malloc(SIZE * macros);
+    unsigned char*  dec = malloc(SIZE * macros);
 
     if ( 0 == in || 0 == orig || 0 == out || 0 == dec ) {
         printf("Cannot allocate needed memory\n");
         exit(EXIT_FAILURE);
     }
-
-    macros = (argc > 1) ? atoi(argv[1]) : 1;
 
 #ifdef DEBUG
     RAND_bytes(in, SIZE);
@@ -38,22 +38,20 @@ int main(int argc, char *argv[])
     memcpy(orig, in, SIZE);
 
     printf("AESMIX-ing %d * %d macroblocks ...\n", SIZE/MACRO_SIZE, macros);
-    for (i=0; i < macros; ++i) {
-        D RAND_bytes(iv, IVSIZE);
-        D printx("IV: ", iv, IVSIZE, MINI_SIZE);
+    D RAND_bytes(iv, IVSIZE);
+    D printx("IV: ", iv, IVSIZE, MINI_SIZE);
 
-        mixencrypt(in, out, SIZE, key, iv);
-        D assert(0 != memcmp(in, out, SIZE));
-        D printf("in != out .. verified\n");
-        D assert(0 == memcmp(in, orig, SIZE));
-        D printf("in == orig .. verified\n");
+    mixencrypt(in, out, SIZE * macros, key, iv);
+    D assert(0 != memcmp(in, out, SIZE * macros));
+    D printf("in != out .. verified\n");
+    D assert(0 == memcmp(in, orig, SIZE * macros));
+    D printf("in == orig .. verified\n");
 
-        D mixdecrypt(out, dec, SIZE, key, iv);
-        D assert(0 == memcmp(in, dec, SIZE));
-        D printf("in == dec .. verified\n");
-        D assert(0 == memcmp(in, orig, SIZE));
-        D printf("in == orig .. verified\n");
-    }
+    D mixdecrypt(out, dec, SIZE * macros, key, iv);
+    D assert(0 == memcmp(in, dec, SIZE * macros));
+    D printf("in == dec .. verified\n");
+    D assert(0 == memcmp(in, orig, SIZE * macros));
+    D printf("in == orig .. verified\n");
 
     free(in);
     free(orig);

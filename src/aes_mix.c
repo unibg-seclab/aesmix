@@ -22,7 +22,7 @@
     }
 
 
-#ifndef NO_NAOR
+#ifdef NAOR
 #define MIX(ctx, in, out, size, hctx1, hctx2)                                 \
     recursive_mixing_naor(ctx, in, out, size, hctx1, hctx2)
 #define UNMIX(ctx, in, out, size, hctx1, hctx2)                               \
@@ -38,7 +38,15 @@ static void recursive_mixing_naor(EVP_CIPHER_CTX* ctx,
     unsigned char *outright = out + partsize;
     unsigned char tmp[partsize];
 
+#ifdef NAOR_EXTERNAL_ONLY
+    if (size == BLOCK_SIZE) {
+        do_h(hctx1, size, buffer, out);
+    } else {
+        memcpy(out, buffer, size);
+    }
+#else
     do_h(hctx1, size, buffer, out);
+#endif
 
     if (partsize == 16) {
         EVP_EncryptUpdate(ctx, tmp, &outl, outright, 16);
@@ -59,7 +67,14 @@ static void recursive_mixing_naor(EVP_CIPHER_CTX* ctx,
         exit(EXIT_FAILURE);
     }
 
-    do_h_inv(hctx2, size, out, out);
+#ifdef NAOR_EXTERNAL_ONLY
+    if (size == BLOCK_SIZE) {
+        do_h_inv(hctx2, size, out, out);
+    }
+#else
+    do_h(hctx1, size, buffer, out);
+#endif
+
 }
 
 static void recursive_unmixing_naor(EVP_CIPHER_CTX* ctx,
@@ -72,7 +87,15 @@ static void recursive_unmixing_naor(EVP_CIPHER_CTX* ctx,
     unsigned char *outright = out + partsize;
     unsigned char tmp[partsize];
 
+#ifdef NAOR_EXTERNAL_ONLY
+    if (size == BLOCK_SIZE) {
+        do_h(hctx2, size, buffer, out);
+    } else {
+        memcpy(out, buffer, size);
+    }
+#else
     do_h(hctx2, size, buffer, out);
+#endif
 
     if (partsize == 16) {
         EVP_EncryptUpdate(ctx, tmp, &outl, outleft, 16);
@@ -95,7 +118,14 @@ static void recursive_unmixing_naor(EVP_CIPHER_CTX* ctx,
         exit(EXIT_FAILURE);
     }
 
-    do_h_inv(hctx1, size, out, out);
+#ifdef NAOR_EXTERNAL_ONLY
+    if (size == BLOCK_SIZE) {
+        do_h_inv(hctx2, size, out, out);
+    }
+#else
+    do_h(hctx1, size, buffer, out);
+#endif
+
 }
 
 #else
@@ -263,7 +293,7 @@ static inline void mixprocess(mixfnv2 fn, const unsigned char* data,
     unsigned char* buffer = (unsigned char*) malloc(MACRO_SIZE);
     HCTX *hctx1 = NULL, *hctx2 = NULL;
 
-#ifndef NO_NAOR
+#ifdef NAOR
     unsigned __int128 keyent;
     memcpy(&keyent, key, KEYSIZE);
     keyent += 1;
@@ -281,7 +311,7 @@ static inline void mixprocess(mixfnv2 fn, const unsigned char* data,
 
     free(buffer);
 
-#ifndef NO_NAOR
+#ifdef NAOR
     destroy_hctx(hctx1);
     destroy_hctx(hctx2);
 #endif
