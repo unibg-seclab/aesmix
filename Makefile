@@ -1,6 +1,5 @@
 .PHONY:	all callgrind clean cleanall debug fresh freshdebug multitest multitest_oaep multitest_oaep_recursive printvars \
-		supertest test test_oaep test_oaep_recursive time time_oaep \
-		multidiff multidiff_oaep install
+		supertest test test_oaep test_oaep_recursive time time_oaep install
 
 # DEFINES
 include Makefile.properties

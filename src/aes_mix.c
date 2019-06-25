@@ -37,22 +37,15 @@ static void recursive_mixing_naor(EVP_CIPHER_CTX* ctx,
     unsigned char tmp[partsize];
 
     do_h(hctx1, size, buffer, out);
-    D { unsigned char test[size];
-        do_h_inv(hctx1, size, out, test);
-        assert(0 == memcmp(buffer, test, size)); }
 
     if (partsize == 16) {
-        D printf("16: AES\n");
         EVP_EncryptUpdate(ctx, tmp, &outl, outright, 16);
-        D assert(16 == outl);
         memxor(outleft, tmp, 16);
 
         EVP_EncryptUpdate(ctx, tmp, &outl, outleft, 16);
-        D assert(16 == outl);
         memxor(outright, tmp, 16);
 
     } else if (partsize > 16) {
-        D printf("%lu: RECURSE\n", partsize);
         recursive_mixing_naor(ctx, outright, tmp, partsize, hctx1, hctx2);
         memxor(outleft, tmp, partsize);
 
@@ -78,22 +71,15 @@ static void recursive_unmixing_naor(EVP_CIPHER_CTX* ctx,
     unsigned char tmp[partsize];
 
     do_h(hctx2, size, buffer, out);
-    D { unsigned char test[size];
-        do_h_inv(hctx1, size, out, test);
-        assert(0 == memcmp(buffer, test, size)); }
 
     if (partsize == 16) {
-        D printf("16: AES\n");
         EVP_EncryptUpdate(ctx, tmp, &outl, outleft, 16);
-        D assert(16 == outl);
         memxor(outright, tmp, 16);
 
         EVP_EncryptUpdate(ctx, tmp, &outl, outright, 16);
-        D assert(16 == outl);
         memxor(outleft, tmp, 16);
 
     } else if (partsize > 16) {
-        D printf("%lu: RECURSE\n", partsize);
         // this HAS to be mixing and not unmixing!
         recursive_mixing_naor(ctx, outleft, tmp, partsize, hctx1, hctx2);
         memxor(outright, tmp, partsize);
@@ -126,21 +112,16 @@ static void recursive_mixing(EVP_CIPHER_CTX* ctx, const unsigned char* buffer,
     unsigned char tmp[partsize];
 
     if (partsize == 16) {
-        D printf("16: AES\n");
         EVP_EncryptUpdate(ctx, outright, &outl, left, 16);
-        D assert(16 == outl);
         memxor(outright, right, 16);
 
         EVP_EncryptUpdate(ctx, outleft, &outl, outright, 16);
-        D assert(16 == outl);
         memxor(outleft, left, 16);
 
         EVP_EncryptUpdate(ctx, tmp, &outl, outleft, 16);
-        D assert(16 == outl);
         memxor(outright, tmp, 16);
 
     } else if (partsize > 16) {
-        D printf("%lu: RECURSE\n", partsize);
         recursive_mixing(ctx, left, outright, partsize, hctx1, hctx2);
         memxor(outright, right, partsize);
 
@@ -164,7 +145,6 @@ static inline void mix(EVP_CIPHER_CTX* ctx,
     const unsigned char* last = input + MACRO_SIZE;
     unsigned char tmp[BLOCK_SIZE];
     for ( ; input < last; input+=BLOCK_SIZE, output+=BLOCK_SIZE) {
-        D printf("mixing block %p\n", input);
         if (unmix) {
             UNMIX(ctx, input, tmp, BLOCK_SIZE, hctx1, hctx2);
         } else {
