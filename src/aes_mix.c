@@ -23,8 +23,10 @@
 
 
 #ifndef NO_NAOR
-#define MIX recursive_mixing_naor
-#define UNMIX recursive_unmixing_naor
+#define MIX(ctx, in, out, size, hctx1, hctx2)                                 \
+    recursive_mixing_naor(ctx, in, out, size, hctx1, hctx2)
+#define UNMIX(ctx, in, out, size, hctx1, hctx2)                               \
+    recursive_unmixing_naor(ctx, in, out, size, hctx1, hctx2)
 
 static void recursive_mixing_naor(EVP_CIPHER_CTX* ctx,
         const unsigned char* buffer, unsigned char* out,
@@ -97,11 +99,13 @@ static void recursive_unmixing_naor(EVP_CIPHER_CTX* ctx,
 }
 
 #else
-#define MIX recursive_mixing
-#define UNMIX recursive_mixing
+#define MIX(ctx, in, out, size, hctx1, hctx2)                                 \
+    recursive_mixing(ctx, in, out, size)
+#define UNMIX(ctx, in, out, size, hctx1, hctx2)                               \
+    recursive_mixing(ctx, in, out, size)
 
-static void recursive_mixing(EVP_CIPHER_CTX* ctx, const unsigned char* buffer,
-        unsigned char* out, unsigned int size, HCTX* hctx1, HCTX* hctx2
+static void recursive_mixing(EVP_CIPHER_CTX* ctx,
+        const unsigned char* buffer, unsigned char* out, unsigned int size
 ){
     int outl;
     unsigned long partsize = size / 2;
@@ -122,13 +126,13 @@ static void recursive_mixing(EVP_CIPHER_CTX* ctx, const unsigned char* buffer,
         memxor(outright, tmp, 16);
 
     } else if (partsize > 16) {
-        recursive_mixing(ctx, left, outright, partsize, hctx1, hctx2);
+        recursive_mixing(ctx, left, outright, partsize);
         memxor(outright, right, partsize);
 
-        recursive_mixing(ctx, outright, outleft, partsize, hctx1, hctx2);
+        recursive_mixing(ctx, outright, outleft, partsize);
         memxor(outleft, left, partsize);
 
-        recursive_mixing(ctx, outleft, tmp, partsize, hctx1, hctx2);
+        recursive_mixing(ctx, outleft, tmp, partsize);
         memxor(outright, tmp, partsize);
 
     } else {  // partsize < BLOCK_SIZE
@@ -142,6 +146,8 @@ static inline void mix(EVP_CIPHER_CTX* ctx,
         const unsigned char* input, unsigned char* output,
         HCTX* hctx1, HCTX* hctx2, unsigned short unmix
 ){
+    (void) hctx1;
+    (void) hctx2;
     const unsigned char* last = input + MACRO_SIZE;
     unsigned char tmp[BLOCK_SIZE];
     for ( ; input < last; input+=BLOCK_SIZE, output+=BLOCK_SIZE) {
@@ -255,24 +261,30 @@ static inline void mixprocess(mixfnv2 fn, const unsigned char* data,
 
     const unsigned char* last = data + size;
     unsigned char* buffer = (unsigned char*) malloc(MACRO_SIZE);
+    HCTX *hctx1 = NULL, *hctx2 = NULL;
 
+#ifndef NO_NAOR
     unsigned __int128 keyent;
     memcpy(&keyent, key, KEYSIZE);
     keyent += 1;
-    HCTX* hctx1 = create_hctx((unsigned char*) &keyent, KEYSIZE);
+    hctx1 = create_hctx((unsigned char*) &keyent, KEYSIZE);
     keyent += 1;
-    HCTX* hctx2 = create_hctx((unsigned char*) &keyent, KEYSIZE);
+    hctx2 = create_hctx((unsigned char*) &keyent, KEYSIZE);
+#endif
 
     unsigned __int128 miv;
 
     memcpy(&miv, iv, IVSIZE);
     for ( ; data < last; data+=MACRO_SIZE, out+=MACRO_SIZE, miv+=1) {
-        fn(data, out, buffer, key, (unsigned char*) &miv, hctx1, hctx1);
+        fn(data, out, buffer, key, (unsigned char*) &miv, hctx1, hctx2);
     }
 
     free(buffer);
+
+#ifndef NO_NAOR
     destroy_hctx(hctx1);
     destroy_hctx(hctx2);
+#endif
 }
 
 void mixencrypt(const unsigned char* data, unsigned char* out,
