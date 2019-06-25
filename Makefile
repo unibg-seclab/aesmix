@@ -1,4 +1,4 @@
-.PHONY:	all callgrind clean cleanall debug fresh multitest multitest_oaep multitest_oaep_recursive printvars \
+.PHONY:	all callgrind clean cleanall debug fresh freshdebug multitest multitest_oaep multitest_oaep_recursive printvars \
 		supertest test test_oaep test_oaep_recursive time time_oaep \
 		multidiff multidiff_oaep install
 
@@ -62,17 +62,24 @@ ifeq ($(shell uname), Darwin)  # OSX
     CFLAGS   += -O3
 endif
 
+ifeq ($(shell uname -s), Linux)
+    MAKEFLAGS += "-j $(shell nproc) "
+endif
+
 vpath %.c $(SRCDIR) $(TESTDIR)
 
 all: $(TARGETS) $(LIBS)
 
-fresh: | clean all
+fresh:
+	$(MAKE) clean
+	$(MAKE) all
 
 debug: CFLAGS += -DDEBUG -g
 debug: all
 
 callgrind: CFLAGS += -g
-callgrind: | clean main
+callgrind: clean
+	$(MAKE) main
 	valgrind --tool=callgrind --callgrind-out-file=callgrind.out ./main 1024
 
 main: aes_mix.lo debug.lo main.lo
@@ -108,7 +115,7 @@ multidiff: aes_mix.lo debug.lo aes_mix_multi.lo multidiff.lo
 multidiff_oaep: aes_mix.lo debug.lo aes_mix_multi_oaep.lo multidiff_oaep.lo aes_mix_oaep.lo
 	$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) $^ $(LDLIBS) -lpthread -o $@
 
-%.lo: %.c
+%.lo: %.c Makefile.properties
 	$(LIBTOOL) --mode=compile $(CC) $(CFLAGS) $(INC) -c -o $@ $<
 
 libaesmix.la: aes_mix.lo aes_mix_oaep.lo aes_mix_multi.lo aes_mix_multi_oaep.lo aes_mixslice.lo
@@ -129,35 +136,42 @@ printvars:
 	@ printf "\nAESNI: %d\nAES: MINI=%d MPM=%d\nOAEP: MINI=%d MPM=%d" \
 		$(AESNI) $(MINI_SIZE) $(MINI_PER_MACRO) $(OAEP_MINI_SIZE) $(OAEP_MINI_PER_MACRO)
 
-test: | clean debug printvars
+freshdebug:
+	@ $(MAKE) clean
+	@ $(MAKE) debug
+
+test: freshdebug printvars
 	@ echo -e "\nRUNNING TESTS ..."
 	./main 1 > /dev/null || ./main 1
 	./blackbox > /dev/null || ./blackbox
 	./multidiff > /dev/null || ./multidiff
 	@ echo -e "\033[0;32mALL OK\033[0m"
 
-test_oaep: | clean debug printvars
+test_oaep: freshdebug printvars
 	@ echo -e "\nRUNNING OAEP TESTS ..."
 	./main_oaep 1 > /dev/null || ./main_oaep 1
 	./blackbox_oaep > /dev/null || ./blackbox_oaep
 	./multidiff_oaep > /dev/null || ./multidiff_oaep
 	@ echo -e "\033[0;32mALL OK\033[0m"
 
-test_oaep_recursive: | clean debug printvars
+test_oaep_recursive: freshdebug printvars
 	@ echo -e "\nRUNNING OAEP RECURSIVE TESTS ..."
 	./main_oaep_recursive 1 > /dev/null || ./main_oaep_recursive 1
 	./blackbox_oaep_recursive > /dev/null || ./blackbox_oaep_recursive
 	@ echo -e "\033[0;32mALL OK\033[0m"
 
-time: | clean main printvars
+time: clean printvars
+	@ $(MAKE) main
 	@ echo -e "\nENCRYPTING 64MiB ..."
 	time ./main $$((1024*1024*64 / ($(MINI_SIZE)*$(MINI_PER_MACRO))))
 
-time_oaep: | clean main_oaep printvars
+time_oaep: clean printvars
+	@ $(MAKE) main_oaep
 	@ echo -e "\nENCRYPTING 64MiB with OAEP ..."
 	time ./main_oaep $$((1024*1024*64 / ($(OAEP_MINI_SIZE)*$(OAEP_MINI_PER_MACRO))))
 
-time_oaep_recursive: | clean main_oaep_recursive printvars
+time_oaep_recursive: clean printvars
+	@ $(MAKE) main_oaep_recursive
 	@ echo -e "\nENCRYPTING 64MiB with OAEP RECURSIVE ..."
 	time ./main_oaep_recursive $$((1024*1024*64 / ($(OAEP_MINI_SIZE)*$(OAEP_MINI_PER_MACRO))))
 
@@ -173,13 +187,16 @@ supertest: clean
 		done \
 	done
 
-multitest: | clean multithread $(DUMMYFILE) printvars
+multitest: clean $(DUMMYFILE) printvars
+	@ $(MAKE) multithread
 	./multithread $(DUMMYFILE) $(DUMMYFILE).out $(THREADS) $(TIMES)
 
-multitest_oaep: | clean multithread_oaep $(DUMMYFILE) printvars
+multitest_oaep: clean $(DUMMYFILE) printvars
+	@ $(MAKE) multithread_oaep
 	./multithread_oaep $(DUMMYFILE) $(DUMMYFILE).out $(THREADS) $(TIMES)
 
-multitest_oaep_recursive: | clean multithread_oaep_recursive $(DUMMYFILE) printvars
+multitest_oaep_recursive: clean $(DUMMYFILE) printvars
+	@ $(MAKE) multithread_oaep_recursive
 	./multithread_oaep_recursive $(DUMMYFILE) $(DUMMYFILE).out $(THREADS) $(TIMES)
 
 clean:
