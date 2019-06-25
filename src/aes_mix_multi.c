@@ -49,6 +49,15 @@ static inline void t_mixprocess(const short enc, unsigned int thr,
         remaining_macro -= tmacro;
         D printf("%lu macroblocks assigned to thread %d\n", tmacro, t);
 
+        printf("IV: ");
+        unsigned char aaa[16];
+        memcpy(aaa, &miv, 16);
+
+        for(int i=0; i<16; i++){
+            printf("%02x", aaa[i]);
+        }
+        printf("\n");
+
         aesmix_args* a = &args[t];
         memcpy(tiv[t], &miv, IVSIZE);
         a->data = data; a->out = out; a->size = tsize; a->key = key; a->iv = tiv[t];

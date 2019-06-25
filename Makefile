@@ -35,6 +35,10 @@ else
     CFLAGS += -DRECURSIVE_AES
 endif
 
+ifeq ($(NO_NAOR),1)
+    CFLAGS += -DNO_NAOR
+endif
+
 # check_params,MINI_SIZE,BLOCK_SIZE,MINI_PER_MACRO
 define check_params
     $(eval miniperblock=$(shell echo "$(2) / $(1)" | bc))

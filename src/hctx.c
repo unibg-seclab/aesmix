@@ -1,5 +1,6 @@
 #include <openssl/evp.h>
 #include <assert.h>
+#include <string.h>
 
 #include "aes_mix.h"
 #include "hctx.h"
@@ -13,7 +14,7 @@ static inline void get_irreducible_polynomial(BIGNUM* p, int size) {
         BN_set_bit(p,   1);
         BN_set_bit(p,   2);
         BN_set_bit(p,   7);
-        BN_set_bit(p, 56);
+        BN_set_bit(p, 128);
 
     } else if (size == 32) {
         /* GF (2^256) -> x^256 + x^10 + x^5 + x^2 + 1 */
@@ -109,21 +110,27 @@ void destroy_hctx(
 }
 
 void do_h(
-        HCTX* hctx, int size, unsigned char* data, unsigned char* out
+        HCTX* hctx, int size, const unsigned char* data, unsigned char* out
 ) {
+    int leftbytes;
     HCTX_FN* fn = size == 16 ? hctx->p128 : (size == 32 ? hctx->p256 : hctx->p512);
     BN_bin2bn(data, size, fn->x);
     BN_GF2m_mod_mul(fn->y, fn->a, fn->x, fn->p, fn->ctx);
     BN_GF2m_add(fn->y, fn->y, fn->b);
-    BN_bn2bin(fn->y, out);
+    leftbytes = size - BN_num_bytes(fn->y);
+    memset(out, 0, leftbytes);
+    BN_bn2bin(fn->y, out + leftbytes);
 }
 
 void do_h_inv(
-        HCTX* hctx, int size, unsigned char* data, unsigned char* out
+        HCTX* hctx, int size, const unsigned char* data, unsigned char* out
 ) {
+    int leftbytes;
     HCTX_FN* fn = size == 16 ? hctx->p128 : (size == 32 ? hctx->p256 : hctx->p512);
     BN_bin2bn(data, size, fn->y);
     BN_GF2m_sub(fn->y, fn->y, fn->b);
-    BN_GF2m_mod_mul(fn->x, fn->a_inv, fn->y, fn->p, fn->ctx);
-    BN_bn2bin(fn->x, out);
+    BN_GF2m_mod_mul(fn->x, fn->y, fn->a_inv, fn->p, fn->ctx);
+    leftbytes = size - BN_num_bytes(fn->x);
+    memset(out, 0, leftbytes);
+    BN_bn2bin(fn->x, out + leftbytes);
 }

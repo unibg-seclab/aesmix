@@ -22,6 +22,98 @@
     }
 
 
+#ifndef NO_NAOR
+#define MIX recursive_mixing_naor
+#define UNMIX recursive_unmixing_naor
+
+static void recursive_mixing_naor(EVP_CIPHER_CTX* ctx,
+        const unsigned char* buffer, unsigned char* out,
+        unsigned int size, HCTX* hctx1, HCTX* hctx2
+){
+    int outl;
+    unsigned long partsize = size / 2;
+    unsigned char *outleft = out;
+    unsigned char *outright = out + partsize;
+    unsigned char tmp[partsize];
+
+    do_h(hctx1, size, buffer, out);
+    D { unsigned char test[size];
+        do_h_inv(hctx1, size, out, test);
+        assert(0 == memcmp(buffer, test, size)); }
+
+    if (partsize == 16) {
+        D printf("16: AES\n");
+        EVP_EncryptUpdate(ctx, tmp, &outl, outright, 16);
+        D assert(16 == outl);
+        memxor(outleft, tmp, 16);
+
+        EVP_EncryptUpdate(ctx, tmp, &outl, outleft, 16);
+        D assert(16 == outl);
+        memxor(outright, tmp, 16);
+
+    } else if (partsize > 16) {
+        D printf("%lu: RECURSE\n", partsize);
+        recursive_mixing_naor(ctx, outright, tmp, partsize, hctx1, hctx2);
+        memxor(outleft, tmp, partsize);
+
+        recursive_mixing_naor(ctx, outleft, tmp, partsize, hctx1, hctx2);
+        memxor(outright, tmp, partsize);
+
+    } else {  // partsize < BLOCK_SIZE
+        printf("plaintext length wrong.");
+        exit(EXIT_FAILURE);
+    }
+
+    do_h_inv(hctx2, size, out, out);
+}
+
+static void recursive_unmixing_naor(EVP_CIPHER_CTX* ctx,
+        const unsigned char* buffer, unsigned char* out,
+        unsigned int size, HCTX* hctx1, HCTX* hctx2
+){
+    int outl;
+    unsigned long partsize = size / 2;
+    unsigned char *outleft = out;
+    unsigned char *outright = out + partsize;
+    unsigned char tmp[partsize];
+
+    do_h(hctx2, size, buffer, out);
+    D { unsigned char test[size];
+        do_h_inv(hctx1, size, out, test);
+        assert(0 == memcmp(buffer, test, size)); }
+
+    if (partsize == 16) {
+        D printf("16: AES\n");
+        EVP_EncryptUpdate(ctx, tmp, &outl, outleft, 16);
+        D assert(16 == outl);
+        memxor(outright, tmp, 16);
+
+        EVP_EncryptUpdate(ctx, tmp, &outl, outright, 16);
+        D assert(16 == outl);
+        memxor(outleft, tmp, 16);
+
+    } else if (partsize > 16) {
+        D printf("%lu: RECURSE\n", partsize);
+        // this HAS to be mixing and not unmixing!
+        recursive_mixing_naor(ctx, outleft, tmp, partsize, hctx1, hctx2);
+        memxor(outright, tmp, partsize);
+
+        // this HAS to be mixing and not unmixing!
+        recursive_mixing_naor(ctx, outright, tmp, partsize, hctx1, hctx2);
+        memxor(outleft, tmp, partsize);
+
+    } else {  // partsize < BLOCK_SIZE
+        printf("plaintext length wrong.");
+        exit(EXIT_FAILURE);
+    }
+
+    do_h_inv(hctx1, size, out, out);
+}
+
+#else
+#define MIX recursive_mixing
+#define UNMIX recursive_mixing
+
 static void recursive_mixing(EVP_CIPHER_CTX* ctx, const unsigned char* buffer,
         unsigned char* out, unsigned int size, HCTX* hctx1, HCTX* hctx2
 ){
@@ -63,16 +155,21 @@ static void recursive_mixing(EVP_CIPHER_CTX* ctx, const unsigned char* buffer,
         exit(EXIT_FAILURE);
     }
 }
+#endif
 
 static inline void mix(EVP_CIPHER_CTX* ctx,
         const unsigned char* input, unsigned char* output,
-        HCTX* hctx1, HCTX* hctx2
+        HCTX* hctx1, HCTX* hctx2, unsigned short unmix
 ){
     const unsigned char* last = input + MACRO_SIZE;
     unsigned char tmp[BLOCK_SIZE];
     for ( ; input < last; input+=BLOCK_SIZE, output+=BLOCK_SIZE) {
         D printf("mixing block %p\n", input);
-        recursive_mixing(ctx, input, tmp, BLOCK_SIZE, hctx1, hctx2);
+        if (unmix) {
+            UNMIX(ctx, input, tmp, BLOCK_SIZE, hctx1, hctx2);
+        } else {
+            MIX(ctx, input, tmp, BLOCK_SIZE, hctx1, hctx2);
+        }
         memcpy(output, tmp, BLOCK_SIZE);
     }
 }
@@ -82,14 +179,14 @@ static inline void do_step_encrypt(EVP_CIPHER_CTX* ctx, unsigned char* buffer,
     HCTX* hctx1, HCTX* hctx2
 ){
     SHUFFLE(step, off, bp, macro, buffer, bp, macro + off);
-    mix(ctx, buffer, out, hctx1, hctx2);
+    mix(ctx, buffer, out, hctx1, hctx2, 0);
 }
 
 static inline void do_step_decrypt(EVP_CIPHER_CTX* ctx, unsigned char* buffer,
     const unsigned char* macro, unsigned char* out, const unsigned int step,
     HCTX* hctx1, HCTX* hctx2
 ){
-    mix(ctx, macro, buffer, hctx1, hctx2);
+    mix(ctx, macro, buffer, hctx1, hctx2, 1);
     SHUFFLE(step, off, bp, macro, buffer, out + off, bp);
 }
 
@@ -119,7 +216,7 @@ static inline void mixencrypt_macroblock(const unsigned char* macro,
 
     // Step 0
     memxor((unsigned char*) macro, iv, IVSIZE);  // add IV to input
-    mix(ctx, macro, out, hctx1, hctx2);
+    mix(ctx, macro, out, hctx1, hctx2, 0);
     memxor((unsigned char*) macro, iv, IVSIZE);  // add IV to input
 
     // Steps 1 -> N
@@ -153,7 +250,7 @@ static inline void mixdecrypt_macroblock(const unsigned char* macro,
     }
 
     // Step 0
-    mix(ctx, out, out, hctx1, hctx2);
+    mix(ctx, out, out, hctx1, hctx2, 1);
     memxor(out, iv, IVSIZE);         // remove IV from output
 
     EVP_CIPHER_CTX_cleanup(ctx);
@@ -178,18 +275,19 @@ static inline void mixprocess(mixfnv2 fn, const unsigned char* data,
 
     const unsigned char* last = data + size;
     unsigned char* buffer = (unsigned char*) malloc(MACRO_SIZE);
-    HCTX* hctx1 = create_hctx(key, KEYSIZE);
-    HCTX* hctx2 = create_hctx(iv, IVSIZE);
-    unsigned __int128 miv;
 
-    if ( !buffer ) {
-        printf("Cannot allocate needed memory\n");
-        exit(EXIT_FAILURE);
-    }
+    unsigned __int128 keyent;
+    memcpy(&keyent, key, KEYSIZE);
+    keyent += 1;
+    HCTX* hctx1 = create_hctx((unsigned char*) &keyent, KEYSIZE);
+    keyent += 1;
+    HCTX* hctx2 = create_hctx((unsigned char*) &keyent, KEYSIZE);
+
+    unsigned __int128 miv;
 
     memcpy(&miv, iv, IVSIZE);
     for ( ; data < last; data+=MACRO_SIZE, out+=MACRO_SIZE, miv+=1) {
-        fn(data, out, buffer, key, (unsigned char*) &miv, hctx1, hctx2);
+        fn(data, out, buffer, key, (unsigned char*) &miv, hctx1, hctx1);
     }
 
     free(buffer);

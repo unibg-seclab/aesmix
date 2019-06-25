@@ -23,7 +23,9 @@ typedef struct hctx_s {
 
 
 HCTX* create_hctx(const unsigned char *seed, int seedsize);
-
 void destroy_hctx(HCTX* hctx);
+
+void do_h(HCTX* hctx, int size, const unsigned char* data, unsigned char* out);
+void do_h_inv(HCTX* hctx, int size, const unsigned char* data, unsigned char* out);
 
 #endif // HCTX_H
