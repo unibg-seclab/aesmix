@@ -165,7 +165,7 @@ typedef void (*mixfnv2) (
     const unsigned char* key, const unsigned char* iv, HCTX* hctx1, HCTX* hctx2
 );
 
-inline void mixprocess(mixfnv2 fn, const unsigned char* data,
+static inline void mixprocess(mixfnv2 fn, const unsigned char* data,
     unsigned char* out, const unsigned long size,
     const unsigned char* key, const unsigned char* iv
 ){
