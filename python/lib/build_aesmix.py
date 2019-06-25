@@ -43,6 +43,7 @@ ffibuilder.cdef("""
 ffibuilder.set_source(
     'aesmix._aesmix',
     """
+    #include "hctx.c"
     #include "aes_mix.c"
     #include "aes_mix_multi.c"
     #include "aes_mixslice.c"
