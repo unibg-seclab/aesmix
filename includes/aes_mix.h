@@ -52,11 +52,6 @@ typedef void (*mixfn) (
     const unsigned char* key, const unsigned char* iv
 );
 
-void mixprocess (
-    mixfn fn, const unsigned char* data, unsigned char* out,
-    const unsigned long size, const unsigned char* key, const unsigned char* iv
-);
-
 /* utility functions */
 
 void* memxor (

@@ -67,6 +67,7 @@ ifeq ($(shell uname -s), Linux)
 endif
 
 vpath %.c $(SRCDIR) $(TESTDIR)
+BASE        = aes_mix.lo hctx.lo debug.lo
 
 all: $(TARGETS) $(LIBS)
 
@@ -82,43 +83,43 @@ callgrind: clean
 	$(MAKE) main
 	valgrind --tool=callgrind --callgrind-out-file=callgrind.out ./main 1024
 
-main: aes_mix.lo debug.lo main.lo
+main: $(BASE) main.lo
 	$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
-main_oaep: aes_mix.lo debug.lo main_oaep.lo aes_mix_oaep.lo
+main_oaep: $(BASE) main_oaep.lo aes_mix_oaep.lo
 	$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
-main_oaep_recursive: aes_mix.lo debug.lo main_oaep_recursive.lo aes_mix_oaep_recursive.lo
+main_oaep_recursive: $(BASE) main_oaep_recursive.lo aes_mix_oaep_recursive.lo
 	$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
-blackbox: aes_mix.lo debug.lo blackbox.lo
+blackbox: $(BASE) blackbox.lo
 	$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
-blackbox_oaep: aes_mix.lo debug.lo blackbox_oaep.lo aes_mix_oaep.lo
+blackbox_oaep: $(BASE) blackbox_oaep.lo aes_mix_oaep.lo
 	$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
-blackbox_oaep_recursive: aes_mix.lo debug.lo blackbox_oaep_recursive.lo aes_mix_oaep_recursive.lo
+blackbox_oaep_recursive: $(BASE) blackbox_oaep_recursive.lo aes_mix_oaep_recursive.lo
 	$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
-multithread: aes_mix.lo debug.lo aes_mix_multi.lo multithread.lo
+multithread: $(BASE) aes_mix_multi.lo multithread.lo
 	$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) $^ $(LDLIBS) -lpthread -o $@
 
-multithread_oaep: aes_mix.lo debug.lo aes_mix_multi_oaep.lo multithread_oaep.lo aes_mix_oaep.lo
+multithread_oaep: $(BASE) aes_mix_multi_oaep.lo multithread_oaep.lo aes_mix_oaep.lo
 	$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) $^ $(LDLIBS) -lpthread -o $@
 
-multithread_oaep_recursive: aes_mix.lo debug.lo aes_mix_multi_oaep.lo aes_mix_multi_oaep_recursive.lo multithread_oaep_recursive.lo aes_mix_oaep.lo aes_mix_oaep_recursive.lo
+multithread_oaep_recursive: $(BASE) aes_mix_multi_oaep.lo aes_mix_multi_oaep_recursive.lo multithread_oaep_recursive.lo aes_mix_oaep.lo aes_mix_oaep_recursive.lo
 	$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) $^ $(LDLIBS) -lpthread -o $@
 
-multidiff: aes_mix.lo debug.lo aes_mix_multi.lo multidiff.lo
+multidiff: $(BASE) aes_mix_multi.lo multidiff.lo
 	$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) $^ $(LDLIBS) -lpthread -o $@
 
-multidiff_oaep: aes_mix.lo debug.lo aes_mix_multi_oaep.lo multidiff_oaep.lo aes_mix_oaep.lo
+multidiff_oaep: $(BASE) aes_mix_multi_oaep.lo multidiff_oaep.lo aes_mix_oaep.lo
 	$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) $^ $(LDLIBS) -lpthread -o $@
 
 %.lo: %.c Makefile.properties
 	$(LIBTOOL) --mode=compile $(CC) $(CFLAGS) $(INC) -c -o $@ $<
 
-libaesmix.la: aes_mix.lo aes_mix_oaep.lo aes_mix_multi.lo aes_mix_multi_oaep.lo aes_mixslice.lo
+libaesmix.la: aes_mix.lo hctx.lo aes_mix_oaep.lo aes_mix_multi.lo aes_mix_multi_oaep.lo aes_mixslice.lo
 	$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) -o $@ $^ -rpath $(LIBDIR) $(LDLIBS)
 
 install: libaesmix.la
