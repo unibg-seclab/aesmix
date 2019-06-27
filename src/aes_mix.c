@@ -8,7 +8,6 @@
 #include "aes_mix.h"
 #include "hctx.h"
 
-
 #define SHUFFLE(STEP, OFF, BP, MACRO, BUFFER, TO, FROM)                       \
     unsigned int j, OFF, mask, start, dist;                                   \
     unsigned char *BP = buffer;                                               \
@@ -22,7 +21,7 @@
     }
 
 
-#ifdef NAOR
+#if defined(NAOR)
 #define MIX(ctx, in, out, size, hctx1, hctx2)                                 \
     recursive_mixing_naor(ctx, in, out, size, hctx1, hctx2)
 #define UNMIX(ctx, in, out, size, hctx1, hctx2)                               \
@@ -126,6 +125,93 @@ static void recursive_unmixing_naor(EVP_CIPHER_CTX* ctx,
     do_h(hctx1, size, buffer, out);
 #endif
 
+}
+
+#elif defined(CAPKUN)
+#define MIX(ctx, in, out, size, hctx1, hctx2)                                 \
+    recursive_mixing_capkun(ctx, in, out, size)
+#define UNMIX(ctx, in, out, size, hctx1, hctx2)                               \
+    recursive_unmixing_capkun(ctx, in, out, size)
+
+static inline void mix_capkun(
+        const unsigned char* buffer, unsigned char* out, unsigned int size
+){
+    unsigned __int128 seam = 0;
+    const unsigned __int128 *ptr = (unsigned __int128*) buffer;
+    const unsigned __int128 *last = ptr + (size / 16);
+    for ( ; ptr < last; ++ptr ) { seam ^= *ptr; }
+
+    unsigned __int128 *outptr = (unsigned __int128*) out;
+    ptr = (unsigned __int128*) buffer;
+    for ( ; ptr < last; ++ptr, ++outptr) { *outptr = seam ^ *ptr; }
+}
+
+static void recursive_mixing_capkun(EVP_CIPHER_CTX* ctx,
+        const unsigned char* buffer, unsigned char* out, unsigned int size
+){
+    int outl;
+    unsigned long partsize = size / 2;
+    unsigned char *outleft = out;
+    unsigned char *outright = out + partsize;
+    unsigned char tmp[partsize];
+
+    mix_capkun(buffer, out, size);
+
+    if (partsize == 16) {
+        EVP_EncryptUpdate(ctx, tmp, &outl, outright, 16);
+        memxor(outleft, tmp, 16);
+
+        EVP_EncryptUpdate(ctx, tmp, &outl, outleft, 16);
+        memxor(outright, tmp, 16);
+
+    } else if (partsize > 16) {
+        recursive_mixing_capkun(ctx, outright, tmp, partsize);
+        memxor(outleft, tmp, partsize);
+
+        recursive_mixing_capkun(ctx, outleft, tmp, partsize);
+        memxor(outright, tmp, partsize);
+
+    } else {  // partsize < BLOCK_SIZE
+        printf("plaintext length wrong.");
+        exit(EXIT_FAILURE);
+    }
+
+    mix_capkun(out, out, size);
+}
+
+static void recursive_unmixing_capkun(EVP_CIPHER_CTX* ctx,
+        const unsigned char* buffer, unsigned char* out, unsigned int size
+){
+    int outl;
+    unsigned long partsize = size / 2;
+    unsigned char *outleft = out;
+    unsigned char *outright = out + partsize;
+    unsigned char tmp[partsize];
+
+    mix_capkun(buffer, out, size);
+
+    if (partsize == 16) {
+        EVP_EncryptUpdate(ctx, tmp, &outl, outleft, 16);
+        memxor(outright, tmp, 16);
+
+        EVP_EncryptUpdate(ctx, tmp, &outl, outright, 16);
+        memxor(outleft, tmp, 16);
+
+    } else if (partsize > 16) {
+        // this HAS to be mixing and not unmixing!
+        recursive_mixing_capkun(ctx, outleft, tmp, partsize);
+        memxor(outright, tmp, partsize);
+
+        // this HAS to be mixing and not unmixing!
+        recursive_mixing_capkun(ctx, outright, tmp, partsize);
+        memxor(outleft, tmp, partsize);
+
+    } else {  // partsize < BLOCK_SIZE
+        printf("plaintext length wrong.");
+        exit(EXIT_FAILURE);
+    }
+
+    mix_capkun(out, out, size);
 }
 
 #else

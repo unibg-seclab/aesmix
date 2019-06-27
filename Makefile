@@ -42,6 +42,11 @@ ifeq ($(NAOR_EXTERNAL_ONLY),1)
     CFLAGS += -DNAOR_EXTERNAL_ONLY
 endif
 
+ifeq ($(CAPKUN),1)
+    CFLAGS += -DCAPKUN
+endif
+
+
 # check_params,MINI_SIZE,BLOCK_SIZE,MINI_PER_MACRO
 define check_params
     $(eval miniperblock=$(shell echo "$(2) / $(1)" | bc))
