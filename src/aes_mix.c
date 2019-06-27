@@ -181,19 +181,18 @@ static void recursive_mixing_capkun(EVP_CIPHER_CTX* ctx,
 
 #else
 #define MIX(ctx, in, out, size, hctx1, hctx2)                                 \
-    recursive_mixing(ctx, in, out, size)
+    recursive_mixing(ctx, in, size, out, out + size/2)
 #define UNMIX(ctx, in, out, size, hctx1, hctx2)                               \
-    recursive_mixing(ctx, in, out, size)
+    recursive_mixing(ctx, in, size, out, out + size/2)
 
 static void recursive_mixing(EVP_CIPHER_CTX* ctx,
-        const unsigned char* buffer, unsigned char* out, unsigned int size
+        const unsigned char* buffer, unsigned int size,
+        unsigned char* outleft, unsigned char* outright
 ){
     int outl;
     unsigned long partsize = size / 2;
     const unsigned char *left = buffer;
     const unsigned char *right = buffer + partsize;
-    unsigned char *outleft = out;
-    unsigned char *outright = out + partsize;
     unsigned char tmp[partsize];
 
     if (partsize == 16) {
@@ -207,13 +206,13 @@ static void recursive_mixing(EVP_CIPHER_CTX* ctx,
         memxor(outright, tmp, 16);
 
     } else if (partsize > 16) {
-        recursive_mixing(ctx, left, outright, partsize);
+        MIX(ctx, left, outright, partsize, NULL, NULL);
         memxor(outright, right, partsize);
 
-        recursive_mixing(ctx, outright, outleft, partsize);
+        MIX(ctx, outright, outleft, partsize, NULL, NULL);
         memxor(outleft, left, partsize);
 
-        recursive_mixing(ctx, outleft, tmp, partsize);
+        MIX(ctx, outleft, tmp, partsize,NULL, NULL);
         memxor(outright, tmp, partsize);
 
     } else {  // partsize < BLOCK_SIZE
