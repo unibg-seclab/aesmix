@@ -23,29 +23,28 @@
 
 
 #if defined(NAOR)
-#define MIX(ctx, in, out, size, hctx1, hctx2)                                 \
-    recursive_mixing_naor(ctx, in, out, size, hctx1, hctx2)
-#define UNMIX(ctx, in, out, size, hctx1, hctx2)                               \
-    recursive_unmixing_naor(ctx, in, out, size, hctx1, hctx2)
+#define MIX(ctx, in, out, size, h1, h2)                                       \
+    recursive_mixing_naor(ctx, in, out, out, out + size/2, size, h1, h2, 1)
+#define UNMIX(ctx, in, out, size, h1, h2)                                     \
+    recursive_mixing_naor(ctx, in, out, out + size/2, out, size, h1, h2, 0)
 
 static void recursive_mixing_naor(EVP_CIPHER_CTX* ctx,
         const unsigned char* buffer, unsigned char* out,
-        unsigned int size, HCTX* hctx1, HCTX* hctx2
+        unsigned char* outleft, unsigned char* outright,
+        unsigned int size, HCTX* hctx1, HCTX* hctx2, int mix
 ){
     int outl;
     unsigned long partsize = size / 2;
-    unsigned char *outleft = out;
-    unsigned char *outright = out + partsize;
     unsigned char tmp[partsize];
 
 #ifdef NAOR_EXTERNAL_ONLY
     if (size == BLOCK_SIZE) {
-        do_h(hctx1, size, buffer, out);
+        do_h(mix ? hctx1 : hctx2, size, buffer, out);
     } else {
         memcpy(out, buffer, size);
     }
 #else
-    do_h(hctx1, size, buffer, out);
+    do_h(mix ? hctx1 : hctx2, size, buffer, out);
 #endif
 
     if (partsize == 16) {
@@ -56,10 +55,10 @@ static void recursive_mixing_naor(EVP_CIPHER_CTX* ctx,
         memxor(outright, tmp, 16);
 
     } else if (partsize > 16) {
-        recursive_mixing_naor(ctx, outright, tmp, partsize, hctx1, hctx2);
+        MIX(ctx, outright, tmp, partsize, hctx1, hctx2);
         memxor(outleft, tmp, partsize);
 
-        recursive_mixing_naor(ctx, outleft, tmp, partsize, hctx1, hctx2);
+        MIX(ctx, outleft, tmp, partsize, hctx1, hctx2);
         memxor(outright, tmp, partsize);
 
     } else {  // partsize < BLOCK_SIZE
@@ -69,64 +68,14 @@ static void recursive_mixing_naor(EVP_CIPHER_CTX* ctx,
 
 #ifdef NAOR_EXTERNAL_ONLY
     if (size == BLOCK_SIZE) {
-        do_h_inv(hctx2, size, out, out);
+        do_h_inv(mix ? hctx2 : hctx1, size, out, out);
     }
 #else
-    do_h(hctx1, size, buffer, out);
+    do_h_inv(mix ? hctx2 : hctx1, size, out, out);
 #endif
 
 }
 
-static void recursive_unmixing_naor(EVP_CIPHER_CTX* ctx,
-        const unsigned char* buffer, unsigned char* out,
-        unsigned int size, HCTX* hctx1, HCTX* hctx2
-){
-    int outl;
-    unsigned long partsize = size / 2;
-    unsigned char *outleft = out;
-    unsigned char *outright = out + partsize;
-    unsigned char tmp[partsize];
-
-#ifdef NAOR_EXTERNAL_ONLY
-    if (size == BLOCK_SIZE) {
-        do_h(hctx2, size, buffer, out);
-    } else {
-        memcpy(out, buffer, size);
-    }
-#else
-    do_h(hctx2, size, buffer, out);
-#endif
-
-    if (partsize == 16) {
-        EVP_EncryptUpdate(ctx, tmp, &outl, outleft, 16);
-        memxor(outright, tmp, 16);
-
-        EVP_EncryptUpdate(ctx, tmp, &outl, outright, 16);
-        memxor(outleft, tmp, 16);
-
-    } else if (partsize > 16) {
-        // this HAS to be mixing and not unmixing!
-        recursive_mixing_naor(ctx, outleft, tmp, partsize, hctx1, hctx2);
-        memxor(outright, tmp, partsize);
-
-        // this HAS to be mixing and not unmixing!
-        recursive_mixing_naor(ctx, outright, tmp, partsize, hctx1, hctx2);
-        memxor(outleft, tmp, partsize);
-
-    } else {  // partsize < BLOCK_SIZE
-        printf("plaintext length wrong.");
-        exit(EXIT_FAILURE);
-    }
-
-#ifdef NAOR_EXTERNAL_ONLY
-    if (size == BLOCK_SIZE) {
-        do_h_inv(hctx2, size, out, out);
-    }
-#else
-    do_h(hctx1, size, buffer, out);
-#endif
-
-}
 
 #elif defined(CAPKUN)
 #define MIX(ctx, in, out, size, hctx1, hctx2)                                 \
